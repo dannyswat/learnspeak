@@ -44,7 +44,7 @@ func NewFileUploadHandler(uploadDir string, maxSizeMB int64) *FileUploadHandler 
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/upload/audio [post]
 func (h *FileUploadHandler) UploadAudio(c echo.Context) error {
-	return h.uploadFile(c, "audio", []string{".mp3", ".wav", ".ogg", ".m4a"})
+	return h.uploadFile(c, "audio", []string{".mp3", ".wav", ".ogg", ".m4a", ".webm"})
 }
 
 // UploadImage handles POST /api/upload/image

@@ -99,8 +99,8 @@ export const uploadService = {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    // Prepend API base URL
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-    return `${baseURL}${path}`;
+    // In development with Vite proxy, or production, just use the path directly
+    // The Vite proxy will forward /uploads requests to the backend
+    return path;
   },
 };
