@@ -61,8 +61,17 @@ func main() {
 	// Request size limit
 	e.Use(middleware.BodyLimit(strconv.FormatInt(cfg.MaxUploadSize, 10)))
 
+	// Create uploads directory
+	uploadsDir := "./uploads"
+	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
+		log.Printf("Warning: Failed to create uploads directory: %v", err)
+	}
+
+	// Serve uploaded files
+	e.Static("/uploads", uploadsDir)
+
 	// Setup routes
-	routes.SetupRoutes(e)
+	routes.SetupRoutes(e, uploadsDir)
 
 	// Serve static files from frontend build (production)
 	// The frontend build should be placed in ../frontend/dist

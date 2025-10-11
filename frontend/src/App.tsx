@@ -4,6 +4,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import WordList from './pages/WordList';
+import WordForm from './pages/WordForm';
+import WordDetail from './pages/WordDetail';
 import './App.css';
 
 function App() {
@@ -21,8 +24,40 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/words"
+            element={
+              <ProtectedRoute>
+                <WordList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/words/new"
+            element={
+              <ProtectedRoute>
+                <WordForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/words/:id"
+            element={
+              <ProtectedRoute>
+                <WordDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/words/:id/edit"
+            element={
+              <ProtectedRoute>
+                <WordForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

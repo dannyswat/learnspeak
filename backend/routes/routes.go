@@ -1,14 +1,27 @@
 package routes
 
 import (
+	"dannyswat/learnspeak/database"
 	"dannyswat/learnspeak/handlers"
 	"dannyswat/learnspeak/middleware"
+	"dannyswat/learnspeak/repositories"
+	"dannyswat/learnspeak/services"
 
 	"github.com/labstack/echo/v4"
 )
 
 // SetupRoutes configures all application routes
-func SetupRoutes(e *echo.Echo) {
+func SetupRoutes(e *echo.Echo, uploadDir string) {
+	// Initialize repositories
+	wordRepo := repositories.NewWordRepository(database.DB)
+
+	// Initialize services
+	wordService := services.NewWordService(wordRepo)
+
+	// Initialize handlers
+	wordHandler := handlers.NewWordHandler(wordService)
+	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
+
 	// API version 1
 	api := e.Group("/api/v1")
 
@@ -25,6 +38,17 @@ func SetupRoutes(e *echo.Echo) {
 	{
 		// User profile
 		protected.GET("/profile", handlers.GetProfile)
+
+		// Word management
+		protected.GET("/words", wordHandler.ListWords)
+		protected.POST("/words", wordHandler.CreateWord)
+		protected.GET("/words/:id", wordHandler.GetWord)
+		protected.PUT("/words/:id", wordHandler.UpdateWord)
+		protected.DELETE("/words/:id", wordHandler.DeleteWord)
+
+		// File uploads
+		protected.POST("/upload/audio", uploadHandler.UploadAudio)
+		protected.POST("/upload/image", uploadHandler.UploadImage)
 
 		// Example: Admin-only routes
 		admin := protected.Group("/admin")

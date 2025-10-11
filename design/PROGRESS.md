@@ -120,16 +120,20 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 - [x] Frontend: Auth context provider
 - [x] Frontend: Registration page
 - [x] Frontend: Login page
-- [ ] Frontend: Protected route wrapper
-- [ ] Frontend: Token storage (localStorage/cookies)
-- [ ] Frontend: Auto-login on page refresh
-- [ ] Error handling and validation
+- [x] Frontend: Protected route wrapper
+- [x] Frontend: Token storage (localStorage/cookies)
+- [x] Frontend: Auto-login on page refresh
+- [x] Error handling and validation
 
 **Deliverables**:
-- ✅ Working user registration
-- ✅ Working login/logout
-- ✅ JWT-based authentication
-- ✅ Protected routes
+- [x] Working user registration
+- [x] Working login/logout
+- [x] JWT-based authentication
+- [x] Protected routes
+- [x] Token persistence and auto-login
+- [x] Form validation and error handling
+
+**Completed**: October 11, 2025 (Previously completed)
 
 **User Stories**: 1.1, 1.2, 1.4
 
@@ -170,29 +174,47 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.1: Word Management
 **Duration**: 3-4 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Backend: Word CRUD endpoints
-  - [ ] POST /api/words (create)
-  - [ ] GET /api/words (list with pagination)
-  - [ ] GET /api/words/:id (get single)
-  - [ ] PUT /api/words/:id (update)
-  - [ ] DELETE /api/words/:id (delete)
-- [ ] Backend: File upload for audio/images
-- [ ] Backend: Word validation
-- [ ] Frontend: Word list page
-- [ ] Frontend: Create word form (without AI first)
-- [ ] Frontend: Edit word form
-- [ ] Frontend: Delete confirmation
-- [ ] Frontend: Audio/image upload
-- [ ] Frontend: Audio player component
-- [ ] Frontend: Image preview component
+- [x] Backend: Word CRUD endpoints
+  - [x] POST /api/words (create)
+  - [x] GET /api/words (list with pagination)
+  - [x] GET /api/words/:id (get single)
+  - [x] PUT /api/words/:id (update)
+  - [x] DELETE /api/words/:id (delete)
+- [x] Backend: File upload for audio/images
+- [x] Backend: Word validation
+- [x] Frontend: Word list page
+- [x] Frontend: Create word form (without AI first)
+- [x] Frontend: Edit word form
+- [x] Frontend: Delete confirmation
+- [x] Frontend: Audio/image upload
+- [x] Frontend: Audio player component
+- [x] Frontend: Image preview component
 
 **Deliverables**:
 - ✅ Word management system (manual creation)
 - ✅ File upload capability
 - ✅ Word list with search
+
+**Completed Files**:
+- Backend:
+  - `models/word.go` - Word, WordTranslation, Language models
+  - `dto/word.go` - Request/response DTOs for word operations
+  - `repositories/word_repository.go` - Database operations for words
+  - `services/word_service.go` - Business logic for word CRUD
+  - `handlers/word_handler.go` - HTTP handlers for word endpoints
+  - `handlers/upload_handler.go` - File upload handlers for audio/images
+  - `routes/routes.go` - Updated with word and upload routes
+  - `main.go` - Updated with uploads directory and static file serving
+- Frontend:
+  - `types/word.ts` - TypeScript types for words
+  - `services/wordService.ts` - API service for word operations
+  - `pages/WordList.tsx` - Word list page with search and pagination
+  - `pages/WordForm.tsx` - Create/edit word form with multi-language support
+  - `pages/WordDetail.tsx` - Word detail view page
+  - `App.tsx` - Updated with word management routes
 
 **User Stories**: 2.2
 
