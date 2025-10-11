@@ -11,18 +11,19 @@
 
 1. [Authentication](#1-authentication)
 2. [Users](#2-users)
-3. [Words](#3-words)
-4. [Topics](#4-topics)
-5. [Journeys](#5-journeys)
-6. [Quizzes](#6-quizzes)
-7. [Learning Activities](#7-learning-activities)
-8. [Progress & Analytics](#8-progress--analytics)
-9. [Achievements](#9-achievements)
-10. [Bookmarks](#10-bookmarks)
-11. [Notes](#11-notes)
-12. [Spaced Repetition](#12-spaced-repetition)
-13. [AI Services](#13-ai-services)
-14. [Admin](#14-admin)
+3. [Languages](#3-languages)
+4. [Words](#4-words)
+5. [Topics](#5-topics)
+6. [Journeys](#6-journeys)
+7. [Quizzes](#7-quizzes)
+8. [Learning Activities](#8-learning-activities)
+9. [Progress & Analytics](#9-progress--analytics)
+10. [Achievements](#10-achievements)
+11. [Bookmarks](#11-bookmarks)
+12. [Notes](#12-notes)
+13. [Spaced Repetition](#13-spaced-repetition)
+14. [AI Services](#14-ai-services)
+15. [Admin](#15-admin)
 
 ---
 
@@ -436,9 +437,105 @@ profilePicture: <file> (max 5MB, jpg/png)
 
 ---
 
-## 3. Words
+## 3. Languages
 
-### 3.1 List Words
+### 3.1 List Languages
+
+**Endpoint:** `GET /languages`  
+**Auth Required:** Yes
+
+**Query Parameters:**
+- `active` (optional): Filter by active status ("true" or "false")
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "code": "en",
+      "name": "English",
+      "nativeName": "English",
+      "isActive": true
+    },
+    {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese",
+      "nativeName": "廣東話",
+      "isActive": true
+    },
+    {
+      "id": 3,
+      "code": "zh-CN",
+      "name": "Mandarin",
+      "nativeName": "普通话",
+      "isActive": true
+    },
+    {
+      "id": 4,
+      "code": "es",
+      "name": "Spanish",
+      "nativeName": "Español",
+      "isActive": true
+    }
+  ]
+}
+```
+
+---
+
+### 3.2 Get Language by ID
+
+**Endpoint:** `GET /languages/:id`  
+**Auth Required:** Yes
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "code": "zh-HK",
+    "name": "Cantonese",
+    "nativeName": "廣東話",
+    "direction": "ltr",
+    "isActive": true
+  }
+}
+```
+
+---
+
+### 3.3 Get Language by Code
+
+**Endpoint:** `GET /languages/code/:code`  
+**Auth Required:** Yes
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "code": "zh-HK",
+    "name": "Cantonese",
+    "nativeName": "廣東話",
+    "direction": "ltr",
+    "isActive": true
+  }
+}
+```
+
+**Error Codes:**
+- `LANGUAGE_NOT_FOUND`: Language with specified code not found
+
+---
+
+## 4. Words
+
+### 4.1 List Words
 
 **Endpoint:** `GET /words`  
 **Auth Required:** Yes  
@@ -447,8 +544,9 @@ profilePicture: <file> (max 5MB, jpg/png)
 **Query Parameters:**
 - `page` (default: 1)
 - `limit` (default: 20)
-- `search` (optional): Search English or Cantonese text
-- `sortBy` (default: "createdAt"): "createdAt" | "english" | "cantonese"
+- `search` (optional): Search base word or translations
+- `languageCode` (optional): Filter words with translations in specific language (e.g., "zh-HK")
+- `sortBy` (default: "createdAt"): "createdAt" | "baseWord"
 - `order` (default: "desc"): "asc" | "desc"
 
 **Response:** `200 OK`
@@ -458,12 +556,34 @@ profilePicture: <file> (max 5MB, jpg/png)
   "data": [
     {
       "id": 1,
-      "english": "Cat",
-      "cantonese": "貓",
-      "romanization": "maau1",
-      "audioUrl": "/uploads/audio/cat_1234.mp3",
+      "baseWord": "cat",
       "imageUrl": "/uploads/images/cat_5678.jpg",
-      "notes": "Common pet animal",
+      "translations": [
+        {
+          "id": 1,
+          "languageCode": "en",
+          "languageName": "English",
+          "translation": "Cat",
+          "romanization": null,
+          "audioUrl": "/uploads/audio/en_cat_1234.mp3"
+        },
+        {
+          "id": 2,
+          "languageCode": "zh-HK",
+          "languageName": "Cantonese",
+          "translation": "貓",
+          "romanization": "maau1",
+          "audioUrl": "/uploads/audio/zh_cat_5678.mp3"
+        },
+        {
+          "id": 3,
+          "languageCode": "es",
+          "languageName": "Spanish",
+          "translation": "Gato",
+          "romanization": null,
+          "audioUrl": "/uploads/audio/es_cat_9012.mp3"
+        }
+      ],
       "createdBy": {
         "id": 2,
         "name": "Danny"
@@ -484,7 +604,7 @@ profilePicture: <file> (max 5MB, jpg/png)
 
 ---
 
-### 3.2 Get Word by ID
+### 4.2 Get Word by ID
 
 **Endpoint:** `GET /words/:id`  
 **Auth Required:** Yes
@@ -495,12 +615,35 @@ profilePicture: <file> (max 5MB, jpg/png)
   "success": true,
   "data": {
     "id": 1,
-    "english": "Cat",
-    "cantonese": "貓",
-    "romanization": "maau1",
-    "audioUrl": "/uploads/audio/cat_1234.mp3",
+    "baseWord": "cat",
     "imageUrl": "/uploads/images/cat_5678.jpg",
     "notes": "Common pet animal",
+    "translations": [
+      {
+        "id": 1,
+        "languageCode": "en",
+        "languageName": "English",
+        "translation": "Cat",
+        "romanization": null,
+        "audioUrl": "/uploads/audio/en_cat_1234.mp3"
+      },
+      {
+        "id": 2,
+        "languageCode": "zh-HK",
+        "languageName": "Cantonese",
+        "translation": "貓",
+        "romanization": "maau1",
+        "audioUrl": "/uploads/audio/zh_cat_5678.mp3"
+      },
+      {
+        "id": 3,
+        "languageCode": "zh-CN",
+        "languageName": "Mandarin",
+        "translation": "猫",
+        "romanization": "māo",
+        "audioUrl": "/uploads/audio/cn_cat_3456.mp3"
+      }
+    ],
     "createdBy": {
       "id": 2,
       "name": "Danny",
@@ -521,7 +664,7 @@ profilePicture: <file> (max 5MB, jpg/png)
 
 ---
 
-### 3.3 Create Word
+### 4.3 Create Word
 
 **Endpoint:** `POST /words`  
 **Auth Required:** Yes  
@@ -530,10 +673,23 @@ profilePicture: <file> (max 5MB, jpg/png)
 **Request Body:**
 ```json
 {
-  "english": "Cat",
-  "cantonese": "貓",
-  "romanization": "maau1",
-  "notes": "Common pet animal"
+  "baseWord": "cat",
+  "notes": "Common pet animal",
+  "translations": [
+    {
+      "languageCode": "en",
+      "translation": "Cat"
+    },
+    {
+      "languageCode": "zh-HK",
+      "translation": "貓",
+      "romanization": "maau1"
+    },
+    {
+      "languageCode": "es",
+      "translation": "Gato"
+    }
+  ]
 }
 ```
 
@@ -543,44 +699,93 @@ profilePicture: <file> (max 5MB, jpg/png)
   "success": true,
   "data": {
     "id": 1,
-    "english": "Cat",
-    "cantonese": "貓",
-    "romanization": "maau1",
-    "audioUrl": null,
+    "baseWord": "cat",
     "imageUrl": null,
     "notes": "Common pet animal",
+    "translations": [
+      {
+        "id": 1,
+        "languageCode": "en",
+        "languageName": "English",
+        "translation": "Cat",
+        "romanization": null,
+        "audioUrl": null
+      },
+      {
+        "id": 2,
+        "languageCode": "zh-HK",
+        "languageName": "Cantonese",
+        "translation": "貓",
+        "romanization": "maau1",
+        "audioUrl": null
+      },
+      {
+        "id": 3,
+        "languageCode": "es",
+        "languageName": "Spanish",
+        "translation": "Gato",
+        "romanization": null,
+        "audioUrl": null
+      }
+    ],
     "createdBy": {
       "id": 2,
       "name": "Danny"
     },
-    "createdAt": "2025-10-11T12:00:00Z",
-    "updatedAt": "2025-10-11T12:00:00Z"
+    "usedInTopics": 0,
+    "createdAt": "2025-10-11T11:00:00Z",
+    "updatedAt": "2025-10-11T11:00:00Z"
   },
   "message": "Word created successfully"
 }
 ```
 
 **Validation Rules:**
-- `english`: required, 1-255 chars
-- `cantonese`: required, 1-255 chars
-- `romanization`: optional, 1-100 chars
-- `notes`: optional, max 1000 chars
+- `baseWord`: 1-100 chars, required
+- `translations`: Array with at least 1 translation, required
+- `translations[].languageCode`: Valid language code from languages table, required
+- `translations[].translation`: 1-100 chars, required
+- `translations[].romanization`: 1-200 chars, optional
+- `notes`: Max 500 chars, optional
+
+**Error Codes:**
+- `WORD_EXISTS`: Base word already exists
+- `LANGUAGE_NOT_FOUND`: Invalid language code in translations
+- `INVALID_INPUT`: Validation failed
 
 ---
 
-### 3.4 Update Word
+### 4.4 Update Word
 
 **Endpoint:** `PUT /words/:id`  
 **Auth Required:** Yes  
-**Roles:** Teacher, Admin (or creator)
+**Roles:** Teacher, Admin
 
 **Request Body:**
 ```json
 {
-  "english": "Cat",
-  "cantonese": "貓",
-  "romanization": "maau1",
-  "notes": "Updated notes"
+  "baseWord": "cat",
+  "notes": "Updated notes - common pet animal",
+  "translations": [
+    {
+      "languageCode": "en",
+      "translation": "Cat"
+    },
+    {
+      "languageCode": "zh-HK",
+      "translation": "貓",
+      "romanization": "maau1"
+    },
+    {
+      "languageCode": "zh-CN",
+      "translation": "猫",
+      "romanization": "māo"
+    },
+    {
+      "languageCode": "es",
+      "translation": "Gato"
+    }
+  ]
 }
 ```
 
@@ -590,21 +795,101 @@ profilePicture: <file> (max 5MB, jpg/png)
   "success": true,
   "data": {
     "id": 1,
-    "english": "Cat",
-    "cantonese": "貓",
-    "romanization": "maau1",
-    "audioUrl": "/uploads/audio/cat_1234.mp3",
+    "baseWord": "cat",
     "imageUrl": "/uploads/images/cat_5678.jpg",
-    "notes": "Updated notes",
+    "notes": "Updated notes - common pet animal",
+    "translations": [
+      {
+        "id": 1,
+        "languageCode": "en",
+        "languageName": "English",
+        "translation": "Cat",
+        "romanization": null,
+        "audioUrl": "/uploads/audio/en_cat_1234.mp3"
+      },
+      {
+        "id": 2,
+        "languageCode": "zh-HK",
+        "languageName": "Cantonese",
+        "translation": "貓",
+        "romanization": "maau1",
+        "audioUrl": "/uploads/audio/zh_cat_5678.mp3"
+      },
+      {
+        "id": 3,
+        "languageCode": "zh-CN",
+        "languageName": "Mandarin",
+        "translation": "猫",
+        "romanization": "māo",
+        "audioUrl": "/uploads/audio/cn_cat_3456.mp3"
+      },
+      {
+        "id": 4,
+        "languageCode": "es",
+        "languageName": "Spanish",
+        "translation": "Gato",
+        "romanization": null,
+        "audioUrl": null
+      }
+    ],
+    "createdBy": {
+      "id": 2,
+      "name": "Danny"
+    },
+    "usedInTopics": 2,
     "updatedAt": "2025-10-11T13:00:00Z"
   },
   "message": "Word updated successfully"
 }
 ```
 
+**Validation Rules:**
+- `baseWord`: 1-100 chars, required
+- `translations`: Array with at least 1 translation, optional (if omitted, keeps existing translations)
+- `translations[].languageCode`: Valid language code, required if translations provided
+- `translations[].translation`: 1-100 chars, required if translations provided
+- `notes`: Max 500 chars, optional
+
+**Note:** Updating translations will replace all existing translations with the new ones provided.
+
 ---
 
-### 3.5 Delete Word
+### 4.5 Get Word Translations
+
+**Endpoint:** `GET /words/:id/translations`  
+**Auth Required:** Yes
+
+**Query Parameters:**
+- `languageCode` (optional): Filter translations by language code
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "languageCode": "en",
+      "languageName": "English",
+      "translation": "Cat",
+      "romanization": null,
+      "audioUrl": "/uploads/audio/en_cat_1234.mp3"
+    },
+    {
+      "id": 2,
+      "languageCode": "zh-HK",
+      "languageName": "Cantonese",
+      "translation": "貓",
+      "romanization": "maau1",
+      "audioUrl": "/uploads/audio/zh_cat_5678.mp3"
+    }
+  ]
+}
+```
+
+---
+
+### 4.6 Delete Word
 
 **Endpoint:** `DELETE /words/:id`  
 **Auth Required:** Yes  
@@ -617,12 +902,15 @@ profilePicture: <file> (max 5MB, jpg/png)
 
 ---
 
-### 3.6 Upload Word Audio
+### 4.7 Upload Word Audio
 
 **Endpoint:** `POST /words/:id/audio`  
 **Auth Required:** Yes  
 **Roles:** Teacher, Admin  
 **Content-Type:** `multipart/form-data`
+
+**Query Parameters:**
+- `languageCode`: Language code for the audio (required)
 
 **Request Body:**
 ```
@@ -634,15 +922,19 @@ audio: <file> (max 10MB, mp3/ogg/wav)
 {
   "success": true,
   "data": {
-    "audioUrl": "/uploads/audio/cat_1697123456.mp3"
+    "languageCode": "zh-HK",
+    "audioUrl": "/uploads/audio/zh_cat_1697123456.mp3"
   },
-  "message": "Audio uploaded successfully"
+  "message": "Audio uploaded successfully for Cantonese translation"
 }
 ```
 
+**Error Codes:**
+- `TRANSLATION_NOT_FOUND`: No translation exists for specified language code
+
 ---
 
-### 3.7 Upload Word Image
+### 4.8 Upload Word Image
 
 **Endpoint:** `POST /words/:id/image`  
 **Auth Required:** Yes  
@@ -665,11 +957,13 @@ image: <file> (max 5MB, jpg/png/webp)
 }
 ```
 
+**Note:** Images are shared across all language translations of the word.
+
 ---
 
-## 4. Topics
+## 5. Topics
 
-### 4.1 List Topics
+### 5.1 List Topics
 
 **Endpoint:** `GET /topics`  
 **Auth Required:** Yes
@@ -678,6 +972,7 @@ image: <file> (max 5MB, jpg/png/webp)
 - `page` (default: 1)
 - `limit` (default: 20)
 - `level` (optional): "beginner" | "intermediate" | "advanced"
+- `languageCode` (optional): Filter topics by language (e.g., "zh-HK", "es")
 - `search` (optional): Search by name
 - `createdBy` (optional): Filter by creator user ID
 
@@ -691,6 +986,11 @@ image: <file> (max 5MB, jpg/png/webp)
       "name": "Animals",
       "description": "Learn common animal names in Cantonese",
       "level": "beginner",
+      "language": {
+        "id": 2,
+        "code": "zh-HK",
+        "name": "Cantonese"
+      },
       "wordCount": 10,
       "createdBy": {
         "id": 2,
@@ -712,7 +1012,7 @@ image: <file> (max 5MB, jpg/png/webp)
 
 ---
 
-### 4.2 Get Topic by ID
+### 5.2 Get Topic by ID
 
 **Endpoint:** `GET /topics/:id`  
 **Auth Required:** Yes
@@ -729,6 +1029,11 @@ image: <file> (max 5MB, jpg/png/webp)
     "name": "Animals",
     "description": "Learn common animal names in Cantonese",
     "level": "beginner",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
     "createdBy": {
       "id": 2,
       "name": "Danny",
@@ -737,19 +1042,19 @@ image: <file> (max 5MB, jpg/png/webp)
     "words": [
       {
         "id": 1,
-        "english": "Cat",
-        "cantonese": "貓",
+        "baseWord": "cat",
+        "translation": "貓",
         "romanization": "maau1",
-        "audioUrl": "/uploads/audio/cat_1234.mp3",
+        "audioUrl": "/uploads/audio/zh_cat_1234.mp3",
         "imageUrl": "/uploads/images/cat_5678.jpg",
         "sequenceOrder": 1
       },
       {
         "id": 2,
-        "english": "Dog",
-        "cantonese": "狗",
+        "baseWord": "dog",
+        "translation": "狗",
         "romanization": "gau2",
-        "audioUrl": "/uploads/audio/dog_1234.mp3",
+        "audioUrl": "/uploads/audio/zh_dog_1234.mp3",
         "imageUrl": "/uploads/images/dog_5678.jpg",
         "sequenceOrder": 2
       }
@@ -761,9 +1066,11 @@ image: <file> (max 5MB, jpg/png/webp)
 }
 ```
 
+**Note:** Words in topic response show the translation for the topic's language only.
+
 ---
 
-### 4.3 Create Topic
+### 5.3 Create Topic
 
 **Endpoint:** `POST /topics`  
 **Auth Required:** Yes  
@@ -775,6 +1082,7 @@ image: <file> (max 5MB, jpg/png/webp)
   "name": "Animals",
   "description": "Learn common animal names in Cantonese",
   "level": "beginner",
+  "languageCode": "zh-HK",
   "wordIds": [1, 2, 3, 4, 5]
 }
 ```
@@ -788,6 +1096,11 @@ image: <file> (max 5MB, jpg/png/webp)
     "name": "Animals",
     "description": "Learn common animal names in Cantonese",
     "level": "beginner",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
     "wordCount": 5,
     "createdBy": {
       "id": 2,
@@ -800,14 +1113,19 @@ image: <file> (max 5MB, jpg/png/webp)
 ```
 
 **Validation Rules:**
-- `name`: required, 1-200 chars, unique
+- `name`: required, 1-200 chars, unique per language
 - `description`: optional, max 1000 chars
 - `level`: required, one of ["beginner", "intermediate", "advanced"]
+- `languageCode`: required, valid language code from languages table
 - `wordIds`: array of word IDs (can be empty initially)
+
+**Error Codes:**
+- `LANGUAGE_NOT_FOUND`: Invalid language code
+- `WORD_NOT_FOUND`: One or more word IDs don't exist
 
 ---
 
-### 4.4 Update Topic
+### 5.4 Update Topic
 
 **Endpoint:** `PUT /topics/:id`  
 **Auth Required:** Yes  
@@ -819,6 +1137,7 @@ image: <file> (max 5MB, jpg/png/webp)
   "name": "Animals (Updated)",
   "description": "Updated description",
   "level": "beginner",
+  "languageCode": "zh-HK",
   "wordIds": [1, 2, 3, 4, 5, 6]
 }
 ```
@@ -832,6 +1151,11 @@ image: <file> (max 5MB, jpg/png/webp)
     "name": "Animals (Updated)",
     "description": "Updated description",
     "level": "beginner",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
     "wordCount": 6,
     "updatedAt": "2025-10-11T15:00:00Z"
   },
@@ -839,9 +1163,12 @@ image: <file> (max 5MB, jpg/png/webp)
 }
 ```
 
+**Validation Rules:**
+- `languageCode`: Optional (if omitted, keeps existing language)
+
 ---
 
-### 4.5 Delete Topic
+### 5.5 Delete Topic
 
 **Endpoint:** `DELETE /topics/:id`  
 **Auth Required:** Yes  
@@ -854,7 +1181,7 @@ image: <file> (max 5MB, jpg/png/webp)
 
 ---
 
-### 4.6 Reorder Topic Words
+### 5.6 Reorder Topic Words
 
 **Endpoint:** `PUT /topics/:id/words/reorder`  
 **Auth Required:** Yes  
@@ -877,9 +1204,9 @@ image: <file> (max 5MB, jpg/png/webp)
 
 ---
 
-## 5. Journeys
+## 6. Journeys
 
-### 5.1 List Journeys
+### 6.1 List Journeys
 
 **Endpoint:** `GET /journeys`  
 **Auth Required:** Yes
@@ -887,6 +1214,7 @@ image: <file> (max 5MB, jpg/png/webp)
 **Query Parameters:**
 - `page` (default: 1)
 - `limit` (default: 20)
+- `languageCode` (optional): Filter journeys by language
 - `createdBy` (optional): Filter by creator
 - `search` (optional): Search by name
 
@@ -899,6 +1227,11 @@ image: <file> (max 5MB, jpg/png/webp)
       "id": 1,
       "name": "My First 100 Words",
       "description": "A complete beginner journey to learn your first 100 Cantonese words",
+      "language": {
+        "id": 2,
+        "code": "zh-HK",
+        "name": "Cantonese"
+      },
       "topicCount": 10,
       "totalWords": 100,
       "createdBy": {
@@ -920,7 +1253,7 @@ image: <file> (max 5MB, jpg/png/webp)
 
 ---
 
-### 5.2 Get Journey by ID
+### 6.2 Get Journey by ID
 
 **Endpoint:** `GET /journeys/:id`  
 **Auth Required:** Yes
@@ -937,6 +1270,11 @@ image: <file> (max 5MB, jpg/png/webp)
     "id": 1,
     "name": "My First 100 Words",
     "description": "A complete beginner journey",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
     "createdBy": {
       "id": 2,
       "name": "Danny"
@@ -980,7 +1318,7 @@ image: <file> (max 5MB, jpg/png/webp)
 
 ---
 
-### 5.3 Create Journey
+### 6.3 Create Journey
 
 **Endpoint:** `POST /journeys`  
 **Auth Required:** Yes  
@@ -991,6 +1329,7 @@ image: <file> (max 5MB, jpg/png/webp)
 {
   "name": "My First 100 Words",
   "description": "A complete beginner journey to learn your first 100 Cantonese words",
+  "languageCode": "zh-HK",
   "topicIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 }
 ```
@@ -1003,6 +1342,11 @@ image: <file> (max 5MB, jpg/png/webp)
     "id": 1,
     "name": "My First 100 Words",
     "description": "A complete beginner journey to learn your first 100 Cantonese words",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
     "topicCount": 10,
     "createdBy": {
       "id": 2,
@@ -1017,11 +1361,16 @@ image: <file> (max 5MB, jpg/png/webp)
 **Validation Rules:**
 - `name`: required, 1-200 chars
 - `description`: optional, max 1000 chars
-- `topicIds`: array of topic IDs in order
+- `languageCode`: required, valid language code from languages table
+- `topicIds`: array of topic IDs in order (all topics must be in the same language as the journey)
+
+**Error Codes:**
+- `LANGUAGE_NOT_FOUND`: Invalid language code
+- `TOPIC_LANGUAGE_MISMATCH`: One or more topics don't match the journey's language
 
 ---
 
-### 5.4 Update Journey
+### 6.4 Update Journey
 
 **Endpoint:** `PUT /journeys/:id`  
 **Auth Required:** Yes  
@@ -1032,6 +1381,7 @@ image: <file> (max 5MB, jpg/png/webp)
 {
   "name": "My First 100 Words (Updated)",
   "description": "Updated description",
+  "languageCode": "zh-HK",
   "topicIds": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 }
 ```
@@ -1044,6 +1394,11 @@ image: <file> (max 5MB, jpg/png/webp)
     "id": 1,
     "name": "My First 100 Words (Updated)",
     "description": "Updated description",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
     "topicCount": 11,
     "updatedAt": "2025-10-11T17:00:00Z"
   },
@@ -1051,9 +1406,12 @@ image: <file> (max 5MB, jpg/png/webp)
 }
 ```
 
+**Validation Rules:**
+- `languageCode`: Optional (if omitted, keeps existing language)
+
 ---
 
-### 5.5 Delete Journey
+### 6.5 Delete Journey
 
 **Endpoint:** `DELETE /journeys/:id`  
 **Auth Required:** Yes  
@@ -1125,6 +1483,11 @@ image: <file> (max 5MB, jpg/png/webp)
       "id": 1,
       "name": "My First 100 Words",
       "description": "A complete beginner journey",
+      "language": {
+        "id": 2,
+        "code": "zh-HK",
+        "name": "Cantonese"
+      },
       "topicCount": 10,
       "completedTopics": 7,
       "progress": 70,
@@ -1147,7 +1510,7 @@ image: <file> (max 5MB, jpg/png/webp)
 
 ---
 
-## 6. Quizzes
+## 7. Quizzes
 
 ### 6.1 List Quiz Questions (Teacher)
 
@@ -1360,7 +1723,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 7. Learning Activities
+## 8. Learning Activities
 
 ### 7.1 Get Flashcards for Topic
 
@@ -1532,7 +1895,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 8. Progress & Analytics
+## 9. Progress & Analytics
 
 ### 8.1 Track Learning Session
 
@@ -1732,9 +2095,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 9. Achievements
+## 10. Achievements
 
-### 9.1 List All Achievements
+### 10.1 List All Achievements
 
 **Endpoint:** `GET /achievements`  
 **Auth Required:** Yes
@@ -1766,7 +2129,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 9.2 Get My Achievements
+### 10.2 Get My Achievements
 
 **Endpoint:** `GET /achievements/me`  
 **Auth Required:** Yes  
@@ -1812,9 +2175,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 10. Bookmarks
+## 11. Bookmarks
 
-### 10.1 Get My Bookmarks
+### 11.1 Get My Bookmarks
 
 **Endpoint:** `GET /bookmarks/me`  
 **Auth Required:** Yes  
@@ -1856,7 +2219,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 10.2 Bookmark Word
+### 11.2 Bookmark Word
 
 **Endpoint:** `POST /bookmarks/words/:wordId`  
 **Auth Required:** Yes  
@@ -1877,7 +2240,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 10.3 Remove Word Bookmark
+### 11.3 Remove Word Bookmark
 
 **Endpoint:** `DELETE /bookmarks/words/:wordId`  
 **Auth Required:** Yes  
@@ -1887,7 +2250,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 10.4 Bookmark Topic
+### 11.4 Bookmark Topic
 
 **Endpoint:** `POST /bookmarks/topics/:topicId`  
 **Auth Required:** Yes  
@@ -1897,7 +2260,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 10.5 Remove Topic Bookmark
+### 11.5 Remove Topic Bookmark
 
 **Endpoint:** `DELETE /bookmarks/topics/:topicId`  
 **Auth Required:** Yes  
@@ -1907,9 +2270,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 11. Notes
+## 12. Notes
 
-### 11.1 Get My Notes
+### 12.1 Get My Notes
 
 **Endpoint:** `GET /notes/me`  
 **Auth Required:** Yes  
@@ -1937,7 +2300,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.2 Add Note to Word
+### 12.2 Add Note to Word
 
 **Endpoint:** `POST /notes/words/:wordId`  
 **Auth Required:** Yes  
@@ -1969,7 +2332,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.3 Update Note
+### 12.3 Update Note
 
 **Endpoint:** `PUT /notes/:id`  
 **Auth Required:** Yes  
@@ -1986,7 +2349,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.4 Delete Note
+### 12.4 Delete Note
 
 **Endpoint:** `DELETE /notes/:id`  
 **Auth Required:** Yes  
@@ -1996,9 +2359,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 12. Spaced Repetition
+## 13. Spaced Repetition
 
-### 12.1 Get Due Reviews
+### 13.1 Get Due Reviews
 
 **Endpoint:** `GET /srs/reviews/due`  
 **Auth Required:** Yes  
@@ -2030,7 +2393,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 12.2 Submit Review
+### 13.2 Submit Review
 
 **Endpoint:** `POST /srs/reviews/submit`  
 **Auth Required:** Yes  
@@ -2061,7 +2424,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 12.3 Get SRS Statistics
+### 13.3 Get SRS Statistics
 
 **Endpoint:** `GET /srs/stats`  
 **Auth Required:** Yes  
@@ -2084,9 +2447,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 13. AI Services
+## 14. AI Services
 
-### 13.1 Generate Audio (TTS)
+### 14.1 Generate Audio (TTS)
 
 **Endpoint:** `POST /ai/generate-audio`  
 **Auth Required:** Yes  
@@ -2096,7 +2459,7 @@ Note: `correctAnswer` is NOT included for learners
 ```json
 {
   "text": "貓",
-  "language": "cantonese",
+  "languageCode": "zh-HK",
   "voice": "female"
 }
 ```
@@ -2107,20 +2470,28 @@ Note: `correctAnswer` is NOT included for learners
   "success": true,
   "data": {
     "audioUrl": "/uploads/ai-audio/generated_1697123456.mp3",
+    "languageCode": "zh-HK",
     "durationSeconds": 1.2,
+    "estimatedCost": 0.002,
     "cached": false
   },
   "message": "Audio generated successfully"
 }
 ```
 
+**Validation Rules:**
+- `text`: required, 1-500 chars
+- `languageCode`: required, valid language code
+- `voice`: optional, "male" | "female" | specific voice ID
+
 **Error Codes:**
+- `LANGUAGE_NOT_SUPPORTED`: Language not supported by TTS service
 - `AI_SERVICE_ERROR`: TTS API failed
 - `QUOTA_EXCEEDED`: API quota exceeded
 
 ---
 
-### 13.2 Generate Image
+### 14.2 Generate Image
 
 **Endpoint:** `POST /ai/generate-image`  
 **Auth Required:** Yes  
@@ -2153,9 +2524,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 14. Admin
+## 15. Admin
 
-### 14.1 List All Users
+### 15.1 List All Users
 
 **Endpoint:** `GET /admin/users`  
 **Auth Required:** Yes  
@@ -2193,7 +2564,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 14.2 Create User (Admin)
+### 15.2 Create User (Admin)
 
 **Endpoint:** `POST /admin/users`  
 **Auth Required:** Yes  
@@ -2214,7 +2585,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 14.3 Update User Roles
+### 15.3 Update User Roles
 
 **Endpoint:** `PUT /admin/users/:id/roles`  
 **Auth Required:** Yes  
@@ -2231,7 +2602,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 14.4 Delete User
+### 15.4 Delete User
 
 **Endpoint:** `DELETE /admin/users/:id`  
 **Auth Required:** Yes  

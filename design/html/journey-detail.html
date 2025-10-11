@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey Detail - LearnSpeak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+            color: #111827;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-button {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            color: #6b7280;
+            transition: color 0.3s;
+        }
+
+        .back-button:hover {
+            color: #22c55e;
+        }
+
+        .page-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Journey Header */
+        .journey-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .journey-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .journey-emoji {
+            font-size: 48px;
+        }
+
+        .journey-description {
+            color: #6b7280;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .journey-stats {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .stat-icon {
+            font-size: 20px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Overall Progress */
+        .overall-progress {
+            margin-top: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .progress-percentage {
+            font-size: 18px;
+            font-weight: 700;
+            color: #22c55e;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        /* Topics Section */
+        .topics-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Topic Card */
+        .topic-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .topic-card.completed {
+            border-left: 4px solid #10b981;
+        }
+
+        .topic-card.current {
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+        }
+
+        .topic-card.locked {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .topic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .topic-info {
+            flex: 1;
+        }
+
+        .topic-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .topic-status-icon {
+            font-size: 28px;
+        }
+
+        .topic-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .level-badge.beginner {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .level-badge.intermediate {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .level-badge.advanced {
+            background: #fce7f3;
+            color: #9f1239;
+        }
+
+        .topic-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .topic-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topic-action {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .btn-topic {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-continue {
+            background: #22c55e;
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-continue:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-start {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-start:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-locked {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .quiz-score {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lock-message {
+            font-size: 13px;
+            color: #9ca3af;
+            text-align: right;
+            max-width: 200px;
+        }
+
+        /* Completion Badge */
+        .completion-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Topic Progress Indicator */
+        .topic-progress {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .topic-progress-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .mini-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 16px;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+
+            .journey-header {
+                padding: 24px;
+            }
+
+            .journey-title {
+                font-size: 28px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .journey-stats {
+                gap: 16px;
+            }
+
+            .topic-header {
+                flex-direction: column;
+            }
+
+            .topic-action {
+                width: 100%;
+                align-items: stretch;
+            }
+
+            .btn-topic {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .lock-message {
+                text-align: left;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="back-button">← Back</div>
+            <div class="page-title">My First 100 Words</div>
+        </div>
+        <div class="profile-pic">E</div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Journey Header -->
+        <div class="journey-header">
+            <h1 class="journey-title">
+                <span class="journey-emoji">🚀</span>
+                <span>My First 100 Words</span>
+            </h1>
+            <p class="journey-description">
+                Learn your first 100 Cantonese words through fun topics and activities! 
+                Master essential vocabulary with flashcards, pronunciation practice, conversations, and quizzes.
+            </p>
+
+            <div class="journey-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">📚</span>
+                    <span><span class="stat-value">10</span> topics</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">📝</span>
+                    <span><span class="stat-value">100</span> words total</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">✅</span>
+                    <span><span class="stat-value">6</span> completed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span><span class="stat-value">3.5</span> hours spent</span>
+                </div>
+            </div>
+
+            <div class="overall-progress">
+                <div class="progress-header">
+                    <span class="progress-label">Overall Progress</span>
+                    <span class="progress-percentage">70%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 70%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topics List -->
+        <div class="topics-section">
+            <!-- Completed Topic 1 -->
+            <div class="topic-card completed">
+                <div class="completion-badge">⭐</div>
+                <div class="topic-header">
+                    <div class="topic-info">
+                        <div class="topic-title-row">
+                            <span class="topic-status-icon">✅</span>
+                            <h3 class="topic-title">1. Colors</h3>
+                            <span class="level-badge beginner">Beginner</span>
+                        </div>
+                        <div class="topic-meta">
+                            <span class="topic-meta-item">📝 10 words</span>
+                            <span class="topic-meta-item">✅ All activities completed</span>
+                        </div>
+                    </div>
+                    <div class="topic-action">
+                        <div class="quiz-score">
+                            <span>🎯</span>
+                            <span>Quiz: 100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Topic 2 -->
+            <div class="topic-card completed">
+                <div class="completion-badge">⭐</div>
+                <div class="topic-header">
+                    <div class="topic-info">
+                        <div class="topic-title-row">
+                            <span class="topic-status-icon">✅</span>
+                            <h3 class="topic-title">2. Numbers</h3>
+                            <span class="level-badge beginner">Beginner</span>
+                        </div>
+                        <div class="topic-meta">
+                            <span class="topic-meta-item">📝 10 words</span>
+                            <span class="topic-meta-item">✅ All activities completed</span>
+                        </div>
+                    </div>
+                    <div class="topic-action">
+                        <div class="quiz-score">
+                            <span>🎯</span>
+                            <span>Quiz: 90%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Topic (In Progress) -->
+            <div class="topic-card current">
+                <div class="topic-header">
+                    <div class="topic-info">
+                        <div class="topic-title-row">
+                            <span class="topic-status-icon">▶️</span>
+                            <h3 class="topic-title">3. Animals</h3>
+                            <span class="level-badge beginner">Beginner</span>
+                        </div>
+                        <div class="topic-meta">
+                            <span class="topic-meta-item">📝 10 words</span>
+                            <span class="topic-meta-item">🔄 In Progress</span>
+                        </div>
+                    </div>
+                    <div class="topic-action">
+                        <button class="btn-topic btn-continue">
+                            Continue
+                            <span>▶</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="topic-progress">
+                    <div class="topic-progress-label">
+                        Progress: Flashcards ✅ • Pronunciation ✅ • Conversations ⏳ • Quiz ⬜
+                    </div>
+                    <div class="mini-progress-bar">
+                        <div class="mini-progress-fill" style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locked Topic 4 -->
+            <div class="topic-card locked">
+                <div class="topic-header">
+                    <div class="topic-info">
+                        <div class="topic-title-row">
+                            <span class="topic-status-icon">🔒</span>
+                            <h3 class="topic-title">4. Food</h3>
+                            <span class="level-badge beginner">Beginner</span>
+                        </div>
+                        <div class="topic-meta">
+                            <span class="topic-meta-item">📝 12 words</span>
+                            <span class="topic-meta-item">🔒 Locked</span>
+                        </div>
+                    </div>
+                    <div class="topic-action">
+                        <button class="btn-topic btn-locked">
+                            <span>🔒</span>
+                            Locked
+                        </button>
+                        <div class="lock-message">
+                            Complete Topic 3 to unlock
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Locked Topic 5 -->
+            <div class="topic-card locked">
+                <div class="topic-header">
+                    <div class="topic-info">
+                        <div class="topic-title-row">
+                            <span class="topic-status-icon">🔒</span>
+                            <h3 class="topic-title">5. Family</h3>
+                            <span class="level-badge beginner">Beginner</span>
+                        </div>
+                        <div class="topic-meta">
+                            <span class="topic-meta-item">📝 10 words</span>
+                            <span class="topic-meta-item">🔒 Locked</span>
+                        </div>
+                    </div>
+                    <div class="topic-action">
+                        <button class="btn-topic btn-locked">
+                            <span>🔒</span>
+                            Locked
+                        </button>
+                        <div class="lock-message">
+                            Complete Topic 4 to unlock
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Locked Topics -->
+            <div class="topic-card locked">
+                <div class="topic-header">
+                    <div class="topic-info">
+                        <div class="topic-title-row">
+                            <span class="topic-status-icon">🔒</span>
+                            <h3 class="topic-title">6. Body Parts</h3>
+                            <span class="level-badge intermediate">Intermediate</span>
+                        </div>
+                        <div class="topic-meta">
+                            <span class="topic-meta-item">📝 10 words</span>
+                            <span class="topic-meta-item">🔒 Locked</span>
+                        </div>
+                    </div>
+                    <div class="topic-action">
+                        <button class="btn-topic btn-locked">
+                            <span>🔒</span>
+                            Locked
+                        </button>
+                        <div class="lock-message">
+                            Complete Topic 5 to unlock
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -119,6 +119,39 @@ func (u *User) GetRoleNames() []string {
 
 ---
 
+### models/language.go
+
+```go
+package models
+
+import (
+	"time"
+)
+
+// Language represents a supported language
+type Language struct {
+	ID          int       `json:"id" gorm:"primaryKey"`
+	Code        string    `json:"code" gorm:"uniqueIndex;size:10;not null"`
+	Name        string    `json:"name" gorm:"size:100;not null"`
+	NativeName  *string   `json:"nativeName" gorm:"size:100"`
+	Direction   string    `json:"direction" gorm:"size:3;default:'ltr';check:direction IN ('ltr','rtl')"`
+	IsActive    bool      `json:"isActive" gorm:"default:true"`
+	CreatedAt   time.Time `json:"createdAt" gorm:"autoCreateTime"`
+	
+	// Relationships
+	WordTranslations []WordTranslation `json:"-" gorm:"foreignKey:LanguageID"`
+	Topics           []Topic           `json:"-" gorm:"foreignKey:LanguageID"`
+	Journeys         []Journey         `json:"-" gorm:"foreignKey:LanguageID"`
+}
+
+// TableName overrides the table name
+func (Language) TableName() string {
+	return "languages"
+}
+```
+
+---
+
 ### models/word.go
 
 ```go
@@ -128,13 +161,10 @@ import (
 	"time"
 )
 
-// Word represents a vocabulary word
+// Word represents a base vocabulary word (language-agnostic)
 type Word struct {
 	ID            int       `json:"id" gorm:"primaryKey"`
-	English       string    `json:"english" gorm:"type:text;not null"`
-	Cantonese     string    `json:"cantonese" gorm:"type:text;not null"`
-	Romanization  *string   `json:"romanization" gorm:"size:100"`
-	AudioURL      *string   `json:"audioUrl" gorm:"size:500"`
+	BaseWord      string    `json:"baseWord" gorm:"size:255;not null"`
 	ImageURL      *string   `json:"imageUrl" gorm:"size:500"`
 	Notes         *string   `json:"notes" gorm:"type:text"`
 	CreatedBy     int       `json:"-" gorm:"not null;index"`
@@ -142,13 +172,35 @@ type Word struct {
 	UpdatedAt     time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 	
 	// Relationships
-	Creator       User         `json:"createdBy" gorm:"foreignKey:CreatedBy"`
-	TopicWords    []TopicWord  `json:"-" gorm:"foreignKey:WordID"`
-	Topics        []Topic      `json:"topics" gorm:"many2many:topic_words;"`
-	Quizzes       []Quiz       `json:"-" gorm:"foreignKey:WordID"`
-	Bookmarks     []UserBookmark `json:"-" gorm:"foreignKey:WordID"`
-	Notes         []UserNote   `json:"-" gorm:"foreignKey:WordID"`
-	SRSItems      []SRSItem    `json:"-" gorm:"foreignKey:WordID"`
+	Creator       User              `json:"createdBy" gorm:"foreignKey:CreatedBy"`
+	Translations  []WordTranslation `json:"translations" gorm:"foreignKey:WordID"`
+	TopicWords    []TopicWord       `json:"-" gorm:"foreignKey:WordID"`
+	Topics        []Topic           `json:"topics" gorm:"many2many:topic_words;"`
+	Quizzes       []Quiz            `json:"-" gorm:"foreignKey:WordID"`
+	Bookmarks     []UserBookmark    `json:"-" gorm:"foreignKey:WordID"`
+	Notes         []UserNote        `json:"-" gorm:"foreignKey:WordID"`
+	SRSItems      []SRSItem         `json:"-" gorm:"foreignKey:WordID"`
+}
+
+// WordTranslation represents a language-specific translation
+type WordTranslation struct {
+	ID            int       `json:"id" gorm:"primaryKey"`
+	WordID        int       `json:"wordId" gorm:"not null;index"`
+	LanguageID    int       `json:"languageId" gorm:"not null;index"`
+	Translation   string    `json:"translation" gorm:"type:text;not null"`
+	Romanization  *string   `json:"romanization" gorm:"size:255"`
+	AudioURL      *string   `json:"audioUrl" gorm:"size:500"`
+	CreatedAt     time.Time `json:"createdAt" gorm:"autoCreateTime"`
+	UpdatedAt     time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
+	
+	// Relationships
+	Word     Word     `json:"-" gorm:"foreignKey:WordID"`
+	Language Language `json:"language" gorm:"foreignKey:LanguageID"`
+}
+
+// TableName overrides the table name
+func (WordTranslation) TableName() string {
+	return "word_translations"
 }
 
 // TopicWord represents the many-to-many relationship with sequence
@@ -186,11 +238,13 @@ type Topic struct {
 	Name        string    `json:"name" gorm:"size:200;not null"`
 	Description *string   `json:"description" gorm:"type:text"`
 	Level       string    `json:"level" gorm:"size:20;not null;check:level IN ('beginner','intermediate','advanced')"`
+	LanguageID  int       `json:"-" gorm:"not null;index"`
 	CreatedBy   int       `json:"-" gorm:"not null;index"`
 	CreatedAt   time.Time `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 	
 	// Relationships
+	Language      Language       `json:"language" gorm:"foreignKey:LanguageID"`
 	Creator       User           `json:"createdBy" gorm:"foreignKey:CreatedBy"`
 	TopicWords    []TopicWord    `json:"-" gorm:"foreignKey:TopicID"`
 	Words         []Word         `json:"words" gorm:"many2many:topic_words;"`
@@ -218,11 +272,13 @@ type Journey struct {
 	ID          int       `json:"id" gorm:"primaryKey"`
 	Name        string    `json:"name" gorm:"size:200;not null"`
 	Description *string   `json:"description" gorm:"type:text"`
+	LanguageID  int       `json:"-" gorm:"not null;index"`
 	CreatedBy   int       `json:"-" gorm:"not null;index"`
 	CreatedAt   time.Time `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 	
 	// Relationships
+	Language       Language       `json:"language" gorm:"foreignKey:LanguageID"`
 	Creator        User           `json:"createdBy" gorm:"foreignKey:CreatedBy"`
 	JourneyTopics  []JourneyTopic `json:"-" gorm:"foreignKey:JourneyID"`
 	Topics         []Topic        `json:"topics" gorm:"many2many:journey_topics;"`
@@ -696,6 +752,35 @@ type StudentListItem struct {
 
 ---
 
+### dto/language.go
+
+```go
+package dto
+
+import "time"
+
+// LanguageResponse for API responses
+type LanguageResponse struct {
+	ID         int     `json:"id"`
+	Code       string  `json:"code"`
+	Name       string  `json:"name"`
+	NativeName *string `json:"nativeName"`
+	Direction  string  `json:"direction"`
+	IsActive   bool    `json:"isActive"`
+}
+
+// LanguageListItem for language lists
+type LanguageListItem struct {
+	ID         int     `json:"id"`
+	Code       string  `json:"code"`
+	Name       string  `json:"name"`
+	NativeName *string `json:"nativeName"`
+	IsActive   bool    `json:"isActive"`
+}
+```
+
+---
+
 ### dto/word.go
 
 ```go
@@ -703,50 +788,71 @@ package dto
 
 import "time"
 
+// WordTranslationRequest for creating word translations
+type WordTranslationRequest struct {
+	LanguageCode string  `json:"languageCode" binding:"required,min=2,max=10"`
+	Translation  string  `json:"translation" binding:"required,min=1"`
+	Romanization *string `json:"romanization" binding:"omitempty,max=255"`
+}
+
 // CreateWordRequest for creating words
 type CreateWordRequest struct {
-	English      string  `json:"english" binding:"required,min=1,max=255"`
-	Cantonese    string  `json:"cantonese" binding:"required,min=1,max=255"`
-	Romanization *string `json:"romanization" binding:"omitempty,max=100"`
-	Notes        *string `json:"notes" binding:"omitempty,max=1000"`
+	BaseWord     string                    `json:"baseWord" binding:"required,min=1,max=255"`
+	Notes        *string                   `json:"notes" binding:"omitempty,max=1000"`
+	Translations []WordTranslationRequest  `json:"translations" binding:"required,min=1"`
 }
 
 // UpdateWordRequest for updating words
 type UpdateWordRequest struct {
-	English      string  `json:"english" binding:"required,min=1,max=255"`
-	Cantonese    string  `json:"cantonese" binding:"required,min=1,max=255"`
-	Romanization *string `json:"romanization" binding:"omitempty,max=100"`
-	Notes        *string `json:"notes" binding:"omitempty,max=1000"`
+	BaseWord     string                    `json:"baseWord" binding:"required,min=1,max=255"`
+	Notes        *string                   `json:"notes" binding:"omitempty,max=1000"`
+	Translations []WordTranslationRequest  `json:"translations" binding:"omitempty"`
+}
+
+// WordTranslationResponse for API responses
+type WordTranslationResponse struct {
+	ID           int     `json:"id"`
+	LanguageCode string  `json:"languageCode"`
+	LanguageName string  `json:"languageName"`
+	Translation  string  `json:"translation"`
+	Romanization *string `json:"romanization"`
+	AudioURL     *string `json:"audioUrl"`
 }
 
 // WordResponse for API responses
 type WordResponse struct {
-	ID            int              `json:"id"`
-	English       string           `json:"english"`
-	Cantonese     string           `json:"cantonese"`
-	Romanization  *string          `json:"romanization"`
-	AudioURL      *string          `json:"audioUrl"`
-	ImageURL      *string          `json:"imageUrl"`
-	Notes         *string          `json:"notes,omitempty"`
-	CreatedBy     UserSummary      `json:"createdBy"`
-	UsedInTopics  int              `json:"usedInTopics,omitempty"`
-	Topics        []TopicSummary   `json:"topics,omitempty"`
-	CreatedAt     time.Time        `json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
+	ID           int                       `json:"id"`
+	BaseWord     string                    `json:"baseWord"`
+	ImageURL     *string                   `json:"imageUrl"`
+	Notes        *string                   `json:"notes,omitempty"`
+	Translations []WordTranslationResponse `json:"translations"`
+	CreatedBy    UserSummary               `json:"createdBy"`
+	UsedInTopics int                       `json:"usedInTopics,omitempty"`
+	CreatedAt    time.Time                 `json:"createdAt"`
+	UpdatedAt    time.Time                 `json:"updatedAt"`
 }
 
 // WordListItem for word lists
 type WordListItem struct {
-	ID            int         `json:"id"`
-	English       string      `json:"english"`
-	Cantonese     string      `json:"cantonese"`
-	Romanization  *string     `json:"romanization"`
-	AudioURL      *string     `json:"audioUrl"`
-	ImageURL      *string     `json:"imageUrl"`
-	CreatedBy     UserSummary `json:"createdBy"`
-	UsedInTopics  int         `json:"usedInTopics"`
-	CreatedAt     time.Time   `json:"createdAt"`
-	UpdatedAt     time.Time   `json:"updatedAt"`
+	ID           int                       `json:"id"`
+	BaseWord     string                    `json:"baseWord"`
+	ImageURL     *string                   `json:"imageUrl"`
+	Translations []WordTranslationResponse `json:"translations"`
+	CreatedBy    UserSummary               `json:"createdBy"`
+	UsedInTopics int                       `json:"usedInTopics"`
+	CreatedAt    time.Time                 `json:"createdAt"`
+	UpdatedAt    time.Time                 `json:"updatedAt"`
+}
+
+// WordInTopic represents a word within a topic (with specific language translation)
+type WordInTopic struct {
+	ID            int     `json:"id"`
+	BaseWord      string  `json:"baseWord"`
+	Translation   string  `json:"translation"`
+	Romanization  *string `json:"romanization"`
+	AudioURL      *string `json:"audioUrl"`
+	ImageURL      *string `json:"imageUrl"`
+	SequenceOrder int     `json:"sequenceOrder"`
 }
 
 // UserSummary for nested user info
@@ -768,18 +874,20 @@ import "time"
 
 // CreateTopicRequest for creating topics
 type CreateTopicRequest struct {
-	Name        string `json:"name" binding:"required,min=1,max=200"`
-	Description string `json:"description" binding:"omitempty,max=1000"`
-	Level       string `json:"level" binding:"required,oneof=beginner intermediate advanced"`
-	WordIDs     []int  `json:"wordIds"`
+	Name         string `json:"name" binding:"required,min=1,max=200"`
+	Description  string `json:"description" binding:"omitempty,max=1000"`
+	Level        string `json:"level" binding:"required,oneof=beginner intermediate advanced"`
+	LanguageCode string `json:"languageCode" binding:"required,min=2,max=10"`
+	WordIDs      []int  `json:"wordIds"`
 }
 
 // UpdateTopicRequest for updating topics
 type UpdateTopicRequest struct {
-	Name        string `json:"name" binding:"required,min=1,max=200"`
-	Description string `json:"description" binding:"omitempty,max=1000"`
-	Level       string `json:"level" binding:"required,oneof=beginner intermediate advanced"`
-	WordIDs     []int  `json:"wordIds"`
+	Name         string `json:"name" binding:"required,min=1,max=200"`
+	Description  string `json:"description" binding:"omitempty,max=1000"`
+	Level        string `json:"level" binding:"required,oneof=beginner intermediate advanced"`
+	LanguageCode string `json:"languageCode" binding:"required,min=2,max=10"`
+	WordIDs      []int  `json:"wordIds"`
 }
 
 // ReorderWordsRequest for reordering words in topic
@@ -787,48 +895,47 @@ type ReorderWordsRequest struct {
 	WordIDs []int `json:"wordIds" binding:"required"`
 }
 
+// LanguageSummary for nested language info
+type LanguageSummary struct {
+	ID   int    `json:"id"`
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 // TopicResponse for API responses
 type TopicResponse struct {
-	ID          int            `json:"id"`
-	Name        string         `json:"name"`
-	Description *string        `json:"description"`
-	Level       string         `json:"level"`
-	CreatedBy   UserSummary    `json:"createdBy"`
-	Words       []WordInTopic  `json:"words,omitempty"`
-	QuizCount   int            `json:"quizCount,omitempty"`
-	CreatedAt   time.Time      `json:"createdAt"`
-	UpdatedAt   time.Time      `json:"updatedAt"`
+	ID          int             `json:"id"`
+	Name        string          `json:"name"`
+	Description *string         `json:"description"`
+	Level       string          `json:"level"`
+	Language    LanguageSummary `json:"language"`
+	CreatedBy   UserSummary     `json:"createdBy"`
+	Words       []WordInTopic   `json:"words,omitempty"`
+	QuizCount   int             `json:"quizCount,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	UpdatedAt   time.Time       `json:"updatedAt"`
 }
 
 // TopicListItem for topic lists
 type TopicListItem struct {
-	ID             int         `json:"id"`
-	Name           string      `json:"name"`
-	Description    *string     `json:"description"`
-	Level          string      `json:"level"`
-	WordCount      int         `json:"wordCount"`
-	CreatedBy      UserSummary `json:"createdBy"`
-	UsedInJourneys int         `json:"usedInJourneys"`
-	CreatedAt      time.Time   `json:"createdAt"`
-	UpdatedAt      time.Time   `json:"updatedAt"`
+	ID             int             `json:"id"`
+	Name           string          `json:"name"`
+	Description    *string         `json:"description"`
+	Level          string          `json:"level"`
+	Language       LanguageSummary `json:"language"`
+	WordCount      int             `json:"wordCount"`
+	CreatedBy      UserSummary     `json:"createdBy"`
+	UsedInJourneys int             `json:"usedInJourneys"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
 }
 
 // TopicSummary for nested topic info
 type TopicSummary struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Level string `json:"level"`
-}
-
-// WordInTopic represents a word within a topic
-type WordInTopic struct {
-	ID            int     `json:"id"`
-	English       string  `json:"english"`
-	Cantonese     string  `json:"cantonese"`
-	Romanization  *string `json:"romanization"`
-	AudioURL      *string `json:"audioUrl"`
-	ImageURL      *string `json:"imageUrl"`
-	SequenceOrder int     `json:"sequenceOrder"`
+	ID       int             `json:"id"`
+	Name     string          `json:"name"`
+	Level    string          `json:"level"`
+	Language LanguageSummary `json:"language,omitempty"`
 }
 ```
 
@@ -843,16 +950,18 @@ import "time"
 
 // CreateJourneyRequest for creating journeys
 type CreateJourneyRequest struct {
-	Name        string `json:"name" binding:"required,min=1,max=200"`
-	Description string `json:"description" binding:"omitempty,max=1000"`
-	TopicIDs    []int  `json:"topicIds" binding:"required"`
+	Name         string `json:"name" binding:"required,min=1,max=200"`
+	Description  string `json:"description" binding:"omitempty,max=1000"`
+	LanguageCode string `json:"languageCode" binding:"required,min=2,max=10"`
+	TopicIDs     []int  `json:"topicIds" binding:"required"`
 }
 
 // UpdateJourneyRequest for updating journeys
 type UpdateJourneyRequest struct {
-	Name        string `json:"name" binding:"required,min=1,max=200"`
-	Description string `json:"description" binding:"omitempty,max=1000"`
-	TopicIDs    []int  `json:"topicIds" binding:"required"`
+	Name         string `json:"name" binding:"required,min=1,max=200"`
+	Description  string `json:"description" binding:"omitempty,max=1000"`
+	LanguageCode string `json:"languageCode" binding:"required,min=2,max=10"`
+	TopicIDs     []int  `json:"topicIds" binding:"required"`
 }
 
 // AssignJourneyRequest for assigning journeys
@@ -866,6 +975,7 @@ type JourneyResponse struct {
 	ID          int               `json:"id"`
 	Name        string            `json:"name"`
 	Description *string           `json:"description"`
+	Language    LanguageSummary   `json:"language"`
 	CreatedBy   UserSummary       `json:"createdBy"`
 	Topics      []TopicInJourney  `json:"topics,omitempty"`
 	TotalTopics int               `json:"totalTopics"`
@@ -877,40 +987,42 @@ type JourneyResponse struct {
 
 // JourneyListItem for journey lists
 type JourneyListItem struct {
-	ID              int         `json:"id"`
-	Name            string      `json:"name"`
-	Description     *string     `json:"description"`
-	TopicCount      int         `json:"topicCount"`
-	TotalWords      int         `json:"totalWords"`
-	CreatedBy       UserSummary `json:"createdBy"`
-	AssignedToCount int         `json:"assignedToCount"`
-	CreatedAt       time.Time   `json:"createdAt"`
+	ID              int             `json:"id"`
+	Name            string          `json:"name"`
+	Description     *string         `json:"description"`
+	Language        LanguageSummary `json:"language"`
+	TopicCount      int             `json:"topicCount"`
+	TotalWords      int             `json:"totalWords"`
+	CreatedBy       UserSummary     `json:"createdBy"`
+	AssignedToCount int             `json:"assignedToCount"`
+	CreatedAt       time.Time       `json:"createdAt"`
 }
 
 // TopicInJourney represents a topic within a journey
 type TopicInJourney struct {
-	ID            int     `json:"id"`
-	Name          string  `json:"name"`
-	Level         string  `json:"level"`
-	WordCount     int     `json:"wordCount"`
-	SequenceOrder int     `json:"sequenceOrder"`
-	Completed     bool    `json:"completed"`
+	ID            int      `json:"id"`
+	Name          string   `json:"name"`
+	Level         string   `json:"level"`
+	WordCount     int      `json:"wordCount"`
+	SequenceOrder int      `json:"sequenceOrder"`
+	Completed     bool     `json:"completed"`
 	QuizScore     *float64 `json:"quizScore"`
 }
 
 // UserJourneyResponse for assigned journeys
 type UserJourneyResponse struct {
-	ID             int              `json:"id"`
-	Name           string           `json:"name"`
-	Description    *string          `json:"description"`
-	TopicCount     int              `json:"topicCount"`
-	CompletedTopics int             `json:"completedTopics"`
-	Progress       float64          `json:"progress"`
-	Status         string           `json:"status"`
-	AssignedBy     UserSummary      `json:"assignedBy"`
-	AssignedAt     time.Time        `json:"assignedAt"`
-	StartedAt      *time.Time       `json:"startedAt"`
-	CurrentTopic   *TopicSummary    `json:"currentTopic"`
+	ID              int              `json:"id"`
+	Name            string           `json:"name"`
+	Description     *string          `json:"description"`
+	Language        LanguageSummary  `json:"language"`
+	TopicCount      int              `json:"topicCount"`
+	CompletedTopics int              `json:"completedTopics"`
+	Progress        float64          `json:"progress"`
+	Status          string           `json:"status"`
+	AssignedBy      UserSummary      `json:"assignedBy"`
+	AssignedAt      time.Time        `json:"assignedAt"`
+	StartedAt       *time.Time       `json:"startedAt"`
+	CurrentTopic    *TopicSummary    `json:"currentTopic"`
 }
 
 // AssignmentResult for assignment response
@@ -1128,7 +1240,9 @@ func AutoMigrate() error {
 		&models.User{},
 		&models.Role{},
 		&models.UserRole{},
+		&models.Language{},
 		&models.Word{},
+		&models.WordTranslation{},
 		&models.Topic{},
 		&models.TopicWord{},
 		&models.Journey{},

@@ -241,25 +241,90 @@ export interface UserFilterParams extends FilterParams {
 
 ---
 
-## 3. Word Types
+## 3. Language Types
+
+### types/language.ts
+
+```typescript
+/**
+ * Text direction for languages
+ */
+export type TextDirection = 'ltr' | 'rtl';
+
+/**
+ * Language interface
+ */
+export interface Language {
+  id: number;
+  code: string;
+  name: string;
+  nativeName?: string;
+  direction: TextDirection;
+  isActive: boolean;
+}
+
+/**
+ * Language summary for nested responses
+ */
+export interface LanguageSummary {
+  id: number;
+  code: string;
+  name: string;
+}
+
+/**
+ * Language list item
+ */
+export interface LanguageListItem {
+  id: number;
+  code: string;
+  name: string;
+  nativeName?: string;
+  isActive: boolean;
+}
+```
+
+---
+
+## 4. Word Types
 
 ### types/word.ts
 
 ```typescript
 import { UserSummary } from './user';
 import { TopicSummary } from './topic';
+import { LanguageSummary } from './language';
+
+/**
+ * Word translation for a specific language
+ */
+export interface WordTranslation {
+  id: number;
+  languageCode: string;
+  languageName: string;
+  translation: string;
+  romanization?: string;
+  audioUrl?: string;
+}
+
+/**
+ * Word translation request
+ */
+export interface WordTranslationRequest {
+  languageCode: string;
+  translation: string;
+  romanization?: string;
+}
 
 /**
  * Base word interface
  */
 export interface Word {
   id: number;
-  english: string;
-  cantonese: string;
-  romanization?: string;
-  audioUrl?: string;
+  baseWord: string;
   imageUrl?: string;
   notes?: string;
+  translations: WordTranslation[];
   createdBy: UserSummary;
   usedInTopics?: number;
   topics?: TopicSummary[];
@@ -272,11 +337,9 @@ export interface Word {
  */
 export interface WordListItem {
   id: number;
-  english: string;
-  cantonese: string;
-  romanization?: string;
-  audioUrl?: string;
+  baseWord: string;
   imageUrl?: string;
+  translations: WordTranslation[];
   createdBy: UserSummary;
   usedInTopics: number;
   createdAt: string;
@@ -284,12 +347,12 @@ export interface WordListItem {
 }
 
 /**
- * Word in topic context
+ * Word in topic context (with specific language translation)
  */
 export interface WordInTopic {
   id: number;
-  english: string;
-  cantonese: string;
+  baseWord: string;
+  translation: string;
   romanization?: string;
   audioUrl?: string;
   imageUrl?: string;
@@ -300,20 +363,18 @@ export interface WordInTopic {
  * Create word request
  */
 export interface CreateWordRequest {
-  english: string;
-  cantonese: string;
-  romanization?: string;
+  baseWord: string;
   notes?: string;
+  translations: WordTranslationRequest[];
 }
 
 /**
  * Update word request
  */
 export interface UpdateWordRequest {
-  english: string;
-  cantonese: string;
-  romanization?: string;
+  baseWord: string;
   notes?: string;
+  translations?: WordTranslationRequest[];
 }
 
 /**
@@ -321,6 +382,7 @@ export interface UpdateWordRequest {
  */
 export interface WordFilterParams extends FilterParams {
   topicId?: number;
+  languageCode?: string;
   createdBy?: number;
 }
 
@@ -329,7 +391,7 @@ export interface WordFilterParams extends FilterParams {
  */
 export interface GenerateAudioRequest {
   text: string;
-  language: 'cantonese';
+  languageCode: string;
   voice?: string;
 }
 
@@ -339,6 +401,7 @@ export interface GenerateAudioRequest {
 export interface AudioGenerationResponse {
   audioUrl: string;
   wordId?: number;
+  languageCode: string;
   estimatedCost: number;
 }
 
@@ -363,13 +426,14 @@ export interface ImageGenerationResponse {
 
 ---
 
-## 4. Topic Types
+## 5. Topic Types
 
 ### types/topic.ts
 
 ```typescript
 import { UserSummary } from './user';
 import { WordInTopic } from './word';
+import { LanguageSummary } from './language';
 
 /**
  * Topic difficulty level
@@ -384,6 +448,7 @@ export interface Topic {
   name: string;
   description?: string;
   level: TopicLevel;
+  language: LanguageSummary;
   createdBy: UserSummary;
   words?: WordInTopic[];
   quizCount?: number;
@@ -399,6 +464,7 @@ export interface TopicListItem {
   name: string;
   description?: string;
   level: TopicLevel;
+  language: LanguageSummary;
   wordCount: number;
   createdBy: UserSummary;
   usedInJourneys: number;
@@ -435,6 +501,7 @@ export interface CreateTopicRequest {
   name: string;
   description?: string;
   level: TopicLevel;
+  languageCode: string;
   wordIds?: number[];
 }
 
@@ -445,6 +512,7 @@ export interface UpdateTopicRequest {
   name: string;
   description?: string;
   level: TopicLevel;
+  languageCode?: string;
   wordIds?: number[];
 }
 
@@ -460,6 +528,7 @@ export interface ReorderWordsRequest {
  */
 export interface TopicFilterParams extends FilterParams {
   level?: TopicLevel;
+  languageCode?: string;
   createdBy?: number;
 }
 
@@ -473,13 +542,14 @@ export interface AddWordsToTopicRequest {
 
 ---
 
-## 5. Journey Types
+## 6. Journey Types
 
 ### types/journey.ts
 
 ```typescript
 import { UserSummary } from './user';
 import { TopicInJourney, TopicSummary } from './topic';
+import { LanguageSummary } from './language';
 
 /**
  * Journey status
@@ -493,6 +563,7 @@ export interface Journey {
   id: number;
   name: string;
   description?: string;
+  language: LanguageSummary;
   createdBy: UserSummary;
   topics?: TopicInJourney[];
   totalTopics: number;
@@ -509,6 +580,7 @@ export interface JourneyListItem {
   id: number;
   name: string;
   description?: string;
+  language: LanguageSummary;
   topicCount: number;
   totalWords: number;
   createdBy: UserSummary;
@@ -523,6 +595,7 @@ export interface UserJourney {
   id: number;
   name: string;
   description?: string;
+  language: LanguageSummary;
   topicCount: number;
   completedTopics: number;
   progress: number;
@@ -539,6 +612,7 @@ export interface UserJourney {
 export interface CreateJourneyRequest {
   name: string;
   description?: string;
+  languageCode: string;
   topicIds: number[];
 }
 
@@ -548,6 +622,7 @@ export interface CreateJourneyRequest {
 export interface UpdateJourneyRequest {
   name: string;
   description?: string;
+  languageCode?: string;
   topicIds: number[];
 }
 
@@ -580,6 +655,7 @@ export interface AssignmentDetail {
  * Journey filter parameters
  */
 export interface JourneyFilterParams extends FilterParams {
+  languageCode?: string;
   createdBy?: number;
   assignedTo?: number;
   status?: JourneyStatus;
