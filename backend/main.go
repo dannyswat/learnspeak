@@ -4,6 +4,7 @@ import (
 	"dannyswat/learnspeak/config"
 	"dannyswat/learnspeak/database"
 	"dannyswat/learnspeak/routes"
+	"dannyswat/learnspeak/utils"
 	"log"
 	"os"
 	"strconv"
@@ -35,6 +36,9 @@ func main() {
 
 	// Initialize Echo
 	e := echo.New()
+
+	// Register custom validator
+	e.Validator = utils.NewValidator()
 
 	// Middleware
 	e.Use(middleware.Logger())

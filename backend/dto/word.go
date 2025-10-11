@@ -3,7 +3,7 @@ package dto
 // CreateWordRequest represents the request to create a new word
 type CreateWordRequest struct {
 	BaseWord     string                   `json:"baseWord" validate:"required,min=1,max=255"`
-	ImageURL     string                   `json:"imageUrl" validate:"omitempty,url"`
+	ImageURL     string                   `json:"imageUrl" validate:"omitempty,max=500"`
 	Notes        string                   `json:"notes" validate:"omitempty,max=5000"`
 	Translations []CreateTranslationInput `json:"translations" validate:"required,min=1,dive"`
 }
@@ -13,13 +13,13 @@ type CreateTranslationInput struct {
 	LanguageID   uint   `json:"languageId" validate:"required,min=1"`
 	Translation  string `json:"translation" validate:"required,min=1"`
 	Romanization string `json:"romanization" validate:"omitempty,max=255"`
-	AudioURL     string `json:"audioUrl" validate:"omitempty,url"`
+	AudioURL     string `json:"audioUrl" validate:"omitempty,max=500"`
 }
 
 // UpdateWordRequest represents the request to update a word
 type UpdateWordRequest struct {
 	BaseWord     *string                  `json:"baseWord" validate:"omitempty,min=1,max=255"`
-	ImageURL     *string                  `json:"imageUrl" validate:"omitempty,url"`
+	ImageURL     *string                  `json:"imageUrl" validate:"omitempty,max=500"`
 	Notes        *string                  `json:"notes" validate:"omitempty,max=5000"`
 	Translations []UpdateTranslationInput `json:"translations" validate:"omitempty,dive"`
 }
@@ -30,7 +30,7 @@ type UpdateTranslationInput struct {
 	LanguageID   uint    `json:"languageId" validate:"required,min=1"`
 	Translation  string  `json:"translation" validate:"required,min=1"`
 	Romanization *string `json:"romanization" validate:"omitempty,max=255"`
-	AudioURL     *string `json:"audioUrl" validate:"omitempty,url"`
+	AudioURL     *string `json:"audioUrl" validate:"omitempty,max=500"`
 }
 
 // WordResponse represents a word with its translations

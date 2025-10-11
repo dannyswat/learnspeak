@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"dannyswat/learnspeak/dto"
-	"dannyswat/learnspeak/models"
 	"dannyswat/learnspeak/services"
 
 	"github.com/labstack/echo/v4"
@@ -33,10 +32,10 @@ func NewWordHandler(wordService services.WordService) *WordHandler {
 // @Failure 401 {object} dto.ErrorResponse
 // @Router /api/words [post]
 func (h *WordHandler) CreateWord(c echo.Context) error {
-	// Get user from context
-	user, ok := c.Get("user").(*models.User)
+	// Get user ID from context (set by JWT middleware)
+	userID, ok := c.Get("userId").(uint)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User not found in context")
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
 	}
 
 	// Parse request
@@ -51,7 +50,7 @@ func (h *WordHandler) CreateWord(c echo.Context) error {
 	}
 
 	// Create word
-	word, err := h.wordService.CreateWord(&req, user.ID)
+	word, err := h.wordService.CreateWord(&req, userID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -98,10 +97,10 @@ func (h *WordHandler) GetWord(c echo.Context) error {
 // @Failure 404 {object} dto.ErrorResponse
 // @Router /api/words/{id} [put]
 func (h *WordHandler) UpdateWord(c echo.Context) error {
-	// Get user from context
-	user, ok := c.Get("user").(*models.User)
+	// Get user ID from context (set by JWT middleware)
+	userID, ok := c.Get("userId").(uint)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User not found in context")
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
 	}
 
 	// Parse ID
@@ -122,7 +121,7 @@ func (h *WordHandler) UpdateWord(c echo.Context) error {
 	}
 
 	// Update word
-	word, err := h.wordService.UpdateWord(uint(id), &req, user.ID)
+	word, err := h.wordService.UpdateWord(uint(id), &req, userID)
 	if err != nil {
 		if err.Error() == "word not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
@@ -147,10 +146,10 @@ func (h *WordHandler) UpdateWord(c echo.Context) error {
 // @Failure 404 {object} dto.ErrorResponse
 // @Router /api/words/{id} [delete]
 func (h *WordHandler) DeleteWord(c echo.Context) error {
-	// Get user from context
-	user, ok := c.Get("user").(*models.User)
+	// Get user ID from context (set by JWT middleware)
+	userID, ok := c.Get("userId").(uint)
 	if !ok {
-		return echo.NewHTTPError(http.StatusUnauthorized, "User not found in context")
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
 	}
 
 	// Parse ID
@@ -160,7 +159,7 @@ func (h *WordHandler) DeleteWord(c echo.Context) error {
 	}
 
 	// Delete word
-	err = h.wordService.DeleteWord(uint(id), user.ID)
+	err = h.wordService.DeleteWord(uint(id), userID)
 	if err != nil {
 		if err.Error() == "word not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
