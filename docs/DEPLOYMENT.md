@@ -1,90 +1,49 @@
 # LearnSpeak - Deployment Guide
 
-## Summary of Changes
+Complete guide for deploying LearnSpeak to production.
 
-The application now uses a unified architecture:
+## Architecture Overview
 
-- **Development:** Frontend runs on port 5173 with Vite proxy, backend on port 8080
-- **Production:** Single server on port 8080 serving both API and frontend
+LearnSpeak uses a unified architecture:
 
-### Key Changes:
-1. ✅ Frontend API calls use relative paths (`/api/v1`)
-2. ✅ Vite proxy configured for development
-3. ✅ Backend serves static files from `../frontend/dist` in production
-4. ✅ CORS only enabled in development (configurable via env)
-5. ✅ No environment variables needed for frontend
-6. ✅ Build script created for easy production builds
+- **Development:** Frontend (Vite :5173) + Backend (Go :8080) + Proxy
+- **Production:** Single Go server (:8080) serves both API and static files
 
----
-
-## Development Setup
-
-### 1. Backend (.env configuration)
-
-```bash
-cd backend
-```
-
-Edit `.env`:
-```bash
-PORT=8080
-ENV=development
-CORS_ALLOWED_ORIGINS=http://localhost:5173  # Enable CORS for dev
-
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=learnspeak
-DB_SSLMODE=disable
-
-# JWT
-JWT_SECRET=your-dev-secret-key
-JWT_EXPIRATION_HOURS=24
-```
-
-### 2. Run Development Servers
-
-Terminal 1 - Backend:
-```bash
-cd backend
-go run main.go
-```
-
-Terminal 2 - Frontend:
-```bash
-cd frontend
-npm run dev
-```
-
-Open: `http://localhost:5173`
+### Key Features:
+- ✅ Relative API paths (`/api/v1`)
+- ✅ Vite proxy for development
+- ✅ Static file serving in production
+- ✅ Conditional CORS (dev only)
+- ✅ HTML5 routing support
+- ✅ No frontend environment variables needed
 
 ---
 
-## Production Deployment
+## Production Deployment Options
 
-### Option 1: Quick Build & Run
+### Option 1: Simple Build & Run (Quickest)
 
 ```bash
-# From project root
+# Build everything
 ./build.sh
 
 # Configure production environment
 cd backend
-nano .env  # Set CORS_ALLOWED_ORIGINS= (empty)
+cp .env.example .env
+nano .env  # Set production values, leave CORS_ALLOWED_ORIGINS empty
 
-# Run
+# Run the server
 ./learnspeak-api
 ```
 
-Open: `http://localhost:8080`
+Server available at **http://localhost:8080**
 
 ### Option 2: Manual Build
 
 ```bash
 # Build frontend
 cd frontend
+npm ci
 npm run build
 # Output: frontend/dist/
 
@@ -93,7 +52,8 @@ cd ../backend
 go build -o learnspeak-api main.go
 
 # Configure
-nano .env  # Remove CORS_ALLOWED_ORIGINS
+cp .env.example .env
+nano .env  # Update for production
 
 # Run
 ./learnspeak-api

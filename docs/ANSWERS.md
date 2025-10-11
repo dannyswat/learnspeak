@@ -1,4 +1,6 @@
-# Language Learning Platform - Answer to QUESTIONS.md
+# Language Learning Platform - Requirements Answers
+
+> **Note:** This is a reference document containing the project requirements. These answers guide the platform's design and implementation. See [QUESTIONS.md](QUESTIONS.md) for the full list of questions.
 
 ## 1. Platform Overview & Goals
 

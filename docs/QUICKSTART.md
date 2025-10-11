@@ -1,77 +1,57 @@
 # LearnSpeak - Quick Start Guide
 
-## Development Mode (Separate Frontend & Backend)
+Get up and running with LearnSpeak in 5 minutes!
 
-### 1. Start the Backend (Terminal 1)
+## Prerequisites
 
-```bash
-cd /Users/dannys/repos/learnspeak/backend
-go run main.go
-```
+- **Go 1.24.3+** installed
+- **Node.js 20+** installed  
+- **PostgreSQL 15+** running (or use Docker Compose)
 
-The backend will start on `http://localhost:8080`
-
-### 2. Start the Frontend with Dev Server (Terminal 2)
+## Quick Start with Docker Compose (Recommended)
 
 ```bash
-cd /Users/dannys/repos/learnspeak/frontend
-npm run dev
+# Clone and start everything
+git clone https://github.com/dannyswat/learnspeak.git
+cd learnspeak
+docker-compose up
 ```
 
-The frontend will start on `http://localhost:5173`
+Access the app at **http://localhost:5173**
 
-**Note:** Vite proxy forwards `/api` requests to `http://localhost:8080` automatically.
+## Manual Development Setup
 
-### 3. Open Browser
+### 1. Database Setup
 
-Navigate to `http://localhost:5173` to use the application.
-
----
-
-## Production Mode (Single Server)
-
-### 1. Build the Application
-
+Create database:
 ```bash
-cd /Users/dannys/repos/learnspeak
-./build.sh
+createdb learnspeak
 ```
 
-This will:
-- Build the React frontend to `frontend/dist`
-- Compile the Go backend to `backend/learnspeak-api`
-
-### 2. Configure Environment
-
-Update `backend/.env`:
-```bash
-# Remove or leave CORS_ALLOWED_ORIGINS empty for production
-CORS_ALLOWED_ORIGINS=
-
-# Other settings...
-PORT=8080
-ENV=production
-```
-
-### 3. Run the Server
+### 2. Backend Setup
 
 ```bash
 cd backend
-./learnspeak-api
+cp .env.example .env
+# Edit .env with your database credentials
+go run main.go
 ```
 
-The server will:
-- Serve the API on `/api/v1/*`
-- Serve the frontend static files from `../frontend/dist`
-- Handle client-side routing (HTML5 mode)
+Backend runs at **http://localhost:8080**
 
-### 4. Open Browser
+### 3. Frontend Setup
 
-Navigate to `http://localhost:8080` to use the application.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Testing with cURL
+Frontend runs at **http://localhost:5173**
 
-### Register a new user:
+## Test the API
+
+### Register a user:
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -93,63 +73,29 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
   }'
 ```
 
-Copy the token from the response and use it for authenticated requests:
+## Production Build
 
 ```bash
-curl -X GET http://localhost:8080/api/v1/profile \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+./build.sh
+cd backend
+./learnspeak-api
 ```
 
-## Project Structure
+Access at **http://localhost:8080**
 
-```
-learnspeak/
-├── backend/               # Go backend
-│   ├── config/           # Configuration
-│   ├── database/         # Database & migrations
-│   ├── dto/             # Data transfer objects
-│   ├── handlers/        # HTTP handlers
-│   ├── middleware/      # Authentication middleware
-│   ├── models/          # Database models
-│   ├── routes/          # Route definitions
-│   ├── utils/           # Utilities (JWT, password)
-│   └── main.go          # Entry point
-│
-├── frontend/             # React frontend
-│   ├── src/
-│   │   ├── components/  # Reusable components
-│   │   ├── contexts/    # React contexts
-│   │   ├── hooks/       # Custom hooks
-│   │   ├── pages/       # Page components
-│   │   ├── services/    # API services
-│   │   └── types/       # TypeScript types
-│   └── package.json
-│
-└── design/              # Design files & mockups
-    └── html/            # HTML/CSS mockups
-```
+## Common Issues
 
-## Troubleshooting
+**Backend won't start?**
+- Verify PostgreSQL is running
+- Check database credentials in `.env`
+- Ensure `learnspeak` database exists
 
-**Backend won't start:**
-- Check PostgreSQL is running
-- Verify database credentials in `backend/.env`
-- Ensure database `learnspeak` exists
-
-**Frontend can't connect:**
-- Verify backend is running on port 8080
-- Check CORS settings in backend
-- Verify `VITE_API_BASE_URL` in `frontend/.env`
-
-**Login fails:**
-- Check network tab in browser DevTools
-- Verify credentials are correct
-- Check backend logs for errors
+**Frontend can't connect?**
+- Make sure backend is running on port 8080
+- Check Vite proxy configuration
 
 ## Next Steps
 
-1. Implement full dashboard based on `design/html/learner-dashboard.html`
-2. Add word learning features
-3. Create topic and journey management
-4. Implement quiz functionality
-5. Add achievements and progress tracking
+- 📖 See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment
+- 📋 Check [PROGRESS.md](../design/PROGRESS.md) for project roadmap
+- 🔧 Read backend/frontend READMEs for detailed documentation

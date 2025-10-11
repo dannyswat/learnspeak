@@ -1,5 +1,7 @@
 # Language Learning Platform - Requirements & Design Questions
 
+> **Note:** This is a reference document containing the initial requirements gathering questions. See [ANSWERS.md](ANSWERS.md) for the project owner's responses.
+
 ## 1. Platform Overview & Goals
 
 ### 1.1 Core Purpose
