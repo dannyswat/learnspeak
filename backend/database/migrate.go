@@ -19,6 +19,9 @@ func Migrate() error {
 		&models.User{},
 		&models.Role{},
 		&models.UserRole{},
+		&models.Language{},
+		&models.Word{},
+		&models.WordTranslation{},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to run basic migrations: %w", err)
@@ -99,7 +102,6 @@ func SeedDefaultRoles() error {
 			if err := DB.Create(&role).Error; err != nil {
 				return err
 			}
-			log.Printf("Created role: %s\n", role.Name)
 		}
 	}
 

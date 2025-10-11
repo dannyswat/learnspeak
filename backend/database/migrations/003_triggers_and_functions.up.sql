@@ -15,42 +15,52 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply to all tables with updated_at column
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at 
     BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_words_updated_at ON words;
 CREATE TRIGGER update_words_updated_at 
     BEFORE UPDATE ON words
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_word_translations_updated_at ON word_translations;
 CREATE TRIGGER update_word_translations_updated_at 
     BEFORE UPDATE ON word_translations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_topics_updated_at ON topics;
 CREATE TRIGGER update_topics_updated_at 
     BEFORE UPDATE ON topics
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_journeys_updated_at ON journeys;
 CREATE TRIGGER update_journeys_updated_at 
     BEFORE UPDATE ON journeys
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_topic_quizzes_updated_at ON topic_quizzes;
 CREATE TRIGGER update_topic_quizzes_updated_at 
     BEFORE UPDATE ON topic_quizzes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_conversations_updated_at ON conversations;
 CREATE TRIGGER update_conversations_updated_at 
     BEFORE UPDATE ON conversations
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_conversation_lines_updated_at ON conversation_lines;
 CREATE TRIGGER update_conversation_lines_updated_at 
     BEFORE UPDATE ON conversation_lines
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_user_notes_updated_at ON user_notes;
 CREATE TRIGGER update_user_notes_updated_at 
     BEFORE UPDATE ON user_notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_srs_items_updated_at ON spaced_repetition_items;
 CREATE TRIGGER update_srs_items_updated_at 
     BEFORE UPDATE ON spaced_repetition_items
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -121,6 +131,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS auto_grant_achievements ON user_progress;
 CREATE TRIGGER auto_grant_achievements
     AFTER INSERT ON user_progress
     FOR EACH ROW EXECUTE FUNCTION check_and_grant_achievements();
@@ -179,6 +190,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS check_journey_completion_trigger ON user_progress;
 CREATE TRIGGER check_journey_completion_trigger
     AFTER INSERT OR UPDATE ON user_progress
     FOR EACH ROW EXECUTE FUNCTION check_journey_completion();

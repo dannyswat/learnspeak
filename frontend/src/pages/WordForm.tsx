@@ -54,6 +54,17 @@ const WordForm: React.FC = () => {
     try {
       const langs = await wordService.getLanguages();
       setLanguages(langs);
+      
+      // If creating a new word, prefill with preferred language
+      if (!isEditMode && translations.length === 1 && translations[0].languageId === 0) {
+        const preferredLanguageId = localStorage.getItem('preferredLanguageId');
+        if (preferredLanguageId) {
+          const langId = parseInt(preferredLanguageId);
+          if (langs.find(l => l.id === langId)) {
+            updateTranslation(0, 'languageId', langId);
+          }
+        }
+      }
     } catch (err) {
       console.error('Error loading languages:', err);
     }
@@ -145,6 +156,11 @@ const WordForm: React.FC = () => {
     const updated = [...translations];
     updated[index] = { ...updated[index], [field]: value };
     setTranslations(updated);
+    
+    // Save language preference to localStorage when language is selected
+    if (field === 'languageId' && typeof value === 'number' && value > 0) {
+      localStorage.setItem('preferredLanguageId', value.toString());
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

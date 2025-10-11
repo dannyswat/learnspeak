@@ -51,17 +51,8 @@ export const wordService = {
 
   // Get all languages
   async getLanguages(): Promise<Language[]> {
-    // For now, return mock data since we don't have a languages endpoint yet
-    // TODO: Create a languages endpoint in the backend
-    return [
-      { id: 1, code: 'en', name: 'English', nativeName: 'English' },
-      { id: 2, code: 'es', name: 'Spanish', nativeName: 'Español' },
-      { id: 3, code: 'fr', name: 'French', nativeName: 'Français' },
-      { id: 4, code: 'de', name: 'German', nativeName: 'Deutsch' },
-      { id: 5, code: 'it', name: 'Italian', nativeName: 'Italiano' },
-      { id: 6, code: 'pt', name: 'Portuguese', nativeName: 'Português' },
-      { id: 7, code: 'zh', name: 'Chinese', nativeName: '中文' },
-    ];
+    const response = await api.get<Language[]>('/languages');
+    return response.data;
   },
 };
 

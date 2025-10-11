@@ -14,12 +14,15 @@ import (
 func SetupRoutes(e *echo.Echo, uploadDir string) {
 	// Initialize repositories
 	wordRepo := repositories.NewWordRepository(database.DB)
+	languageRepo := repositories.NewLanguageRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
+	languageService := services.NewLanguageService(languageRepo)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
+	languageHandler := handlers.NewLanguageHandler(languageService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 
 	// API version 1
@@ -38,6 +41,9 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	{
 		// User profile
 		protected.GET("/profile", handlers.GetProfile)
+
+		// Languages
+		protected.GET("/languages", languageHandler.GetLanguages)
 
 		// Word management
 		protected.GET("/words", wordHandler.ListWords)

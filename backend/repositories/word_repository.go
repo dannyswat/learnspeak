@@ -142,7 +142,12 @@ func (r *wordRepository) CreateTranslation(translation *models.WordTranslation) 
 
 // UpdateTranslation updates an existing translation
 func (r *wordRepository) UpdateTranslation(translation *models.WordTranslation) error {
-	return r.db.Save(translation).Error
+	return r.db.Model(&models.WordTranslation{}).Where("id = ?", translation.ID).Updates(map[string]interface{}{
+		"language_id":  translation.LanguageID,
+		"translation":  translation.Translation,
+		"romanization": translation.Romanization,
+		"audio_url":    translation.AudioURL,
+	}).Error
 }
 
 // DeleteTranslation deletes a translation by ID
