@@ -365,6 +365,109 @@ func (Quiz) TableName() string {
 
 ---
 
+### models/conversation.go
+
+```go
+package models
+
+import (
+	"time"
+)
+
+// Conversation represents a dialogue scenario
+type Conversation struct {
+	ID              int       `json:"id" gorm:"primaryKey"`
+	Title           string    `json:"title" gorm:"size:200;not null"`
+	Description     string    `json:"description" gorm:"type:text"`
+	Context         string    `json:"context" gorm:"type:text"`
+	LanguageID      int       `json:"languageId" gorm:"not null;index"`
+	DifficultyLevel string    `json:"difficultyLevel" gorm:"size:20;not null;check:difficulty_level IN ('beginner','intermediate','advanced')"`
+	CreatedBy       int       `json:"createdBy" gorm:"not null;index"`
+	CreatedAt       time.Time `json:"createdAt" gorm:"autoCreateTime"`
+	UpdatedAt       time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
+	
+	// Relationships
+	Language Language           `json:"language" gorm:"foreignKey:LanguageID"`
+	Creator  User               `json:"creator" gorm:"foreignKey:CreatedBy"`
+	Lines    []ConversationLine `json:"lines,omitempty" gorm:"foreignKey:ConversationID;constraint:OnDelete:CASCADE"`
+	Topics   []Topic            `json:"topics,omitempty" gorm:"many2many:topic_conversations"`
+}
+
+// TableName overrides the table name
+func (Conversation) TableName() string {
+	return "conversations"
+}
+
+// ConversationLine represents a single line of dialogue
+type ConversationLine struct {
+	ID             int        `json:"id" gorm:"primaryKey"`
+	ConversationID int        `json:"conversationId" gorm:"not null;index"`
+	SequenceOrder  int        `json:"sequenceOrder" gorm:"not null"`
+	SpeakerRole    string     `json:"speakerRole" gorm:"size:100;not null"`
+	EnglishText    string     `json:"englishText" gorm:"type:text;not null"`
+	TargetText     string     `json:"targetText" gorm:"type:text;not null"`
+	Romanization   string     `json:"romanization" gorm:"type:text"`
+	AudioURL       string     `json:"audioUrl" gorm:"size:500"`
+	WordID         *int       `json:"wordId" gorm:"index"`
+	IsLearnerLine  bool       `json:"isLearnerLine" gorm:"default:false"`
+	CreatedAt      time.Time  `json:"createdAt" gorm:"autoCreateTime"`
+	UpdatedAt      time.Time  `json:"updatedAt" gorm:"autoUpdateTime"`
+	
+	// Relationships
+	Conversation Conversation `json:"-" gorm:"foreignKey:ConversationID"`
+	Word         *Word        `json:"word,omitempty" gorm:"foreignKey:WordID"`
+}
+
+// TableName overrides the table name
+func (ConversationLine) TableName() string {
+	return "conversation_lines"
+}
+
+// TopicConversation links conversations to topics
+type TopicConversation struct {
+	ID             int       `json:"id" gorm:"primaryKey"`
+	TopicID        int       `json:"topicId" gorm:"not null;index;uniqueIndex:idx_topic_conversation"`
+	ConversationID int       `json:"conversationId" gorm:"not null;index;uniqueIndex:idx_topic_conversation"`
+	SequenceOrder  int       `json:"sequenceOrder" gorm:"not null"`
+	CreatedAt      time.Time `json:"createdAt" gorm:"autoCreateTime"`
+	
+	// Relationships
+	Topic        Topic        `json:"-" gorm:"foreignKey:TopicID"`
+	Conversation Conversation `json:"-" gorm:"foreignKey:ConversationID"`
+}
+
+// TableName overrides the table name
+func (TopicConversation) TableName() string {
+	return "topic_conversations"
+}
+
+// UserConversationProgress tracks user progress on conversations
+type UserConversationProgress struct {
+	ID               int        `json:"id" gorm:"primaryKey"`
+	UserID           int        `json:"userId" gorm:"not null;index;uniqueIndex:idx_user_conversation"`
+	ConversationID   int        `json:"conversationId" gorm:"not null;index;uniqueIndex:idx_user_conversation"`
+	TopicID          *int       `json:"topicId" gorm:"index"`
+	Completed        bool       `json:"completed" gorm:"default:false"`
+	ReplayCount      int        `json:"replayCount" gorm:"default:0"`
+	TimeSpentSeconds int        `json:"timeSpentSeconds" gorm:"default:0"`
+	CompletedAt      *time.Time `json:"completedAt"`
+	LastAccessedAt   time.Time  `json:"lastAccessedAt" gorm:"autoUpdateTime"`
+	CreatedAt        time.Time  `json:"createdAt" gorm:"autoCreateTime"`
+	
+	// Relationships
+	User         User         `json:"-" gorm:"foreignKey:UserID"`
+	Conversation Conversation `json:"-" gorm:"foreignKey:ConversationID"`
+	Topic        *Topic       `json:"topic,omitempty" gorm:"foreignKey:TopicID"`
+}
+
+// TableName overrides the table name
+func (UserConversationProgress) TableName() string {
+	return "user_conversation_progress"
+}
+```
+
+---
+
 ### models/progress.go
 
 ```go
@@ -1125,6 +1228,118 @@ type QuizQuestionResult struct {
 
 ---
 
+### dto/conversation.go
+
+```go
+package dto
+
+import "time"
+
+// CreateConversationRequest for creating a new conversation
+type CreateConversationRequest struct {
+	Title           string                       `json:"title" binding:"required,min=1,max=200"`
+	Description     string                       `json:"description"`
+	Context         string                       `json:"context"`
+	LanguageCode    string                       `json:"languageCode" binding:"required"`
+	DifficultyLevel string                       `json:"difficultyLevel" binding:"required,oneof=beginner intermediate advanced"`
+	Lines           []ConversationLineRequest    `json:"lines" binding:"required,min=1,dive"`
+}
+
+// UpdateConversationRequest for updating a conversation
+type UpdateConversationRequest struct {
+	Title           string                       `json:"title" binding:"required,min=1,max=200"`
+	Description     string                       `json:"description"`
+	Context         string                       `json:"context"`
+	DifficultyLevel string                       `json:"difficultyLevel" binding:"required,oneof=beginner intermediate advanced"`
+	Lines           []ConversationLineRequest    `json:"lines" binding:"required,min=1,dive"`
+}
+
+// ConversationLineRequest for creating/updating conversation lines
+type ConversationLineRequest struct {
+	SequenceOrder  int     `json:"sequenceOrder" binding:"required,min=1"`
+	SpeakerRole    string  `json:"speakerRole" binding:"required,min=1,max=100"`
+	EnglishText    string  `json:"englishText" binding:"required"`
+	TargetText     string  `json:"targetText" binding:"required"`
+	Romanization   string  `json:"romanization"`
+	WordID         *int    `json:"wordId"`
+	IsLearnerLine  bool    `json:"isLearnerLine"`
+}
+
+// ConversationResponse for conversation details
+type ConversationResponse struct {
+	ID              int                       `json:"id"`
+	Title           string                    `json:"title"`
+	Description     string                    `json:"description"`
+	Context         string                    `json:"context"`
+	Language        LanguageSummary           `json:"language"`
+	DifficultyLevel string                    `json:"difficultyLevel"`
+	CreatedBy       UserSummary               `json:"createdBy"`
+	Lines           []ConversationLineResponse `json:"lines"`
+	TotalLines      int                        `json:"totalLines"`
+	UsedInTopics    int                        `json:"usedInTopics"`
+	CreatedAt       time.Time                  `json:"createdAt"`
+	UpdatedAt       time.Time                  `json:"updatedAt"`
+}
+
+// ConversationListItem for conversation lists
+type ConversationListItem struct {
+	ID              int             `json:"id"`
+	Title           string          `json:"title"`
+	Description     string          `json:"description"`
+	Language        LanguageSummary `json:"language"`
+	DifficultyLevel string          `json:"difficultyLevel"`
+	LineCount       int             `json:"lineCount"`
+	CreatedBy       UserSummary     `json:"createdBy"`
+	UsedInTopics    int             `json:"usedInTopics"`
+	CreatedAt       time.Time       `json:"createdAt"`
+}
+
+// ConversationLineResponse for conversation line details
+type ConversationLineResponse struct {
+	ID            int     `json:"id"`
+	SequenceOrder int     `json:"sequenceOrder"`
+	SpeakerRole   string  `json:"speakerRole"`
+	EnglishText   string  `json:"englishText"`
+	TargetText    string  `json:"targetText"`
+	Romanization  string  `json:"romanization,omitempty"`
+	AudioURL      string  `json:"audioUrl,omitempty"`
+	WordID        *int    `json:"wordId,omitempty"`
+	IsLearnerLine bool    `json:"isLearnerLine"`
+}
+
+// ConversationInTopic for conversations within a topic context
+type ConversationInTopic struct {
+	ID              int     `json:"id"`
+	Title           string  `json:"title"`
+	DifficultyLevel string  `json:"difficultyLevel"`
+	LineCount       int     `json:"lineCount"`
+	SequenceOrder   int     `json:"sequenceOrder"`
+	Completed       bool    `json:"completed"`
+	ReplayCount     int     `json:"replayCount"`
+}
+
+// ConversationProgressResponse for learner's conversation progress
+type ConversationProgressResponse struct {
+	ConversationID   int        `json:"conversationId"`
+	Title            string     `json:"title"`
+	DifficultyLevel  string     `json:"difficultyLevel"`
+	LineCount        int        `json:"lineCount"`
+	Completed        bool       `json:"completed"`
+	ReplayCount      int        `json:"replayCount"`
+	TimeSpentSeconds int        `json:"timeSpentSeconds"`
+	CompletedAt      *time.Time `json:"completedAt,omitempty"`
+	LastAccessedAt   time.Time  `json:"lastAccessedAt"`
+	ProgressPercent  int        `json:"progressPercent"`
+}
+
+// CompleteConversationRequest for completing a conversation
+type CompleteConversationRequest struct {
+	TimeSpentSeconds int `json:"timeSpentSeconds" binding:"required,min=1"`
+}
+```
+
+---
+
 ### dto/progress.go
 
 ```go
@@ -1249,6 +1464,10 @@ func AutoMigrate() error {
 		&models.JourneyTopic{},
 		&models.UserJourney{},
 		&models.Quiz{},
+		&models.Conversation{},
+		&models.ConversationLine{},
+		&models.TopicConversation{},
+		&models.UserConversationProgress{},
 		&models.UserProgress{},
 		&models.LearningSession{},
 		&models.Achievement{},

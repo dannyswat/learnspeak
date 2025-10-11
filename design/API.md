@@ -17,13 +17,14 @@
 6. [Journeys](#6-journeys)
 7. [Quizzes](#7-quizzes)
 8. [Learning Activities](#8-learning-activities)
-9. [Progress & Analytics](#9-progress--analytics)
-10. [Achievements](#10-achievements)
-11. [Bookmarks](#11-bookmarks)
-12. [Notes](#12-notes)
-13. [Spaced Repetition](#13-spaced-repetition)
-14. [AI Services](#14-ai-services)
-15. [Admin](#15-admin)
+9. [Conversations](#9-conversations)
+10. [Progress & Analytics](#10-progress--analytics)
+11. [Achievements](#11-achievements)
+12. [Bookmarks](#12-bookmarks)
+13. [Notes](#13-notes)
+14. [Spaced Repetition](#14-spaced-repetition)
+15. [AI Services](#15-ai-services)
+16. [Admin](#16-admin)
 
 ---
 
@@ -1895,7 +1896,366 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 9. Progress & Analytics
+## 9. Conversations
+
+### 9.1 List Conversations
+
+**Endpoint:** `GET /conversations`  
+**Auth Required:** Yes  
+**Roles:** Teacher, Admin
+
+**Query Parameters:**
+- `page` (default: 1)
+- `limit` (default: 20)
+- `languageCode` (optional): Filter by language
+- `difficultyLevel` (optional): "beginner" | "intermediate" | "advanced"
+- `topicId` (optional): Filter conversations used in a specific topic
+- `search` (optional): Search by title
+- `createdBy` (optional): Filter by creator
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Simple Greetings",
+      "description": "Learn how to greet people in Cantonese",
+      "language": {
+        "id": 2,
+        "code": "zh-HK",
+        "name": "Cantonese"
+      },
+      "difficultyLevel": "beginner",
+      "lineCount": 4,
+      "createdBy": {
+        "id": 2,
+        "name": "Danny"
+      },
+      "usedInTopics": 2,
+      "createdAt": "2025-10-01T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 15,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### 9.2 Get Conversation by ID
+
+**Endpoint:** `GET /conversations/:id`  
+**Auth Required:** Yes
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "Simple Greetings",
+    "description": "Learn how to greet people in Cantonese",
+    "context": "Practice basic greeting phrases you can use when meeting someone",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
+    "difficultyLevel": "beginner",
+    "createdBy": {
+      "id": 2,
+      "name": "Danny",
+      "username": "danny"
+    },
+    "lines": [
+      {
+        "id": 1,
+        "sequenceOrder": 1,
+        "speakerRole": "Person A",
+        "englishText": "Hello!",
+        "targetText": "你好！",
+        "romanization": "nei5 hou2!",
+        "audioUrl": "/audio/zh/greeting_1.mp3",
+        "wordId": 1,
+        "isLearnerLine": false
+      },
+      {
+        "id": 2,
+        "sequenceOrder": 2,
+        "speakerRole": "Person B",
+        "englishText": "Hello! How are you?",
+        "targetText": "你好！你好嗎？",
+        "romanization": "nei5 hou2! nei5 hou2 maa3?",
+        "audioUrl": "/audio/zh/greeting_2.mp3",
+        "isLearnerLine": true
+      }
+    ],
+    "totalLines": 4,
+    "usedInTopics": 2,
+    "createdAt": "2025-10-01T10:00:00Z",
+    "updatedAt": "2025-10-01T10:00:00Z"
+  }
+}
+```
+
+---
+
+### 9.3 Create Conversation
+
+**Endpoint:** `POST /conversations`  
+**Auth Required:** Yes  
+**Roles:** Teacher, Admin
+
+**Request Body:**
+```json
+{
+  "title": "At the Restaurant",
+  "description": "Learn how to order food at a restaurant",
+  "context": "You are at a Cantonese restaurant and want to order",
+  "languageCode": "zh-HK",
+  "difficultyLevel": "intermediate",
+  "lines": [
+    {
+      "sequenceOrder": 1,
+      "speakerRole": "Waiter",
+      "englishText": "What would you like to eat?",
+      "targetText": "你想食咩呀？",
+      "romanization": "nei5 soeng2 sik6 me1 aa3?",
+      "isLearnerLine": false
+    },
+    {
+      "sequenceOrder": 2,
+      "speakerRole": "Customer",
+      "englishText": "I want fried rice.",
+      "targetText": "我想要炒飯。",
+      "romanization": "ngo5 soeng2 jiu3 caau2 faan6.",
+      "wordId": 42,
+      "isLearnerLine": true
+    }
+  ]
+}
+```
+
+**Response:** `201 Created`
+```json
+{
+  "success": true,
+  "data": {
+    "id": 5,
+    "title": "At the Restaurant",
+    "description": "Learn how to order food at a restaurant",
+    "language": {
+      "id": 2,
+      "code": "zh-HK",
+      "name": "Cantonese"
+    },
+    "difficultyLevel": "intermediate",
+    "createdBy": {
+      "id": 2,
+      "name": "Danny"
+    },
+    "lines": [...],
+    "totalLines": 2,
+    "usedInTopics": 0,
+    "createdAt": "2025-10-11T18:00:00Z",
+    "updatedAt": "2025-10-11T18:00:00Z"
+  },
+  "message": "Conversation created successfully"
+}
+```
+
+**Validation Rules:**
+- `title`: required, 1-200 chars
+- `languageCode`: required, valid language code
+- `difficultyLevel`: required, one of ["beginner", "intermediate", "advanced"]
+- `lines`: array with at least 2 lines, required
+- `lines[].sequenceOrder`: required, must be sequential starting from 1
+- `lines[].speakerRole`: required, 1-100 chars
+- `lines[].englishText`: required
+- `lines[].targetText`: required
+
+**Error Codes:**
+- `LANGUAGE_NOT_FOUND`: Invalid language code
+- `WORD_NOT_FOUND`: Referenced word_id doesn't exist
+- `INVALID_SEQUENCE`: Line sequence orders are not sequential
+
+---
+
+### 9.4 Update Conversation
+
+**Endpoint:** `PUT /conversations/:id`  
+**Auth Required:** Yes  
+**Roles:** Teacher, Admin (or creator)
+
+**Request Body:**
+```json
+{
+  "title": "At the Restaurant (Updated)",
+  "description": "Updated description",
+  "difficultyLevel": "beginner",
+  "lines": [...]
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "id": 5,
+    "title": "At the Restaurant (Updated)",
+    "totalLines": 4,
+    "updatedAt": "2025-10-11T19:00:00Z"
+  },
+  "message": "Conversation updated successfully"
+}
+```
+
+**Note:** Updating lines will replace all existing lines with the new ones provided.
+
+---
+
+### 9.5 Delete Conversation
+
+**Endpoint:** `DELETE /conversations/:id`  
+**Auth Required:** Yes  
+**Roles:** Teacher, Admin (or creator)
+
+**Response:** `204 No Content`
+
+**Error Codes:**
+- `CONVERSATION_IN_USE`: Conversation is linked to topics
+
+---
+
+### 9.6 Upload Conversation Line Audio
+
+**Endpoint:** `POST /conversations/:id/lines/:lineId/audio`  
+**Auth Required:** Yes  
+**Roles:** Teacher, Admin  
+**Content-Type:** `multipart/form-data`
+
+**Request Body:**
+```
+audio: <file> (max 10MB, mp3/ogg/wav)
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "lineId": 15,
+    "audioUrl": "/uploads/audio/conversation_line_15.mp3"
+  },
+  "message": "Audio uploaded successfully"
+}
+```
+
+---
+
+### 9.7 Get Conversations for Topic
+
+**Endpoint:** `GET /topics/:topicId/conversations`  
+**Auth Required:** Yes
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Simple Greetings",
+      "difficultyLevel": "beginner",
+      "lineCount": 4,
+      "sequenceOrder": 1,
+      "completed": true,
+      "replayCount": 3
+    },
+    {
+      "id": 2,
+      "title": "Introducing Yourself",
+      "difficultyLevel": "beginner",
+      "lineCount": 6,
+      "sequenceOrder": 2,
+      "completed": false,
+      "replayCount": 0
+    }
+  ]
+}
+```
+
+**Note:** Includes user's progress if authenticated as learner
+
+---
+
+### 9.8 Get User's Conversation Progress
+
+**Endpoint:** `GET /conversations/:id/progress`  
+**Auth Required:** Yes  
+**Roles:** Learner
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "conversationId": 1,
+    "title": "Simple Greetings",
+    "difficultyLevel": "beginner",
+    "lineCount": 4,
+    "completed": true,
+    "replayCount": 3,
+    "timeSpentSeconds": 420,
+    "completedAt": "2025-10-05T14:30:00Z",
+    "lastAccessedAt": "2025-10-10T10:00:00Z",
+    "progressPercent": 100
+  }
+}
+```
+
+---
+
+### 9.9 Complete Conversation
+
+**Endpoint:** `POST /conversations/:id/complete`  
+**Auth Required:** Yes  
+**Roles:** Learner
+
+**Request Body:**
+```json
+{
+  "timeSpentSeconds": 180
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "success": true,
+  "data": {
+    "conversationId": 1,
+    "completed": true,
+    "replayCount": 1,
+    "totalTimeSpent": 180,
+    "achievementsEarned": []
+  },
+  "message": "Conversation completed successfully"
+}
+```
+
+**Note:** If already completed, increments replay_count
+
+---
+
+## 10. Progress & Analytics
 
 ### 8.1 Track Learning Session
 
@@ -2095,9 +2455,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 10. Achievements
+## 11. Achievements
 
-### 10.1 List All Achievements
+### 11.1 List All Achievements
 
 **Endpoint:** `GET /achievements`  
 **Auth Required:** Yes
@@ -2129,7 +2489,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 10.2 Get My Achievements
+### 11.2 Get My Achievements
 
 **Endpoint:** `GET /achievements/me`  
 **Auth Required:** Yes  
@@ -2175,9 +2535,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 11. Bookmarks
+## 12. Bookmarks
 
-### 11.1 Get My Bookmarks
+### 12.1 Get My Bookmarks
 
 **Endpoint:** `GET /bookmarks/me`  
 **Auth Required:** Yes  
@@ -2219,7 +2579,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.2 Bookmark Word
+### 12.2 Bookmark Word
 
 **Endpoint:** `POST /bookmarks/words/:wordId`  
 **Auth Required:** Yes  
@@ -2240,7 +2600,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.3 Remove Word Bookmark
+### 12.3 Remove Word Bookmark
 
 **Endpoint:** `DELETE /bookmarks/words/:wordId`  
 **Auth Required:** Yes  
@@ -2250,7 +2610,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.4 Bookmark Topic
+### 12.4 Bookmark Topic
 
 **Endpoint:** `POST /bookmarks/topics/:topicId`  
 **Auth Required:** Yes  
@@ -2260,7 +2620,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 11.5 Remove Topic Bookmark
+### 12.5 Remove Topic Bookmark
 
 **Endpoint:** `DELETE /bookmarks/topics/:topicId`  
 **Auth Required:** Yes  
@@ -2270,9 +2630,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 12. Notes
+## 13. Notes
 
-### 12.1 Get My Notes
+### 13.1 Get My Notes
 
 **Endpoint:** `GET /notes/me`  
 **Auth Required:** Yes  
@@ -2300,7 +2660,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 12.2 Add Note to Word
+### 13.2 Add Note to Word
 
 **Endpoint:** `POST /notes/words/:wordId`  
 **Auth Required:** Yes  
@@ -2332,7 +2692,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 12.3 Update Note
+### 13.3 Update Note
 
 **Endpoint:** `PUT /notes/:id`  
 **Auth Required:** Yes  
@@ -2349,7 +2709,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 12.4 Delete Note
+### 13.4 Delete Note
 
 **Endpoint:** `DELETE /notes/:id`  
 **Auth Required:** Yes  
@@ -2359,9 +2719,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 13. Spaced Repetition
+## 14. Spaced Repetition
 
-### 13.1 Get Due Reviews
+### 14.1 Get Due Reviews
 
 **Endpoint:** `GET /srs/reviews/due`  
 **Auth Required:** Yes  
@@ -2393,7 +2753,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 13.2 Submit Review
+### 14.2 Submit Review
 
 **Endpoint:** `POST /srs/reviews/submit`  
 **Auth Required:** Yes  
@@ -2424,7 +2784,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 13.3 Get SRS Statistics
+### 14.3 Get SRS Statistics
 
 **Endpoint:** `GET /srs/stats`  
 **Auth Required:** Yes  
@@ -2447,9 +2807,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 14. AI Services
+## 15. AI Services
 
-### 14.1 Generate Audio (TTS)
+### 15.1 Generate Audio (TTS)
 
 **Endpoint:** `POST /ai/generate-audio`  
 **Auth Required:** Yes  
@@ -2491,7 +2851,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 14.2 Generate Image
+### 15.2 Generate Image
 
 **Endpoint:** `POST /ai/generate-image`  
 **Auth Required:** Yes  
@@ -2524,9 +2884,9 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-## 15. Admin
+## 16. Admin
 
-### 15.1 List All Users
+### 16.1 List All Users
 
 **Endpoint:** `GET /admin/users`  
 **Auth Required:** Yes  
@@ -2564,7 +2924,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 15.2 Create User (Admin)
+### 16.2 Create User (Admin)
 
 **Endpoint:** `POST /admin/users`  
 **Auth Required:** Yes  
@@ -2585,7 +2945,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 15.3 Update User Roles
+### 16.3 Update User Roles
 
 **Endpoint:** `PUT /admin/users/:id/roles`  
 **Auth Required:** Yes  
@@ -2602,7 +2962,7 @@ Note: `correctAnswer` is NOT included for learners
 
 ---
 
-### 15.4 Delete User
+### 16.4 Delete User
 
 **Endpoint:** `DELETE /admin/users/:id`  
 **Auth Required:** Yes  

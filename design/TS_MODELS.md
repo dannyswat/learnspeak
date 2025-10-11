@@ -671,7 +671,7 @@ export interface ReorderTopicsRequest {
 
 ---
 
-## 6. Quiz Types
+## 7. Quiz Types
 
 ### types/quiz.ts
 
@@ -781,7 +781,7 @@ export interface QuizResult {
 
 ---
 
-## 7. Progress Types
+## 8. Progress Types
 
 ### types/progress.ts
 
@@ -982,7 +982,7 @@ export interface SystemHealth {
 
 ---
 
-## 8. Achievement Types
+## 9. Achievement Types
 
 ### types/achievement.ts
 
@@ -1045,7 +1045,7 @@ export interface AchievementWithStatus extends Achievement {
 
 ---
 
-## 9. Bookmark Types
+## 10. Bookmark Types
 
 ### types/bookmark.ts
 
@@ -1089,7 +1089,154 @@ export interface BookmarkFilterParams extends FilterParams {
 
 ---
 
-## 10. Note Types
+## 11. Conversation Types
+
+### types/conversation.ts
+
+```typescript
+import { UserSummary } from './user';
+import { LanguageSummary } from './language';
+import { TopicSummary } from './topic';
+
+/**
+ * Difficulty level for conversations
+ */
+export type ConversationDifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+
+/**
+ * Conversation interface
+ */
+export interface Conversation {
+  id: number;
+  title: string;
+  description?: string;
+  context?: string;
+  language: LanguageSummary;
+  difficultyLevel: ConversationDifficultyLevel;
+  createdBy: UserSummary;
+  lines: ConversationLine[];
+  totalLines: number;
+  usedInTopics?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Conversation list item
+ */
+export interface ConversationListItem {
+  id: number;
+  title: string;
+  description?: string;
+  language: LanguageSummary;
+  difficultyLevel: ConversationDifficultyLevel;
+  lineCount: number;
+  createdBy: UserSummary;
+  usedInTopics: number;
+  createdAt: string;
+}
+
+/**
+ * Conversation line (dialogue)
+ */
+export interface ConversationLine {
+  id: number;
+  sequenceOrder: number;
+  speakerRole: string;
+  englishText: string;
+  targetText: string;
+  romanization?: string;
+  audioUrl?: string;
+  wordId?: number;
+  isLearnerLine: boolean;
+}
+
+/**
+ * Conversation in topic context
+ */
+export interface ConversationInTopic {
+  id: number;
+  title: string;
+  difficultyLevel: ConversationDifficultyLevel;
+  lineCount: number;
+  sequenceOrder: number;
+  completed: boolean;
+  replayCount: number;
+}
+
+/**
+ * Create conversation request
+ */
+export interface CreateConversationRequest {
+  title: string;
+  description?: string;
+  context?: string;
+  languageCode: string;
+  difficultyLevel: ConversationDifficultyLevel;
+  lines: ConversationLineRequest[];
+}
+
+/**
+ * Update conversation request
+ */
+export interface UpdateConversationRequest {
+  title: string;
+  description?: string;
+  context?: string;
+  difficultyLevel: ConversationDifficultyLevel;
+  lines: ConversationLineRequest[];
+}
+
+/**
+ * Conversation line request
+ */
+export interface ConversationLineRequest {
+  sequenceOrder: number;
+  speakerRole: string;
+  englishText: string;
+  targetText: string;
+  romanization?: string;
+  wordId?: number;
+  isLearnerLine: boolean;
+}
+
+/**
+ * User conversation progress
+ */
+export interface ConversationProgress {
+  conversationId: number;
+  title: string;
+  difficultyLevel: ConversationDifficultyLevel;
+  lineCount: number;
+  completed: boolean;
+  replayCount: number;
+  timeSpentSeconds: number;
+  completedAt?: string;
+  lastAccessedAt: string;
+  progressPercent: number;
+}
+
+/**
+ * Complete conversation request
+ */
+export interface CompleteConversationRequest {
+  timeSpentSeconds: number;
+}
+
+/**
+ * Conversation filter parameters
+ */
+export interface ConversationFilterParams extends FilterParams {
+  languageCode?: string;
+  difficultyLevel?: ConversationDifficultyLevel;
+  topicId?: number;
+  createdBy?: number;
+}
+```
+
+---
+
+## 12. Note Types
 
 ### types/note.ts
 
@@ -1134,7 +1281,7 @@ export interface NoteFilterParams extends FilterParams {
 
 ---
 
-## 11. SRS (Spaced Repetition System) Types
+## 13. SRS (Spaced Repetition System) Types
 
 ### types/srs.ts
 
@@ -1226,7 +1373,7 @@ export interface SubmitSRSReviewWithQualityRequest {
 
 ---
 
-## 12. Index File (Re-exports)
+## 14. Index File (Re-exports)
 
 ### types/index.ts
 
@@ -1338,7 +1485,7 @@ export interface ActionResult<T = any> {
 
 ---
 
-## 13. API Service Type Guards
+## 15. API Service Type Guards
 
 ### services/api.ts (Type Guards & Helpers)
 
@@ -1471,7 +1618,7 @@ export function throttle<T extends (...args: any[]) => any>(
 
 ---
 
-## 14. React Hook Types (Bonus)
+## 16. React Hook Types (Bonus)
 
 ### types/hooks.ts
 
@@ -1592,7 +1739,7 @@ export interface ThemeContextType {
 
 ---
 
-## 15. Component Prop Types (Bonus)
+## 17. Component Prop Types (Bonus)
 
 ### types/components.ts
 

@@ -81,17 +81,43 @@
                                   │ option_c     │
                                   │ option_d     │
                                   └──────────────┘
+                                        │
+                                        ├──────────────────────┐
+                                        │                      │
+                                        ▼                      ▼
+                              ┌──────────────────┐   ┌────────────────┐
+                              │ conversations    │   │ topic_convs    │
+                              │──────────────────│   │────────────────│
+                              │ id (PK)          │<──│ conversation_id│
+                              │ title            │   │ topic_id (FK)  │
+                              │ language_id (FK) │   │ sequence_order │
+                              │ difficulty       │   └────────────────┘
+                              │ created_by (FK)  │
+                              └──────────────────┘
+                                        │
+                                        ▼
+                              ┌──────────────────┐
+                              │conversation_lines│
+                              │──────────────────│
+                              │ id (PK)          │
+                              │ conversation_id  │
+                              │ sequence_order   │
+                              │ speaker_role     │
+                              │ english_text     │
+                              │ target_text      │
+                              │ word_id (FK)     │
+                              └──────────────────┘
 
-┌──────────────────┐       ┌────────────────────┐
-│ user_journeys    │       │ user_progress      │
-│──────────────────│       │────────────────────│
-│ id (PK)          │       │ id (PK)            │
-│ user_id (FK)     │       │ user_id (FK)       │
-│ journey_id (FK)  │       │ topic_id (FK)      │
-│ assigned_by (FK) │       │ journey_id (FK)    │
-│ status           │       │ completed          │
-│ assigned_at      │       │ score              │
-│ completed_at     │       │ time_spent_mins    │
+┌──────────────────┐       ┌────────────────────┐      ┌──────────────────────┐
+│ user_journeys    │       │ user_progress      │      │user_conversation_prog│
+│──────────────────│       │────────────────────│      │──────────────────────│
+│ id (PK)          │       │ id (PK)            │      │ id (PK)              │
+│ user_id (FK)     │       │ user_id (FK)       │      │ user_id (FK)         │
+│ journey_id (FK)  │       │ topic_id (FK)      │      │ conversation_id (FK) │
+│ assigned_by (FK) │       │ journey_id (FK)    │      │ completed            │
+│ status           │       │ completed          │      │ replay_count         │
+│ assigned_at      │       │ score              │      │ time_spent_secs      │
+│ completed_at     │       │ time_spent_mins    │      └──────────────────────┘
 └──────────────────┘       │ completed_at       │
                            └────────────────────┘
 
@@ -492,6 +518,96 @@ CREATE INDEX idx_topic_quizzes_word_id ON topic_quizzes(word_id);
 
 ---
 
+#### `conversations`
+Conversation scenarios for dialogue practice.
+
+```sql
+CREATE TABLE conversations (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    context TEXT,
+    language_id INTEGER NOT NULL REFERENCES languages(id) ON DELETE RESTRICT,
+    difficulty_level VARCHAR(20) NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
+    created_by INTEGER NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_conversations_language_id ON conversations(language_id);
+CREATE INDEX idx_conversations_created_by ON conversations(created_by);
+CREATE INDEX idx_conversations_difficulty ON conversations(difficulty_level);
+```
+
+**Fields**:
+- `title`: Conversation title (e.g., "Ordering at a Restaurant")
+- `description`: Brief description of the scenario
+- `context`: Optional context or instructions for learners
+- `language_id`: Target language for this conversation
+- `difficulty_level`: Complexity level for learners
+
+---
+
+#### `conversation_lines`
+Individual dialogue lines within conversations.
+
+```sql
+CREATE TABLE conversation_lines (
+    id SERIAL PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    sequence_order INTEGER NOT NULL,
+    speaker_role VARCHAR(100) NOT NULL,
+    english_text TEXT NOT NULL,
+    target_text TEXT NOT NULL,
+    romanization TEXT,
+    audio_url VARCHAR(500),
+    word_id INTEGER REFERENCES words(id) ON DELETE SET NULL,
+    is_learner_line BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(conversation_id, sequence_order)
+);
+
+CREATE INDEX idx_conversation_lines_conversation_id ON conversation_lines(conversation_id);
+CREATE INDEX idx_conversation_lines_word_id ON conversation_lines(word_id);
+CREATE INDEX idx_conversation_lines_sequence ON conversation_lines(conversation_id, sequence_order);
+```
+
+**Fields**:
+- `sequence_order`: Order of line in the conversation
+- `speaker_role`: Who is speaking (e.g., "customer", "waiter", "narrator")
+- `english_text`: English version of the line
+- `target_text`: Target language version (e.g., Cantonese)
+- `romanization`: Phonetic representation (Jyutping/Pinyin)
+- `audio_url`: Audio file for this specific line
+- `word_id`: Optional link to vocabulary word being used
+- `is_learner_line`: TRUE if this is meant for learner to practice saying
+
+---
+
+#### `topic_conversations`
+Links conversations to topics (many-to-many).
+
+```sql
+CREATE TABLE topic_conversations (
+    id SERIAL PRIMARY KEY,
+    topic_id INTEGER NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    sequence_order INTEGER NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(topic_id, conversation_id)
+);
+
+CREATE INDEX idx_topic_conversations_topic_id ON topic_conversations(topic_id);
+CREATE INDEX idx_topic_conversations_conversation_id ON topic_conversations(conversation_id);
+CREATE INDEX idx_topic_conversations_sequence ON topic_conversations(topic_id, sequence_order);
+```
+
+**Fields**:
+- `sequence_order`: Order of conversation within the topic
+
+---
+
 ### 2.4 User Progress & Assignments
 
 #### `user_journeys`
@@ -547,6 +663,38 @@ CREATE INDEX idx_user_progress_activity_type ON user_progress(activity_type);
 - `score`: Points earned (for quizzes)
 - `max_score`: Maximum possible points
 - `time_spent_seconds`: Duration of activity
+
+---
+
+#### `user_conversation_progress`
+Tracks learner progress on conversation practice.
+
+```sql
+CREATE TABLE user_conversation_progress (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    topic_id INTEGER REFERENCES topics(id) ON DELETE SET NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    replay_count INTEGER DEFAULT 0,
+    time_spent_seconds INTEGER DEFAULT 0,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    last_accessed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, conversation_id)
+);
+
+CREATE INDEX idx_user_conversation_progress_user_id ON user_conversation_progress(user_id);
+CREATE INDEX idx_user_conversation_progress_conversation_id ON user_conversation_progress(conversation_id);
+CREATE INDEX idx_user_conversation_progress_topic_id ON user_conversation_progress(topic_id);
+CREATE INDEX idx_user_conversation_progress_completed ON user_conversation_progress(completed);
+```
+
+**Fields**:
+- `completed`: Whether user has completed the conversation at least once
+- `replay_count`: Number of times user has replayed this conversation
+- `time_spent_seconds`: Total time spent on this conversation
+- `last_accessed_at`: Last time user opened this conversation
 
 ---
 
@@ -834,6 +982,31 @@ FROM languages WHERE code = 'zh-CN';
 INSERT INTO word_translations (word_id, language_id, translation, audio_url)
 SELECT 1, id, 'hola', '/audio/es/hello.mp3'
 FROM languages WHERE code = 'es';
+
+-- Sample conversation: Greeting someone
+INSERT INTO conversations (id, title, description, context, language_id, difficulty_level, created_by)
+SELECT 
+    1,
+    'Simple Greetings',
+    'Learn how to greet people in Cantonese',
+    'Practice basic greeting phrases you can use when meeting someone',
+    l.id,
+    'beginner',
+    1
+FROM languages l
+WHERE l.code = 'zh-HK';
+
+-- Conversation lines for "Simple Greetings"
+INSERT INTO conversation_lines (conversation_id, sequence_order, speaker_role, english_text, target_text, romanization, is_learner_line, word_id)
+VALUES
+(1, 1, 'Person A', 'Hello!', '你好！', 'nei5 hou2!', FALSE, 1),
+(1, 2, 'Person B', 'Hello! How are you?', '你好！你好嗎？', 'nei5 hou2! nei5 hou2 maa3?', TRUE, NULL),
+(1, 3, 'Person A', 'I''m fine, thank you!', '我好好，多謝！', 'ngo5 hou2 hou2, do1 ze6!', FALSE, NULL),
+(1, 4, 'Person B', 'See you later!', '遲啲見！', 'ci4 di1 gin3!', TRUE, NULL);
+
+-- Link conversation to a topic (example)
+-- INSERT INTO topic_conversations (topic_id, conversation_id, sequence_order)
+-- VALUES (1, 1, 1);  -- Assuming topic 1 exists
 ```
 
 ---
@@ -1052,6 +1225,84 @@ WHERE l.code = $1
   AND l.is_active = TRUE
 GROUP BY j.id, j.name, j.description, l.name, l.code, u.name
 ORDER BY j.created_at DESC;
+```
+
+### Get conversation with all dialogue lines
+```sql
+SELECT 
+    c.id,
+    c.title,
+    c.description,
+    c.context,
+    c.difficulty_level,
+    l.name AS language_name,
+    l.code AS language_code,
+    json_agg(
+        json_build_object(
+            'id', cl.id,
+            'sequence_order', cl.sequence_order,
+            'speaker_role', cl.speaker_role,
+            'english_text', cl.english_text,
+            'target_text', cl.target_text,
+            'romanization', cl.romanization,
+            'audio_url', cl.audio_url,
+            'is_learner_line', cl.is_learner_line,
+            'word_id', cl.word_id
+        ) ORDER BY cl.sequence_order
+    ) AS lines
+FROM conversations c
+JOIN languages l ON c.language_id = l.id
+LEFT JOIN conversation_lines cl ON c.id = cl.conversation_id
+WHERE c.id = $1
+GROUP BY c.id, c.title, c.description, c.context, c.difficulty_level, l.name, l.code;
+```
+
+### Get user's conversation progress for a topic
+```sql
+SELECT 
+    c.id,
+    c.title,
+    c.difficulty_level,
+    COUNT(cl.id) AS total_lines,
+    ucp.completed,
+    ucp.replay_count,
+    ucp.time_spent_seconds,
+    ucp.last_accessed_at,
+    CASE 
+        WHEN ucp.completed THEN 100
+        ELSE 0
+    END AS progress_percentage
+FROM conversations c
+JOIN topic_conversations tc ON c.id = tc.conversation_id
+JOIN conversation_lines cl ON c.id = cl.conversation_id
+LEFT JOIN user_conversation_progress ucp 
+    ON c.id = ucp.conversation_id AND ucp.user_id = $1
+WHERE tc.topic_id = $2
+GROUP BY c.id, c.title, c.difficulty_level, ucp.completed, ucp.replay_count, 
+         ucp.time_spent_seconds, ucp.last_accessed_at, tc.sequence_order
+ORDER BY tc.sequence_order;
+```
+
+### Get conversations using specific vocabulary words
+```sql
+SELECT DISTINCT
+    c.id,
+    c.title,
+    c.difficulty_level,
+    COUNT(DISTINCT cl.id) AS line_count,
+    COUNT(DISTINCT CASE WHEN cl.word_id = ANY($1::INTEGER[]) THEN cl.id END) AS matching_word_usage
+FROM conversations c
+JOIN conversation_lines cl ON c.id = cl.conversation_id
+WHERE c.language_id = $2
+  AND cl.word_id = ANY($1::INTEGER[])
+GROUP BY c.id, c.title, c.difficulty_level
+HAVING COUNT(DISTINCT CASE WHEN cl.word_id = ANY($1::INTEGER[]) THEN cl.id END) > 0
+ORDER BY matching_word_usage DESC, c.difficulty_level;
+```
+
+---
+
+## 7. Scalability Considerations
 ```
 
 ---
