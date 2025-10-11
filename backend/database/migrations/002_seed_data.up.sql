@@ -5,39 +5,75 @@
 -- 1. ROLES
 -- ============================================================================
 
-INSERT INTO roles (name, description) VALUES
-    ('learner', 'Student learning languages'),
-    ('teacher', 'Teacher managing content and learners'),
-    ('admin', 'System administrator')
+-- Only insert roles if the table is empty
+INSERT INTO roles (name, description)
+SELECT 'learner', 'Student learning languages'
+WHERE NOT EXISTS (SELECT 1 FROM roles LIMIT 1)
+UNION ALL
+SELECT 'teacher', 'Teacher managing content and learners'
+WHERE NOT EXISTS (SELECT 1 FROM roles LIMIT 1)
+UNION ALL
+SELECT 'admin', 'System administrator'
+WHERE NOT EXISTS (SELECT 1 FROM roles LIMIT 1)
 ON CONFLICT (name) DO NOTHING;
 
 -- ============================================================================
 -- 2. LANGUAGES
 -- ============================================================================
 
-INSERT INTO languages (code, name, native_name, direction, is_active) VALUES
-    ('en', 'English', 'English', 'ltr', true),
-    ('zh-HK', 'Cantonese (Traditional)', '廣東話（繁體）', 'ltr', true),
-    ('zh-CN', 'Mandarin (Simplified)', '普通话（简体）', 'ltr', true),
-    ('es', 'Spanish', 'Español', 'ltr', true),
-    ('fr', 'French', 'Français', 'ltr', true),
-    ('ja', 'Japanese', '日本語', 'ltr', true),
-    ('ko', 'Korean', '한국어', 'ltr', true)
+-- Only insert languages if the table is empty
+INSERT INTO languages (code, name, native_name, direction, is_active)
+SELECT 'en', 'English', 'English', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
+UNION ALL
+SELECT 'zh-HK', 'Cantonese (Traditional)', '廣東話（繁體）', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
+UNION ALL
+SELECT 'zh-CN', 'Mandarin (Simplified)', '普通话（简体）', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
+UNION ALL
+SELECT 'es', 'Spanish', 'Español', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
+UNION ALL
+SELECT 'fr', 'French', 'Français', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
+UNION ALL
+SELECT 'ja', 'Japanese', '日本語', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
+UNION ALL
+SELECT 'ko', 'Korean', '한국어', 'ltr', true
+WHERE NOT EXISTS (SELECT 1 FROM languages LIMIT 1)
 ON CONFLICT (code) DO NOTHING;
 
 -- ============================================================================
 -- 3. ACHIEVEMENTS
 -- ============================================================================
 
-INSERT INTO achievements (name, description, criteria_type, criteria_value, badge_icon_url) VALUES
-    ('First Topic', 'Complete your first topic', 'topic_complete', 1, '/badges/first-topic.svg'),
-    ('Journey Beginner', 'Complete your first journey', 'journey_complete', 1, '/badges/first-journey.svg'),
-    ('Perfect Score', 'Get 100% on a quiz', 'quiz_score', 100, '/badges/perfect-score.svg'),
-    ('Word Master 50', 'Learn 50 words', 'total_words', 50, '/badges/word-master-50.svg'),
-    ('Word Master 100', 'Learn 100 words', 'total_words', 100, '/badges/word-master-100.svg'),
-    ('Word Master 500', 'Learn 500 words', 'total_words', 500, '/badges/word-master-500.svg'),
-    ('Journey Master', 'Complete 5 journeys', 'journey_complete', 5, '/badges/journey-master.svg'),
-    ('Topic Expert', 'Complete 10 topics', 'topic_complete', 10, '/badges/topic-expert.svg')
+-- Only insert achievements if the table is empty
+INSERT INTO achievements (name, description, criteria_type, criteria_value, badge_icon_url)
+SELECT 'First Topic', 'Complete your first topic', 'topic_complete', 1, '/badges/first-topic.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Journey Beginner', 'Complete your first journey', 'journey_complete', 1, '/badges/first-journey.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Perfect Score', 'Get 100% on a quiz', 'quiz_score', 100, '/badges/perfect-score.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Word Master 50', 'Learn 50 words', 'total_words', 50, '/badges/word-master-50.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Word Master 100', 'Learn 100 words', 'total_words', 100, '/badges/word-master-100.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Word Master 500', 'Learn 500 words', 'total_words', 500, '/badges/word-master-500.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Journey Master', 'Complete 5 journeys', 'journey_complete', 5, '/badges/journey-master.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
+UNION ALL
+SELECT 'Topic Expert', 'Complete 10 topics', 'topic_complete', 10, '/badges/topic-expert.svg'
+WHERE NOT EXISTS (SELECT 1 FROM achievements LIMIT 1)
 ON CONFLICT DO NOTHING;
 
 -- ============================================================================
@@ -46,8 +82,8 @@ ON CONFLICT DO NOTHING;
 
 -- Note: In production, you may want to skip or modify this section
 -- This creates sample words, topics, and journeys for testing
+-- Only runs if words table is empty
 
--- Sample words with translations (Cantonese focus)
 DO $$
 DECLARE
     v_user_id INTEGER;
@@ -56,7 +92,16 @@ DECLARE
     v_journey_id INTEGER;
     v_lang_en INTEGER;
     v_lang_cantonese INTEGER;
+    v_word_count INTEGER;
 BEGIN
+    -- Check if words table is empty
+    SELECT COUNT(*) INTO v_word_count FROM words;
+    
+    IF v_word_count > 0 THEN
+        RAISE NOTICE 'Words table already contains data. Skipping sample data creation.';
+        RETURN;
+    END IF;
+    
     -- Get the first admin/teacher user (or create a system user)
     SELECT id INTO v_user_id FROM users 
     WHERE EXISTS (
