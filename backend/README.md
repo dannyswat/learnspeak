@@ -134,6 +134,17 @@ go build -o learnspeak-api main.go
 ./learnspeak-api
 ```
 
+The backend will serve both the API and frontend static files from `../frontend/dist`.
+
+## Static File Serving
+
+In production, the backend serves the React frontend:
+
+1. Build the frontend: `cd ../frontend && npm run build`
+2. The backend automatically serves files from `../frontend/dist`
+3. Supports client-side routing (HTML5 mode)
+4. API routes take precedence over static files
+
 ## Environment Variables
 
 See `.env.example` for all available configuration options.
@@ -144,14 +155,27 @@ Key variables:
 - `DB_NAME` - Database name
 - `JWT_SECRET` - Secret key for JWT tokens (change in production!)
 - `JWT_EXPIRATION_HOURS` - Token expiration time
+- `CORS_ALLOWED_ORIGINS` - CORS origins (only needed for dev with separate frontend, leave empty in production)
 
 ## Security
 
 - Passwords are hashed using bcrypt
 - JWT tokens for authentication
-- CORS protection
+- CORS protection (configurable)
 - Request size limits
 - Input validation
+
+## Architecture
+
+### Development
+- Frontend: `http://localhost:5173` (Vite dev server with proxy)
+- Backend: `http://localhost:8080` (API only)
+- Vite proxies `/api/*` to backend
+
+### Production
+- Single server: `http://localhost:8080`
+- Backend serves both API and static files
+- No CORS needed (same origin)
 
 ## Next Steps
 

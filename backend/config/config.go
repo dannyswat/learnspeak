@@ -19,6 +19,7 @@ type Config struct {
 	DBSSLMode          string
 	JWTSecret          string
 	JWTExpirationHours int
+	CORSAllowedOrigins string
 	MaxUploadSize      int64
 	UploadDir          string
 }
@@ -46,6 +47,7 @@ func LoadConfig() *Config {
 		DBSSLMode:          getEnv("DB_SSLMODE", "disable"),
 		JWTSecret:          getEnv("JWT_SECRET", "your-secret-key"),
 		JWTExpirationHours: jwtExpHours,
+		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", ""),
 		MaxUploadSize:      maxUploadSize,
 		UploadDir:          getEnv("UPLOAD_DIR", "./uploads"),
 	}
