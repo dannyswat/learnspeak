@@ -87,3 +87,43 @@ type AssignJourneyResponse struct {
 	AssignedCount int                 `json:"assignedCount"`
 	Assignments   []JourneyAssignment `json:"assignments"`
 }
+
+// UserJourneyResponse represents a journey assignment for a user
+type UserJourneyResponse struct {
+	ID              uint             `json:"id"`
+	UserID          uint             `json:"userId"`
+	JourneyID       uint             `json:"journeyId"`
+	Journey         *JourneyResponse `json:"journey,omitempty"`
+	User            *UserInfo        `json:"user,omitempty"`
+	AssignedBy      *UserInfo        `json:"assignedBy,omitempty"`
+	Status          string           `json:"status"`
+	AssignedAt      string           `json:"assignedAt"`
+	StartedAt       *string          `json:"startedAt,omitempty"`
+	CompletedAt     *string          `json:"completedAt,omitempty"`
+	Progress        float64          `json:"progress,omitempty"`
+	TotalTopics     int              `json:"totalTopics,omitempty"`
+	CompletedTopics int              `json:"completedTopics,omitempty"`
+}
+
+// UserInfo represents basic user information
+type UserInfo struct {
+	ID       uint     `json:"id"`
+	Username string   `json:"username"`
+	Name     string   `json:"name"`
+	Email    string   `json:"email"`
+	Roles    []string `json:"roles,omitempty"`
+}
+
+// UnassignJourneyRequest represents the request to unassign a journey
+type UnassignJourneyRequest struct {
+	UserIDs []uint `json:"userIds" validate:"required,min=1"`
+}
+
+// UserJourneyListResponse represents paginated user journey list
+type UserJourneyListResponse struct {
+	UserJourneys []UserJourneyResponse `json:"userJourneys"`
+	Total        int64                 `json:"total"`
+	Page         int                   `json:"page"`
+	PageSize     int                   `json:"pageSize"`
+	TotalPages   int                   `json:"totalPages"`
+}

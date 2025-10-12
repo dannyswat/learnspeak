@@ -345,3 +345,236 @@ func (h *JourneyHandler) ReorderTopics(c echo.Context) error {
 		Message: "Topics reordered successfully",
 	})
 }
+
+// AssignJourney godoc
+// @Summary Assign journey to users
+// @Description Assign a journey to one or more users (learners)
+// @Tags journeys
+// @Accept json
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Param assignment body dto.AssignJourneyRequest true "User IDs to assign"
+// @Success 200 {object} dto.AssignJourneyResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/assign [post]
+func (h *JourneyHandler) AssignJourney(c echo.Context) error {
+	// Get user ID from context
+	userID, ok := c.Get("userId").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "User ID not found in context",
+			Error:   "unauthorized",
+		})
+	}
+
+	// Parse journey ID
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Parse request body
+	var req dto.AssignJourneyRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid request body",
+			Error:   err.Error(),
+		})
+	}
+
+	// Validate request
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Validation failed",
+			Error:   err.Error(),
+		})
+	}
+
+	// Assign journey
+	response, err := h.journeyService.AssignJourney(uint(id), req.UserIDs, userID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to assign journey",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+// UnassignJourney godoc
+// @Summary Unassign journey from users
+// @Description Remove journey assignment from one or more users
+// @Tags journeys
+// @Accept json
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Param unassignment body dto.UnassignJourneyRequest true "User IDs to unassign"
+// @Success 200 {object} dto.SuccessResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/unassign [post]
+func (h *JourneyHandler) UnassignJourney(c echo.Context) error {
+	// Parse journey ID
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Parse request body
+	var req dto.UnassignJourneyRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid request body",
+			Error:   err.Error(),
+		})
+	}
+
+	// Validate request
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Validation failed",
+			Error:   err.Error(),
+		})
+	}
+
+	// Unassign journey
+	if err := h.journeyService.UnassignJourney(uint(id), req.UserIDs); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to unassign journey",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResponse{
+		Success: true,
+		Message: "Journey unassigned successfully",
+	})
+}
+
+// GetUserJourneys godoc
+// @Summary Get journeys assigned to a user
+// @Description Get all journeys assigned to a specific user
+// @Tags journeys
+// @Produce json
+// @Param userId path int true "User ID"
+// @Param status query string false "Filter by status (assigned, in_progress, completed)"
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Items per page (default: 20, max: 100)"
+// @Success 200 {object} dto.UserJourneyListResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{userId}/journeys [get]
+func (h *JourneyHandler) GetUserJourneys(c echo.Context) error {
+	// Parse user ID
+	userID, err := strconv.ParseUint(c.Param("userId"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid user ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Parse status filter
+	var status *string
+	if statusParam := c.QueryParam("status"); statusParam != "" {
+		status = &statusParam
+	}
+
+	// Parse pagination
+	page := 1
+	pageSize := 20
+
+	if pageStr := c.QueryParam("page"); pageStr != "" {
+		p, err := strconv.Atoi(pageStr)
+		if err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	if pageSizeStr := c.QueryParam("pageSize"); pageSizeStr != "" {
+		ps, err := strconv.Atoi(pageSizeStr)
+		if err == nil && ps > 0 {
+			pageSize = ps
+		}
+	}
+
+	// Get user journeys
+	journeys, err := h.journeyService.GetUserJourneys(uint(userID), status, page, pageSize)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to get user journeys",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, journeys)
+}
+
+// GetJourneyAssignments godoc
+// @Summary Get users assigned to a journey
+// @Description Get all users assigned to a specific journey
+// @Tags journeys
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Param status query string false "Filter by status (assigned, in_progress, completed)"
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Items per page (default: 20, max: 100)"
+// @Success 200 {object} dto.UserJourneyListResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/assignments [get]
+func (h *JourneyHandler) GetJourneyAssignments(c echo.Context) error {
+	// Parse journey ID
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Parse status filter
+	var status *string
+	if statusParam := c.QueryParam("status"); statusParam != "" {
+		status = &statusParam
+	}
+
+	// Parse pagination
+	page := 1
+	pageSize := 20
+
+	if pageStr := c.QueryParam("page"); pageStr != "" {
+		p, err := strconv.Atoi(pageStr)
+		if err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	if pageSizeStr := c.QueryParam("pageSize"); pageSizeStr != "" {
+		ps, err := strconv.Atoi(pageSizeStr)
+		if err == nil && ps > 0 {
+			pageSize = ps
+		}
+	}
+
+	// Get journey assignments
+	assignments, err := h.journeyService.GetJourneyAssignments(uint(id), status, page, pageSize)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to get journey assignments",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, assignments)
+}

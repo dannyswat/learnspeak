@@ -17,18 +17,22 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	languageRepo := repositories.NewLanguageRepository(database.DB)
 	topicRepo := repositories.NewTopicRepository(database.DB)
 	journeyRepo := repositories.NewJourneyRepository(database.DB)
+	userRepo := repositories.NewUserRepository(database.DB)
+	userJourneyRepo := repositories.NewUserJourneyRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
 	languageService := services.NewLanguageService(languageRepo)
 	topicService := services.NewTopicService(topicRepo, languageRepo)
-	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo)
+	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo, userJourneyRepo)
+	userService := services.NewUserService(userRepo)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
 	languageHandler := handlers.NewLanguageHandler(languageService)
 	topicHandler := handlers.NewTopicHandler(topicService)
 	journeyHandler := handlers.NewJourneyHandler(journeyService)
+	userHandler := handlers.NewUserHandler(userService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 
 	// API version 1
@@ -73,6 +77,17 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 		protected.PUT("/journeys/:id", journeyHandler.UpdateJourney)
 		protected.DELETE("/journeys/:id", journeyHandler.DeleteJourney)
 		protected.POST("/journeys/:id/reorder", journeyHandler.ReorderTopics)
+		protected.POST("/journeys/:id/assign", journeyHandler.AssignJourney)
+		protected.POST("/journeys/:id/unassign", journeyHandler.UnassignJourney)
+		protected.GET("/journeys/:id/assignments", journeyHandler.GetJourneyAssignments)
+
+		// User management
+		protected.GET("/users", userHandler.SearchUsers)
+		protected.GET("/users/learners", userHandler.GetLearners)
+		protected.GET("/users/teachers", userHandler.GetTeachers)
+		protected.GET("/users/:id", userHandler.GetUser)
+		protected.PUT("/users/:id", userHandler.UpdateUser)
+		protected.GET("/users/:userId/journeys", journeyHandler.GetUserJourneys)
 
 		// File uploads
 		protected.POST("/upload/audio", uploadHandler.UploadAudio)

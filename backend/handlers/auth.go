@@ -78,10 +78,15 @@ func Register(c echo.Context) error {
 		})
 	}
 
-	// Assign default "learner" role
-	var learnerRole models.Role
-	if err := database.DB.Where("name = ?", "learner").First(&learnerRole).Error; err == nil {
-		database.DB.Model(&user).Association("Roles").Append(&learnerRole)
+	// Assign role (default to "learner" if not specified)
+	roleName := req.Role
+	if roleName == "" {
+		roleName = "learner"
+	}
+
+	var role models.Role
+	if err := database.DB.Where("name = ?", roleName).First(&role).Error; err == nil {
+		database.DB.Model(&user).Association("Roles").Append(&role)
 	}
 
 	// Load user with roles

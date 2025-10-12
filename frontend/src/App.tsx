@@ -13,6 +13,10 @@ import TopicDetail from './pages/TopicDetail';
 import JourneyList from './pages/JourneyList';
 import JourneyForm from './pages/JourneyForm';
 import JourneyDetail from './pages/JourneyDetail';
+import StudentList from './pages/StudentList';
+import StudentDetail from './pages/StudentDetail';
+import JourneyAssignment from './pages/JourneyAssignment';
+import MyJourneys from './pages/MyJourneys';
 import './App.css';
 
 function App() {
@@ -123,6 +127,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <JourneyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/students"
+            element={
+              <ProtectedRoute>
+                <StudentList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/students/:id"
+            element={
+              <ProtectedRoute>
+                <StudentDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journeys/assign"
+            element={
+              <ProtectedRoute>
+                <JourneyAssignment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-journeys"
+            element={
+              <ProtectedRoute>
+                <MyJourneys />
               </ProtectedRoute>
             }
           />

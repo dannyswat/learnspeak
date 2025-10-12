@@ -16,23 +16,30 @@ type JourneyService interface {
 	DeleteJourney(id uint, userID uint) error
 	ListJourneys(params *dto.JourneyFilterParams) (*dto.JourneyListResponse, error)
 	ReorderTopics(journeyID uint, topicIDs []uint, userID uint) error
+	AssignJourney(journeyID uint, userIDs []uint, assignedBy uint) (*dto.AssignJourneyResponse, error)
+	UnassignJourney(journeyID uint, userIDs []uint) error
+	GetUserJourneys(userID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error)
+	GetJourneyAssignments(journeyID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error)
 }
 
 type journeyService struct {
-	journeyRepo  repositories.JourneyRepository
-	languageRepo repositories.LanguageRepository
-	topicRepo    repositories.TopicRepository
+	journeyRepo     repositories.JourneyRepository
+	languageRepo    repositories.LanguageRepository
+	topicRepo       repositories.TopicRepository
+	userJourneyRepo repositories.UserJourneyRepository
 }
 
 func NewJourneyService(
 	journeyRepo repositories.JourneyRepository,
 	languageRepo repositories.LanguageRepository,
 	topicRepo repositories.TopicRepository,
+	userJourneyRepo repositories.UserJourneyRepository,
 ) JourneyService {
 	return &journeyService{
-		journeyRepo:  journeyRepo,
-		languageRepo: languageRepo,
-		topicRepo:    topicRepo,
+		journeyRepo:     journeyRepo,
+		languageRepo:    languageRepo,
+		topicRepo:       topicRepo,
+		userJourneyRepo: userJourneyRepo,
 	}
 }
 
@@ -355,4 +362,184 @@ func (s *journeyService) toJourneyResponse(journey *models.Journey, includeTopic
 	}
 
 	return response, nil
+}
+
+// AssignJourney assigns a journey to multiple users
+func (s *journeyService) AssignJourney(journeyID uint, userIDs []uint, assignedBy uint) (*dto.AssignJourneyResponse, error) {
+	// Verify journey exists
+	_, err := s.journeyRepo.GetByID(journeyID, false)
+	if err != nil {
+		return nil, fmt.Errorf("journey not found")
+	}
+
+	var assignments []dto.JourneyAssignment
+	assignedCount := 0
+
+	for _, userID := range userIDs {
+		// Check if already assigned
+		isAssigned, err := s.userJourneyRepo.IsAssigned(userID, journeyID)
+		if err != nil {
+			continue
+		}
+		if isAssigned {
+			continue // Skip if already assigned
+		}
+
+		// Assign journey
+		userJourney, err := s.userJourneyRepo.AssignJourney(userID, journeyID, assignedBy)
+		if err != nil {
+			continue
+		}
+
+		assignments = append(assignments, dto.JourneyAssignment{
+			UserID:     userJourney.UserID,
+			UserName:   userJourney.User.Name,
+			AssignedAt: userJourney.AssignedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+		assignedCount++
+	}
+
+	return &dto.AssignJourneyResponse{
+		AssignedCount: assignedCount,
+		Assignments:   assignments,
+	}, nil
+}
+
+// UnassignJourney removes journey assignments from multiple users
+func (s *journeyService) UnassignJourney(journeyID uint, userIDs []uint) error {
+	for _, userID := range userIDs {
+		if err := s.userJourneyRepo.UnassignJourney(userID, journeyID); err != nil {
+			return fmt.Errorf("failed to unassign journey from user %d: %w", userID, err)
+		}
+	}
+	return nil
+}
+
+// GetUserJourneys retrieves all journeys assigned to a user
+func (s *journeyService) GetUserJourneys(userID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error) {
+	// Set defaults
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	userJourneys, total, err := s.userJourneyRepo.GetUserJourneys(userID, status, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.buildUserJourneyListResponse(userJourneys, total, page, pageSize), nil
+}
+
+// GetJourneyAssignments retrieves all users assigned to a journey
+func (s *journeyService) GetJourneyAssignments(journeyID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error) {
+	// Set defaults
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	userJourneys, total, err := s.userJourneyRepo.GetJourneyUsers(journeyID, status, page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.buildUserJourneyListResponse(userJourneys, total, page, pageSize), nil
+}
+
+// buildUserJourneyListResponse builds a paginated user journey list response
+func (s *journeyService) buildUserJourneyListResponse(userJourneys []models.UserJourney, total int64, page, pageSize int) *dto.UserJourneyListResponse {
+	responses := make([]dto.UserJourneyResponse, len(userJourneys))
+	for i, uj := range userJourneys {
+		responses[i] = s.toUserJourneyResponse(&uj)
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(pageSize)))
+
+	return &dto.UserJourneyListResponse{
+		UserJourneys: responses,
+		Total:        total,
+		Page:         page,
+		PageSize:     pageSize,
+		TotalPages:   totalPages,
+	}
+}
+
+// toUserJourneyResponse converts a user journey model to response DTO
+func (s *journeyService) toUserJourneyResponse(uj *models.UserJourney) dto.UserJourneyResponse {
+	response := dto.UserJourneyResponse{
+		ID:         uj.ID,
+		UserID:     uj.UserID,
+		JourneyID:  uj.JourneyID,
+		Status:     uj.Status,
+		AssignedAt: uj.AssignedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	if uj.StartedAt != nil {
+		startedAt := uj.StartedAt.Format("2006-01-02T15:04:05Z07:00")
+		response.StartedAt = &startedAt
+	}
+
+	if uj.CompletedAt != nil {
+		completedAt := uj.CompletedAt.Format("2006-01-02T15:04:05Z07:00")
+		response.CompletedAt = &completedAt
+	}
+
+	// Add user info if available
+	if uj.User.ID > 0 {
+		roles := make([]string, len(uj.User.Roles))
+		for i, role := range uj.User.Roles {
+			roles[i] = role.Name
+		}
+
+		response.User = &dto.UserInfo{
+			ID:       uj.User.ID,
+			Username: uj.User.Username,
+			Name:     uj.User.Name,
+			Email:    uj.User.Email,
+			Roles:    roles,
+		}
+	}
+
+	// Add assigned by info if available
+	if uj.AssignedByUser.ID > 0 {
+		response.AssignedBy = &dto.UserInfo{
+			ID:       uj.AssignedByUser.ID,
+			Username: uj.AssignedByUser.Username,
+			Name:     uj.AssignedByUser.Name,
+			Email:    uj.AssignedByUser.Email,
+		}
+	}
+
+	// Add journey info if available
+	if uj.Journey.ID > 0 {
+		journeyResponse, _ := s.toJourneyResponse(&uj.Journey, false)
+		response.Journey = journeyResponse
+	}
+
+	// Get statistics if needed
+	stats, err := s.userJourneyRepo.GetStatistics(uj.UserID, uj.JourneyID)
+	if err == nil {
+		if totalTopics, ok := stats["total_topics"].(int64); ok {
+			response.TotalTopics = int(totalTopics)
+		}
+		if completedTopics, ok := stats["completed_topics"].(int64); ok {
+			response.CompletedTopics = int(completedTopics)
+		}
+		if progress, ok := stats["progress_percentage"].(float64); ok {
+			response.Progress = progress
+		}
+	}
+
+	return response
 }
