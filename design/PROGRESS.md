@@ -270,21 +270,40 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.3: Journey Management
 **Duration**: 2-3 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Backend: Journey CRUD endpoints
-- [ ] Backend: Journey-topic association
-- [ ] Backend: Get journey with all topics and progress
-- [ ] Frontend: Journey list page
-- [ ] Frontend: Create journey form
-- [ ] Frontend: Topic selection and ordering
-- [ ] Frontend: Journey preview
-- [ ] Frontend: Edit/delete journey
+- [x] Backend: Journey CRUD endpoints
+- [x] Backend: Journey-topic association
+- [x] Backend: Get journey with all topics and progress
+- [x] Frontend: Journey list page
+- [x] Frontend: Create journey form
+- [x] Frontend: Topic selection and ordering
+- [x] Frontend: Journey preview
+- [x] Frontend: Edit/delete journey
 
 **Deliverables**:
 - ✅ Journey management system
 - ✅ Topic ordering in journeys
+
+**Completed**: October 12, 2025
+
+**Completed Files**:
+- Backend:
+  - `models/journey.go` - Journey and JourneyTopic models
+  - `dto/journey.go` - Request/response DTOs for journey operations
+  - `repositories/journey_repository.go` - Database operations for journeys
+  - `services/journey_service.go` - Business logic for journey CRUD
+  - `handlers/journey_handler.go` - HTTP handlers for journey endpoints
+  - `routes/routes.go` - Updated with journey routes
+- Frontend:
+  - `types/journey.ts` - TypeScript types for journeys
+  - `services/journeyService.ts` - API service for journey operations
+  - `pages/JourneyList.tsx` - Journey list page with search and filtering
+  - `pages/JourneyForm.tsx` - Create/edit journey form with topic selection and ordering
+  - `pages/JourneyDetail.tsx` - Journey detail view with topic list
+  - `App.tsx` - Updated with journey management routes
+  - `components/Layout.tsx` - Added Journeys link to navigation
 
 **User Stories**: 2.4  
 **Dependencies**: Sprint 2.2

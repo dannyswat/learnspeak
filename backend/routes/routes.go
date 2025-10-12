@@ -16,16 +16,19 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	wordRepo := repositories.NewWordRepository(database.DB)
 	languageRepo := repositories.NewLanguageRepository(database.DB)
 	topicRepo := repositories.NewTopicRepository(database.DB)
+	journeyRepo := repositories.NewJourneyRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
 	languageService := services.NewLanguageService(languageRepo)
 	topicService := services.NewTopicService(topicRepo, languageRepo)
+	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
 	languageHandler := handlers.NewLanguageHandler(languageService)
 	topicHandler := handlers.NewTopicHandler(topicService)
+	journeyHandler := handlers.NewJourneyHandler(journeyService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 
 	// API version 1
@@ -62,6 +65,14 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 		protected.PUT("/topics/:id", topicHandler.UpdateTopic)
 		protected.DELETE("/topics/:id", topicHandler.DeleteTopic)
 		protected.PUT("/topics/:id/words/reorder", topicHandler.ReorderWords)
+
+		// Journey management
+		protected.GET("/journeys", journeyHandler.ListJourneys)
+		protected.POST("/journeys", journeyHandler.CreateJourney)
+		protected.GET("/journeys/:id", journeyHandler.GetJourney)
+		protected.PUT("/journeys/:id", journeyHandler.UpdateJourney)
+		protected.DELETE("/journeys/:id", journeyHandler.DeleteJourney)
+		protected.POST("/journeys/:id/reorder", journeyHandler.ReorderTopics)
 
 		// File uploads
 		protected.POST("/upload/audio", uploadHandler.UploadAudio)

@@ -68,6 +68,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span>Topics</span>
             </button>
 
+            {/* Journeys Link */}
+            <button
+              onClick={() => navigate('/journeys')}
+              className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              <span>🗺️</span>
+              <span>Journeys</span>
+            </button>
+
             {/* Profile Dropdown */}
             <div className="relative">
               <button

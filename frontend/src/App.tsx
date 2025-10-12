@@ -10,6 +10,9 @@ import WordDetail from './pages/WordDetail';
 import TopicList from './pages/TopicList';
 import TopicForm from './pages/TopicForm';
 import TopicDetail from './pages/TopicDetail';
+import JourneyList from './pages/JourneyList';
+import JourneyForm from './pages/JourneyForm';
+import JourneyDetail from './pages/JourneyDetail';
 import './App.css';
 
 function App() {
@@ -88,6 +91,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <TopicForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journeys"
+            element={
+              <ProtectedRoute>
+                <JourneyList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journeys/new"
+            element={
+              <ProtectedRoute>
+                <JourneyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journeys/:id"
+            element={
+              <ProtectedRoute>
+                <JourneyDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/journeys/:id/edit"
+            element={
+              <ProtectedRoute>
+                <JourneyForm />
               </ProtectedRoute>
             }
           />
