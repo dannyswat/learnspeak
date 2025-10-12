@@ -69,6 +69,16 @@ export interface UserJourney {
   progress?: number;
   totalTopics?: number;
   completedTopics?: number;
+  nextTopic?: {
+    id: number;
+    name: string;
+    description: string;
+    level: string;
+    wordCount: number;
+    quizCount: number;
+    sequenceOrder: number;
+    completed: boolean;
+  };
 }
 
 export interface UserJourneyListResponse {

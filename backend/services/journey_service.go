@@ -23,10 +23,11 @@ type JourneyService interface {
 }
 
 type journeyService struct {
-	journeyRepo     repositories.JourneyRepository
-	languageRepo    repositories.LanguageRepository
-	topicRepo       repositories.TopicRepository
-	userJourneyRepo repositories.UserJourneyRepository
+	journeyRepo      repositories.JourneyRepository
+	languageRepo     repositories.LanguageRepository
+	topicRepo        repositories.TopicRepository
+	userJourneyRepo  repositories.UserJourneyRepository
+	userProgressRepo repositories.UserProgressRepository
 }
 
 func NewJourneyService(
@@ -34,12 +35,14 @@ func NewJourneyService(
 	languageRepo repositories.LanguageRepository,
 	topicRepo repositories.TopicRepository,
 	userJourneyRepo repositories.UserJourneyRepository,
+	userProgressRepo repositories.UserProgressRepository,
 ) JourneyService {
 	return &journeyService{
-		journeyRepo:     journeyRepo,
-		languageRepo:    languageRepo,
-		topicRepo:       topicRepo,
-		userJourneyRepo: userJourneyRepo,
+		journeyRepo:      journeyRepo,
+		languageRepo:     languageRepo,
+		topicRepo:        topicRepo,
+		userJourneyRepo:  userJourneyRepo,
+		userProgressRepo: userProgressRepo,
 	}
 }
 
@@ -541,5 +544,63 @@ func (s *journeyService) toUserJourneyResponse(uj *models.UserJourney) dto.UserJ
 		}
 	}
 
+	// Get next available topic
+	nextTopic := s.getNextTopic(uj.UserID, uj.JourneyID)
+	if nextTopic != nil {
+		response.NextTopic = nextTopic
+	}
+
 	return response
+}
+
+// getNextTopic determines the next unlocked topic for a user in a journey
+func (s *journeyService) getNextTopic(userID, journeyID uint) *dto.JourneyTopicInfo {
+	// Get journey with topics ordered by sequence
+	journey, err := s.journeyRepo.GetByID(journeyID, true)
+	if err != nil || journey == nil {
+		return nil
+	}
+
+	// Get user's completed topic IDs in this journey
+	completedTopicIDs, err := s.userProgressRepo.GetCompletedTopicIDs(userID, journeyID)
+	if err != nil {
+		completedTopicIDs = []uint{} // Default to empty if error
+	}
+
+	// Find the first topic that is not completed
+	for _, jt := range journey.Topics {
+		if jt.Topic.ID == 0 {
+			continue
+		}
+
+		isCompleted := false
+		for _, completedID := range completedTopicIDs {
+			if completedID == jt.Topic.ID {
+				isCompleted = true
+				break
+			}
+		}
+
+		if !isCompleted {
+			// Get word count and quiz count from topic
+			wordCount := 0
+			quizCount := 0
+
+			// Note: These would ideally be preloaded or cached
+			// For now, we'll return basic info
+			return &dto.JourneyTopicInfo{
+				ID:            jt.Topic.ID,
+				Name:          jt.Topic.Name,
+				Description:   jt.Topic.Description,
+				Level:         jt.Topic.Level,
+				WordCount:     wordCount,
+				QuizCount:     quizCount,
+				SequenceOrder: jt.SequenceOrder,
+				Completed:     false,
+			}
+		}
+	}
+
+	// All topics completed
+	return nil
 }

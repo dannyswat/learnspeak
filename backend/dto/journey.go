@@ -90,19 +90,20 @@ type AssignJourneyResponse struct {
 
 // UserJourneyResponse represents a journey assignment for a user
 type UserJourneyResponse struct {
-	ID              uint             `json:"id"`
-	UserID          uint             `json:"userId"`
-	JourneyID       uint             `json:"journeyId"`
-	Journey         *JourneyResponse `json:"journey,omitempty"`
-	User            *UserInfo        `json:"user,omitempty"`
-	AssignedBy      *UserInfo        `json:"assignedBy,omitempty"`
-	Status          string           `json:"status"`
-	AssignedAt      string           `json:"assignedAt"`
-	StartedAt       *string          `json:"startedAt,omitempty"`
-	CompletedAt     *string          `json:"completedAt,omitempty"`
-	Progress        float64          `json:"progress,omitempty"`
-	TotalTopics     int              `json:"totalTopics,omitempty"`
-	CompletedTopics int              `json:"completedTopics,omitempty"`
+	ID              uint              `json:"id"`
+	UserID          uint              `json:"userId"`
+	JourneyID       uint              `json:"journeyId"`
+	Journey         *JourneyResponse  `json:"journey,omitempty"`
+	User            *UserInfo         `json:"user,omitempty"`
+	AssignedBy      *UserInfo         `json:"assignedBy,omitempty"`
+	Status          string            `json:"status"`
+	AssignedAt      string            `json:"assignedAt"`
+	StartedAt       *string           `json:"startedAt,omitempty"`
+	CompletedAt     *string           `json:"completedAt,omitempty"`
+	Progress        float64           `json:"progress,omitempty"`
+	TotalTopics     int               `json:"totalTopics,omitempty"`
+	CompletedTopics int               `json:"completedTopics,omitempty"`
+	NextTopic       *JourneyTopicInfo `json:"nextTopic,omitempty"`
 }
 
 // UserInfo represents basic user information

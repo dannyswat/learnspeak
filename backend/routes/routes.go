@@ -19,12 +19,13 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	journeyRepo := repositories.NewJourneyRepository(database.DB)
 	userRepo := repositories.NewUserRepository(database.DB)
 	userJourneyRepo := repositories.NewUserJourneyRepository(database.DB)
+	userProgressRepo := repositories.NewUserProgressRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
 	languageService := services.NewLanguageService(languageRepo)
 	topicService := services.NewTopicService(topicRepo, languageRepo)
-	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo, userJourneyRepo)
+	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo, userJourneyRepo, userProgressRepo)
 	userService := services.NewUserService(userRepo)
 
 	// Initialize handlers

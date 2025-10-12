@@ -312,21 +312,28 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.4: Journey Assignment & User Management
 **Duration**: 2-3 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Backend: User role management
-- [ ] Backend: Assign journey endpoint
-- [ ] Backend: Get assigned journeys for user
-- [ ] Backend: Get students for teacher
-- [ ] Frontend: User list (for teachers)
-- [ ] Frontend: Journey assignment interface
-- [ ] Frontend: Student management page
-- [ ] Frontend: View assigned journeys per student
+- [x] Backend: User role management
+- [x] Backend: Assign journey endpoint
+- [x] Backend: Get assigned journeys for user
+- [x] Backend: Get students for teacher
+- [x] Frontend: User list (for teachers)
+- [x] Frontend: Journey assignment interface
+- [x] Frontend: Student management page
+- [x] Frontend: View assigned journeys per student
+- [x] Bug fix: userID context key issue (changed to userId)
+- [x] Bug fix: Missing GET /users/:id route
+- [x] Bug fix: Added deleted_at column migration
 
 **Deliverables**:
 - ✅ Journey assignment system
 - ✅ Student management for teachers
+- ✅ User journey tracking with status
+- ✅ Soft delete support for user_journeys
+
+**Completed**: October 12, 2025
 
 **User Stories**: 2.5  
 **Dependencies**: Sprint 2.3
@@ -337,25 +344,44 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.5: Learner Dashboard & Navigation
 **Duration**: 2-3 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
-**Tasks**:
-- [ ] Backend: Get user's assigned journeys with progress
-- [ ] Backend: Get next available topic in journey
-- [ ] Frontend: Learner dashboard
-- [ ] Frontend: Journey cards with progress
-- [ ] Frontend: Journey detail page
-- [ ] Frontend: Topic navigation (sequential unlock)
-- [ ] Frontend: Progress indicators
-- [ ] Frontend: Stats cards
+**Backend Tasks**:
+- [x] Create UserProgress model and repository
+- [x] Implement GetCompletedTopicIDs method
+- [x] Implement GetJourneyProgress method
+- [x] Extend JourneyService with getNextTopic()
+- [x] Update DTOs to include nextTopic in UserJourneyResponse
+- [x] Inject UserProgressRepository into services
+
+**Frontend Tasks**:
+- [x] Enhanced Dashboard with role-based views
+- [x] Teacher quick actions (Add Words, Topics, Journeys, Students)
+- [x] Learner journey cards with progress bars
+- [x] Stats cards (total, in progress, completed, avg progress)
+- [x] JourneyDetail page with sequential navigation
+- [x] Lock/unlock topic states based on completion
+- [x] Visual indicators (lock icons, checkmarks, next badge)
+- [x] Learner progress card with stats and CTA
+- [x] Click prevention for locked topics
 
 **Deliverables**:
-- ✅ Learner dashboard
+- ✅ Learner dashboard with journey cards
 - ✅ Sequential topic navigation
-- ✅ Progress visualization
+- ✅ Progress visualization and tracking
+- ✅ Role-based UI rendering
+
+**Completed**: October 12, 2025
 
 **User Stories**: 3.1, 3.2  
 **Dependencies**: Sprint 2.4
+
+**Technical Notes**:
+- UserProgress table tracks completion by activity type (flashcard, pronunciation, conversation, quiz)
+- Next topic calculated server-side based on sequential order
+- Topics locked until previous topics completed (learners only)
+- Teachers have full access to all topics
+- Progress calculated as: (completed topics / total topics) * 100
 
 ---
 
