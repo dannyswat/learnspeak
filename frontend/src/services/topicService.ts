@@ -37,6 +37,10 @@ class TopicService {
   async reorderWords(topicId: number, wordIds: number[]): Promise<void> {
     await api.put(`/topics/${topicId}/words/reorder`, { wordIds });
   }
+
+  async addWordsToTopic(topicId: number, wordIds: number[]): Promise<void> {
+    await api.post(`/topics/${topicId}/words`, { wordIds });
+  }
 }
 
 export const topicService = new TopicService();

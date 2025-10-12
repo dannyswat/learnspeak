@@ -40,6 +40,8 @@ func (s *QuizService) CreateQuestion(req *dto.CreateQuizQuestionRequest) (*model
 		WordID:        req.WordID,
 		QuestionType:  req.QuestionType,
 		QuestionText:  req.QuestionText,
+		AudioURL:      req.AudioURL,
+		ImageURL:      req.ImageURL,
 		CorrectAnswer: req.CorrectAnswer,
 		OptionA:       req.OptionA,
 		OptionB:       req.OptionB,
@@ -86,6 +88,8 @@ func (s *QuizService) GetTopicQuestionsForPractice(topicID uint, shuffle bool) (
 			ID:           q.ID,
 			QuestionType: q.QuestionType,
 			QuestionText: q.QuestionText,
+			AudioURL:     q.AudioURL,
+			ImageURL:     q.ImageURL,
 			OptionA:      q.OptionA,
 			OptionB:      q.OptionB,
 			OptionC:      q.OptionC,
@@ -112,6 +116,12 @@ func (s *QuizService) UpdateQuestion(id uint, req *dto.UpdateQuizQuestionRequest
 	}
 	if req.QuestionText != "" {
 		question.QuestionText = req.QuestionText
+	}
+	if req.AudioURL != nil {
+		question.AudioURL = req.AudioURL
+	}
+	if req.ImageURL != nil {
+		question.ImageURL = req.ImageURL
 	}
 	if req.CorrectAnswer != "" {
 		question.CorrectAnswer = req.CorrectAnswer
@@ -176,7 +186,10 @@ func (s *QuizService) SubmitQuiz(userID uint, req *dto.QuizSubmissionRequest) (*
 
 		questionResults = append(questionResults, dto.QuestionResult{
 			QuestionID:    question.ID,
+			QuestionType:  question.QuestionType,
 			QuestionText:  question.QuestionText,
+			AudioURL:      question.AudioURL,
+			ImageURL:      question.ImageURL,
 			UserAnswer:    answer.Answer,
 			CorrectAnswer: question.CorrectAnswer,
 			IsCorrect:     isCorrect,

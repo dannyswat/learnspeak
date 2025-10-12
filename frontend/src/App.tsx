@@ -20,6 +20,7 @@ import MyJourneys from './pages/MyJourneys';
 import FlashcardPractice from './pages/FlashcardPractice';
 import QuizPractice from './pages/QuizPractice';
 import QuizManagement from './pages/QuizManagement';
+import BulkWordCreation from './pages/BulkWordCreation';
 import './App.css';
 
 function App() {
@@ -122,6 +123,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <QuizManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:topicId/words/bulk"
+            element={
+              <ProtectedRoute>
+                <BulkWordCreation />
               </ProtectedRoute>
             }
           />

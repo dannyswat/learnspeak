@@ -5,6 +5,8 @@ export interface QuizQuestion {
   wordId?: number;
   questionType: 'translation' | 'listening' | 'image';
   questionText: string;
+  audioUrl?: string;
+  imageUrl?: string;
   correctAnswer: 'a' | 'b' | 'c' | 'd';
   optionA: string;
   optionB: string;
@@ -19,6 +21,8 @@ export interface QuizQuestionForPractice {
   id: number;
   questionType: 'translation' | 'listening' | 'image';
   questionText: string;
+  audioUrl?: string;
+  imageUrl?: string;
   optionA: string;
   optionB: string;
   optionC: string;
@@ -32,6 +36,8 @@ export interface CreateQuizQuestionRequest {
   wordId?: number;
   questionType: 'translation' | 'listening' | 'image';
   questionText: string;
+  audioUrl?: string;
+  imageUrl?: string;
   correctAnswer: 'a' | 'b' | 'c' | 'd';
   optionA: string;
   optionB: string;
@@ -43,6 +49,8 @@ export interface CreateQuizQuestionRequest {
 export interface UpdateQuizQuestionRequest {
   questionType?: 'translation' | 'listening' | 'image';
   questionText?: string;
+  audioUrl?: string;
+  imageUrl?: string;
   correctAnswer?: 'a' | 'b' | 'c' | 'd';
   optionA?: string;
   optionB?: string;
@@ -67,7 +75,10 @@ export interface QuizSubmissionRequest {
 // Result for a single question
 export interface QuestionResult {
   questionId: number;
+  questionType: 'translation' | 'listening' | 'image';
   questionText: string;
+  audioUrl?: string;
+  imageUrl?: string;
   userAnswer: 'a' | 'b' | 'c' | 'd';
   correctAnswer: 'a' | 'b' | 'c' | 'd';
   isCorrect: boolean;

@@ -11,6 +11,8 @@ type QuizQuestion struct {
 	WordID        *uint     `json:"wordId,omitempty" gorm:"index"` // Optional: reference to specific word
 	QuestionType  string    `json:"questionType" gorm:"not null;type:varchar(50)"`
 	QuestionText  string    `json:"questionText" gorm:"not null;type:text"`
+	AudioURL      *string   `json:"audioUrl,omitempty" gorm:"type:varchar(255)"` // For listening questions
+	ImageURL      *string   `json:"imageUrl,omitempty" gorm:"type:varchar(255)"` // For image questions
 	CorrectAnswer string    `json:"correctAnswer" gorm:"not null;type:varchar(255)"`
 	OptionA       string    `json:"optionA" gorm:"not null;type:varchar(255)"`
 	OptionB       string    `json:"optionB" gorm:"not null;type:varchar(255)"`

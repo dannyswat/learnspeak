@@ -2,40 +2,46 @@ package dto
 
 // CreateQuizQuestionRequest represents the request to create a quiz question
 type CreateQuizQuestionRequest struct {
-	TopicID       uint   `json:"topicId" validate:"required"`
-	WordID        *uint  `json:"wordId"`
-	QuestionType  string `json:"questionType" validate:"required,oneof=translation listening image"`
-	QuestionText  string `json:"questionText" validate:"required"`
-	CorrectAnswer string `json:"correctAnswer" validate:"required,oneof=a b c d"`
-	OptionA       string `json:"optionA" validate:"required"`
-	OptionB       string `json:"optionB" validate:"required"`
-	OptionC       string `json:"optionC" validate:"required"`
-	OptionD       string `json:"optionD" validate:"required"`
+	TopicID       uint    `json:"topicId" validate:"required"`
+	WordID        *uint   `json:"wordId"`
+	QuestionType  string  `json:"questionType" validate:"required,oneof=translation listening image"`
+	QuestionText  string  `json:"questionText" validate:"required"`
+	AudioURL      *string `json:"audioUrl"`
+	ImageURL      *string `json:"imageUrl"`
+	CorrectAnswer string  `json:"correctAnswer" validate:"required,oneof=a b c d"`
+	OptionA       string  `json:"optionA" validate:"required"`
+	OptionB       string  `json:"optionB" validate:"required"`
+	OptionC       string  `json:"optionC" validate:"required"`
+	OptionD       string  `json:"optionD" validate:"required"`
 }
 
 // UpdateQuizQuestionRequest represents the request to update a quiz question
 type UpdateQuizQuestionRequest struct {
-	QuestionType  string `json:"questionType" validate:"omitempty,oneof=translation listening image"`
-	QuestionText  string `json:"questionText"`
-	CorrectAnswer string `json:"correctAnswer" validate:"omitempty,oneof=a b c d"`
-	OptionA       string `json:"optionA"`
-	OptionB       string `json:"optionB"`
-	OptionC       string `json:"optionC"`
-	OptionD       string `json:"optionD"`
+	QuestionType  string  `json:"questionType" validate:"omitempty,oneof=translation listening image"`
+	QuestionText  string  `json:"questionText"`
+	AudioURL      *string `json:"audioUrl"`
+	ImageURL      *string `json:"imageUrl"`
+	CorrectAnswer string  `json:"correctAnswer" validate:"omitempty,oneof=a b c d"`
+	OptionA       string  `json:"optionA"`
+	OptionB       string  `json:"optionB"`
+	OptionC       string  `json:"optionC"`
+	OptionD       string  `json:"optionD"`
 }
 
 // QuizQuestionResponse represents a quiz question in responses
 type QuizQuestionResponse struct {
-	ID            uint   `json:"id"`
-	TopicID       uint   `json:"topicId"`
-	WordID        *uint  `json:"wordId,omitempty"`
-	QuestionType  string `json:"questionType"`
-	QuestionText  string `json:"questionText"`
-	CorrectAnswer string `json:"correctAnswer"`
-	OptionA       string `json:"optionA"`
-	OptionB       string `json:"optionB"`
-	OptionC       string `json:"optionC"`
-	OptionD       string `json:"optionD"`
+	ID            uint    `json:"id"`
+	TopicID       uint    `json:"topicId"`
+	WordID        *uint   `json:"wordId,omitempty"`
+	QuestionType  string  `json:"questionType"`
+	QuestionText  string  `json:"questionText"`
+	AudioURL      *string `json:"audioUrl,omitempty"`
+	ImageURL      *string `json:"imageUrl,omitempty"`
+	CorrectAnswer string  `json:"correctAnswer"`
+	OptionA       string  `json:"optionA"`
+	OptionB       string  `json:"optionB"`
+	OptionC       string  `json:"optionC"`
+	OptionD       string  `json:"optionD"`
 }
 
 // QuizAnswerRequest represents a user's answer to a quiz question
@@ -64,15 +70,18 @@ type QuizResultResponse struct {
 
 // QuestionResult represents the result for a single question
 type QuestionResult struct {
-	QuestionID    uint   `json:"questionId"`
-	QuestionText  string `json:"questionText"`
-	UserAnswer    string `json:"userAnswer"`
-	CorrectAnswer string `json:"correctAnswer"`
-	IsCorrect     bool   `json:"isCorrect"`
-	OptionA       string `json:"optionA"`
-	OptionB       string `json:"optionB"`
-	OptionC       string `json:"optionC"`
-	OptionD       string `json:"optionD"`
+	QuestionID    uint    `json:"questionId"`
+	QuestionType  string  `json:"questionType"`
+	QuestionText  string  `json:"questionText"`
+	AudioURL      *string `json:"audioUrl,omitempty"`
+	ImageURL      *string `json:"imageUrl,omitempty"`
+	UserAnswer    string  `json:"userAnswer"`
+	CorrectAnswer string  `json:"correctAnswer"`
+	IsCorrect     bool    `json:"isCorrect"`
+	OptionA       string  `json:"optionA"`
+	OptionB       string  `json:"optionB"`
+	OptionC       string  `json:"optionC"`
+	OptionD       string  `json:"optionD"`
 }
 
 // QuizQuestionsResponse represents a list of quiz questions for taking a quiz
@@ -83,12 +92,14 @@ type QuizQuestionsResponse struct {
 
 // QuizQuestionForPractice represents a quiz question without the correct answer
 type QuizQuestionForPractice struct {
-	ID           uint   `json:"id"`
-	QuestionType string `json:"questionType"`
-	QuestionText string `json:"questionText"`
-	OptionA      string `json:"optionA"`
-	OptionB      string `json:"optionB"`
-	OptionC      string `json:"optionC"`
-	OptionD      string `json:"optionD"`
-	WordID       *uint  `json:"wordId,omitempty"`
+	ID           uint    `json:"id"`
+	QuestionType string  `json:"questionType"`
+	QuestionText string  `json:"questionText"`
+	AudioURL     *string `json:"audioUrl,omitempty"`
+	ImageURL     *string `json:"imageUrl,omitempty"`
+	OptionA      string  `json:"optionA"`
+	OptionB      string  `json:"optionB"`
+	OptionC      string  `json:"optionC"`
+	OptionD      string  `json:"optionD"`
+	WordID       *uint   `json:"wordId,omitempty"`
 }

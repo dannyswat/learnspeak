@@ -210,12 +210,20 @@ const TopicDetail: React.FC = () => {
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">Words in Topic</h3>
-            <button
-              onClick={() => navigate(`/topics/${id}/edit`)}
-              className="text-sm text-green-600 hover:text-green-700"
-            >
-              Manage Words
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/topics/${id}/words/bulk`)}
+                className="text-sm px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                Quick Add Words
+              </button>
+              <button
+                onClick={() => navigate(`/topics/${id}/edit`)}
+                className="text-sm text-green-600 hover:text-green-700"
+              >
+                Manage Words
+              </button>
+            </div>
           </div>
 
           {topic.words && topic.words.length > 0 ? (
