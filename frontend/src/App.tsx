@@ -9,7 +9,7 @@ import WordForm from './pages/WordForm';
 import WordDetail from './pages/WordDetail';
 import TopicList from './pages/TopicList';
 import TopicForm from './pages/TopicForm';
-import TopicDetail from './pages/TopicDetail';
+import TopicRouter from './pages/TopicRouter';
 import JourneyList from './pages/JourneyList';
 import JourneyForm from './pages/JourneyForm';
 import JourneyDetail from './pages/JourneyDetail';
@@ -17,6 +17,7 @@ import StudentList from './pages/StudentList';
 import StudentDetail from './pages/StudentDetail';
 import JourneyAssignment from './pages/JourneyAssignment';
 import MyJourneys from './pages/MyJourneys';
+import FlashcardPractice from './pages/FlashcardPractice';
 import './App.css';
 
 function App() {
@@ -86,7 +87,7 @@ function App() {
             path="/topics/:id"
             element={
               <ProtectedRoute>
-                <TopicDetail />
+                <TopicRouter />
               </ProtectedRoute>
             }
           />
@@ -95,6 +96,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TopicForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:topicId/flashcards"
+            element={
+              <ProtectedRoute>
+                <FlashcardPractice />
               </ProtectedRoute>
             }
           />

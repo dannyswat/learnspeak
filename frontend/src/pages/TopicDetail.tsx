@@ -3,13 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { topicService } from '../services/topicService';
 import type { Topic } from '../types/topic';
 import Layout from '../components/Layout';
+import { useAuth } from '../hooks/useAuth';
 
 const TopicDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const isTeacher = user?.roles?.some(role => role === 'teacher' || role === 'admin');
 
   useEffect(() => {
     if (id) {
@@ -121,20 +125,22 @@ const TopicDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate(`/topics/${id}/edit`)}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                Edit
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
+            {isTeacher && (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate(`/topics/${id}/edit`)}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -90,6 +90,13 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 		protected.PUT("/users/:id", userHandler.UpdateUser)
 		protected.GET("/users/:userId/journeys", journeyHandler.GetUserJourneys)
 
+		// Flashcard activities
+		flashcardHandler := handlers.NewFlashcardHandler(database.DB)
+		protected.GET("/topics/:id/flashcards", flashcardHandler.GetTopicFlashcards)
+		protected.POST("/topics/:id/flashcards/complete", flashcardHandler.CompleteFlashcardActivity)
+		protected.POST("/words/:wordId/bookmark", flashcardHandler.ToggleBookmark)
+		protected.GET("/bookmarks", flashcardHandler.GetBookmarkedWords)
+
 		// File uploads
 		protected.POST("/upload/audio", uploadHandler.UploadAudio)
 		protected.POST("/upload/image", uploadHandler.UploadImage)

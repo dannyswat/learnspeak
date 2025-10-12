@@ -387,25 +387,67 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.6: Flashcard Activity
 **Duration**: 3 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
-**Tasks**:
-- [ ] Backend: Get topic words for flashcard practice
-- [ ] Backend: Track flashcard completion
-- [ ] Frontend: Flashcard component (flip animation)
-- [ ] Frontend: Flashcard navigation (next/prev, swipe)
-- [ ] Frontend: Audio playback
-- [ ] Frontend: Progress tracking within activity
-- [ ] Frontend: Bookmark word functionality
-- [ ] Frontend: Complete activity and return to topic
+**Backend Tasks**:
+- [x] Create UserBookmark model for word/topic bookmarks
+- [x] Implement FlashcardHandler with endpoints:
+  - GET /topics/:id/flashcards - Get topic words with translations
+  - POST /topics/:id/flashcards/complete - Save completion progress
+  - POST /words/:wordId/bookmark - Toggle word bookmark
+  - GET /bookmarks - Get user's bookmarked words
+- [x] Add routes for flashcard endpoints
+
+**Frontend Tasks**:
+- [x] Create flashcardService with API integration
+- [x] Build FlashcardPractice component with:
+  - 3D flip animation (CSS transforms)
+  - Front: English word, image, notes
+  - Back: Translation, romanization, audio player
+  - Navigation: Previous/Next buttons
+  - Keyboard shortcuts (←/→ arrows, Space/Enter to flip)
+  - Progress bar and counter (X/Total, percentage)
+  - Bookmark toggle with visual feedback
+  - Audio playback with error handling
+  - Completion modal with stats (cards completed, time spent)
+  - Review option and save to backend
+- [x] Add route: /topics/:topicId/flashcards
+- [x] Update TopicDetail page with Activities section:
+  - Flashcard activity card (active)
+  - Pronunciation activity (coming soon)
+  - Conversation activity (coming soon)
+  - Quiz activity (coming soon)
+  - Journey parameter support
+  - Completion status indicators
+- [x] Hide Edit/Delete buttons for learners
 
 **Deliverables**:
-- ✅ Flashcard learning activity
-- ✅ Progress tracking
-- ✅ Bookmark functionality
+- ✅ Flashcard learning activity with flip animations
+- ✅ Progress tracking and time recording
+- ✅ Bookmark functionality for words
+- ✅ Activity cards on topic page
+
+**Completed**: October 12, 2025
 
 **User Stories**: 3.3, 3.8  
 **Dependencies**: Sprint 2.5
+
+**Technical Notes**:
+- FlashcardPractice supports journeyId parameter for journey tracking
+- UserBookmark table supports both word and topic bookmarks
+- Progress saved to user_progress with activity_type='flashcard'
+- 3D flip effect using CSS perspective and rotateY transforms
+- Keyboard navigation: ← Previous, → Next, Space/Enter to flip
+- Completion modal shows total cards and time spent
+- Audio playback via HTML5 Audio API with error handling
+- Auto-play audio: Plays automatically 300ms after flipping to back side
+- Image visibility: Displayed on both front (192px) and back (128px with white border)
+- Role-based topic pages:
+  * Teachers/Admins → TopicDetail (management-focused: Edit/Delete, Manage Words, stats only, no activities)
+  * Learners → TopicLearner (activity-focused: 2-column grid, enhanced descriptions, gradient stats, "Coming Soon" badges)
+  * TopicRouter component detects user role and routes appropriately
+  * Maintains journey parameter support across both views
+  * Learning activities section removed from teacher view - teachers manage content, learners practice it
 
 ---
 
