@@ -15,14 +15,17 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	// Initialize repositories
 	wordRepo := repositories.NewWordRepository(database.DB)
 	languageRepo := repositories.NewLanguageRepository(database.DB)
+	topicRepo := repositories.NewTopicRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
 	languageService := services.NewLanguageService(languageRepo)
+	topicService := services.NewTopicService(topicRepo, languageRepo)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
 	languageHandler := handlers.NewLanguageHandler(languageService)
+	topicHandler := handlers.NewTopicHandler(topicService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 
 	// API version 1
@@ -51,6 +54,14 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 		protected.GET("/words/:id", wordHandler.GetWord)
 		protected.PUT("/words/:id", wordHandler.UpdateWord)
 		protected.DELETE("/words/:id", wordHandler.DeleteWord)
+
+		// Topic management
+		protected.GET("/topics", topicHandler.ListTopics)
+		protected.POST("/topics", topicHandler.CreateTopic)
+		protected.GET("/topics/:id", topicHandler.GetTopic)
+		protected.PUT("/topics/:id", topicHandler.UpdateTopic)
+		protected.DELETE("/topics/:id", topicHandler.DeleteTopic)
+		protected.PUT("/topics/:id/words/reorder", topicHandler.ReorderWords)
 
 		// File uploads
 		protected.POST("/upload/audio", uploadHandler.UploadAudio)

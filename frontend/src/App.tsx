@@ -7,6 +7,9 @@ import { Dashboard } from './pages/Dashboard';
 import WordList from './pages/WordList';
 import WordForm from './pages/WordForm';
 import WordDetail from './pages/WordDetail';
+import TopicList from './pages/TopicList';
+import TopicForm from './pages/TopicForm';
+import TopicDetail from './pages/TopicDetail';
 import './App.css';
 
 function App() {
@@ -53,6 +56,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <WordForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics"
+            element={
+              <ProtectedRoute>
+                <TopicList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/new"
+            element={
+              <ProtectedRoute>
+                <TopicForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:id"
+            element={
+              <ProtectedRoute>
+                <TopicDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:id/edit"
+            element={
+              <ProtectedRoute>
+                <TopicForm />
               </ProtectedRoute>
             }
           />

@@ -9,6 +9,7 @@ import (
 type LanguageRepository interface {
 	GetAllLanguages() ([]models.Language, error)
 	GetLanguageByID(id uint) (*models.Language, error)
+	GetByCode(code string) (*models.Language, error)
 }
 
 type languageRepository struct {
@@ -28,6 +29,15 @@ func (r *languageRepository) GetAllLanguages() ([]models.Language, error) {
 func (r *languageRepository) GetLanguageByID(id uint) (*models.Language, error) {
 	var language models.Language
 	err := r.db.First(&language, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &language, nil
+}
+
+func (r *languageRepository) GetByCode(code string) (*models.Language, error) {
+	var language models.Language
+	err := r.db.Where("code = ?", code).First(&language).Error
 	if err != nil {
 		return nil, err
 	}

@@ -222,26 +222,46 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.2: Topic Management
 **Duration**: 3-4 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Backend: Topic CRUD endpoints
-- [ ] Backend: Topic-word association endpoints
-- [ ] Backend: Get topic with all words
-- [ ] Frontend: Topic list page
-- [ ] Frontend: Create topic form
-- [ ] Frontend: Word selection interface (search & select)
-- [ ] Frontend: Drag-and-drop word ordering
-- [ ] Frontend: Edit topic form
-- [ ] Frontend: Delete topic with confirmation
-- [ ] Frontend: Topic preview
+- [x] Backend: Topic CRUD endpoints
+- [x] Backend: Topic-word association endpoints
+- [x] Backend: Get topic with all words
+- [x] Frontend: Topic list page
+- [x] Frontend: Create topic form
+- [x] Frontend: Word selection interface (search & select)
+- [x] Frontend: Drag-and-drop word ordering
+- [x] Frontend: Edit topic form
+- [x] Frontend: Delete topic with confirmation
+- [x] Frontend: Topic preview
 
 **Deliverables**:
 - ✅ Topic management system
 - ✅ Word-topic associations
 - ✅ Drag-and-drop ordering
 
-**User Stories**: 2.3  
+**Completed**: October 12, 2025
+
+**Completed Files**:
+- Backend:
+  - `models/topic.go` - Topic and TopicWord models
+  - `dto/topic.go` - Request/response DTOs for topic operations
+  - `repositories/topic_repository.go` - Database operations for topics
+  - `repositories/language_repository.go` - Added GetByCode method
+  - `services/topic_service.go` - Business logic for topic CRUD
+  - `handlers/topic_handler.go` - HTTP handlers for topic endpoints
+  - `routes/routes.go` - Updated with topic routes
+- Frontend:
+  - `types/topic.ts` - TypeScript types for topics
+  - `services/topicService.ts` - API service for topic operations
+  - `pages/TopicList.tsx` - Topic list page with search and filtering
+  - `pages/TopicForm.tsx` - Create/edit topic form with word selection
+  - `pages/TopicDetail.tsx` - Topic detail view with word list
+  - `App.tsx` - Updated with topic management routes
+  - `components/Layout.tsx` - Added Topics link to navigation
+
+**User Stories**: 2.3
 **Dependencies**: Sprint 2.1
 
 ---
