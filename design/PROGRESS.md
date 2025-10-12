@@ -453,31 +453,69 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 2.7: Quiz System
 **Duration**: 3-4 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
-**Tasks**:
-- [ ] Backend: Quiz question CRUD (for teachers)
-- [ ] Backend: Get quiz questions for topic
-- [ ] Backend: Submit quiz answers
-- [ ] Backend: Calculate and save quiz score
-- [ ] Backend: Track quiz completion
-- [ ] Frontend (Teacher): Create quiz questions form
-- [ ] Frontend (Teacher): Question list and management
-- [ ] Frontend (Learner): Quiz interface
-- [ ] Frontend (Learner): Question display
-- [ ] Frontend (Learner): Answer selection
-- [ ] Frontend (Learner): Immediate feedback
-- [ ] Frontend (Learner): Quiz results page
-- [ ] Frontend (Learner): Review incorrect answers
+**Backend Tasks**:
+- [x] Create QuizQuestion model
+- [x] Create migration 005_create_topic_quizzes.up.sql
+- [x] Create QuizRepository with CRUD operations
+- [x] Create QuizService with business logic and grading
+- [x] Create QuizHandler with 8 endpoints:
+  - POST /quiz - Create question
+  - GET /quiz/:id - Get question
+  - PUT /quiz/:id - Update question
+  - DELETE /quiz/:id - Delete question
+  - GET /quiz - List questions with pagination
+  - GET /topics/:id/quiz - Get topic questions (teacher view)
+  - GET /topics/:id/quiz/practice - Get questions for practice (no answers)
+  - POST /topics/:id/quiz/submit - Submit quiz and get results
+- [x] Add quiz routes and wire dependencies
+
+**Frontend Tasks**:
+- [x] Create types/quiz.ts with all quiz interfaces
+- [x] Create quizService with API integration
+- [x] Create QuizPractice component for learners:
+  - Question display with multiple choice options
+  - Progress bar and question navigator
+  - Answer selection with visual feedback
+  - Time tracking
+  - Submit confirmation if incomplete
+  - Results view with score, percentage, time
+  - Question review with correct/incorrect highlighting
+  - Retry option
+- [x] Create QuizManagement component for teachers:
+  - Create/edit/delete quiz questions
+  - List all questions for topic
+  - Inline question form
+  - Visual indication of correct answers
+- [x] Add routes: /topics/:topicId/quiz, /topics/:topicId/quiz/manage
+- [x] Enable Quiz activity in TopicLearner
+- [x] Add "Manage Quiz" section in TopicDetail (teacher view)
 
 **Deliverables**:
-- ✅ Quiz creation (teacher)
-- ✅ Quiz taking (learner)
-- ✅ Score tracking
-- ✅ Results display
+- ✅ Quiz creation and management (teacher)
+- ✅ Quiz taking with immediate grading (learner)
+- ✅ Score tracking (70% pass threshold)
+- ✅ Results display with question review
+
+**Completed**: October 12, 2025
 
 **User Stories**: 2.6, 3.4, 4.3  
 **Dependencies**: Sprint 2.6
+
+**Technical Notes**:
+- QuizQuestion model supports 3 question types: translation, listening, image
+- Quiz submission includes auto-grading with percentage score
+- Pass threshold set at 70%
+- Progress saved to user_progress with activity_type='quiz'
+- Questions can be shuffled for practice
+- Results show detailed review with correct/incorrect highlighting
+- Support for journey parameter to track quiz within journey context
+- Quiz disabled if no questions available (topic.quizCount === 0)
+- Teachers see "Manage Quiz" button in TopicDetail
+- Learners see "Start Quiz" button in TopicLearner activity cards
+- Question navigator shows answered vs unanswered questions
+- Immediate visual feedback on answer selection
 
 ---
 

@@ -261,17 +261,14 @@ const TopicLearner: React.FC = () => {
               </button>
             </div>
 
-            {/* Quiz Activity - Coming Soon */}
-            <div className="bg-white shadow rounded-lg p-6 opacity-60 border border-gray-200">
+            {/* Quiz Activity */}
+            <div className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow border border-gray-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                 </div>
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                  Coming Soon
-                </span>
               </div>
               
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Quiz</h4>
@@ -285,10 +282,22 @@ const TopicLearner: React.FC = () => {
               </div>
 
               <button
-                disabled
-                className="w-full px-4 py-3 bg-gray-200 text-gray-500 rounded-lg font-medium cursor-not-allowed"
+                onClick={() => {
+                  const url = journeyId 
+                    ? `/topics/${id}/quiz?journeyId=${journeyId}`
+                    : `/topics/${id}/quiz`;
+                  navigate(url);
+                }}
+                disabled={topic.quizCount === 0}
+                className={`
+                  w-full px-4 py-3 rounded-lg font-medium transition-colors
+                  ${topic.quizCount === 0
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                  }
+                `}
               >
-                Coming Soon
+                {topic.quizCount === 0 ? 'No Questions Yet' : 'Start Quiz'}
               </button>
             </div>
           </div>

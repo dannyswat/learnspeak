@@ -185,6 +185,27 @@ const TopicDetail: React.FC = () => {
           </div>
         </div>
 
+        {/* Quiz Management */}
+        {isTeacher && (
+          <div className="bg-white shadow rounded-lg p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Quiz Questions</h3>
+                <p className="text-sm text-gray-600">Manage quiz questions for this topic</p>
+              </div>
+              <button
+                onClick={() => navigate(`/topics/${id}/quiz/manage`)}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                Manage Quiz
+              </button>
+            </div>
+            <div className="text-sm text-gray-600">
+              {topic.quizCount} {topic.quizCount === 1 ? 'question' : 'questions'} available
+            </div>
+          </div>
+        )}
+
         {/* Words */}
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">

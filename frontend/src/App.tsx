@@ -18,6 +18,8 @@ import StudentDetail from './pages/StudentDetail';
 import JourneyAssignment from './pages/JourneyAssignment';
 import MyJourneys from './pages/MyJourneys';
 import FlashcardPractice from './pages/FlashcardPractice';
+import QuizPractice from './pages/QuizPractice';
+import QuizManagement from './pages/QuizManagement';
 import './App.css';
 
 function App() {
@@ -104,6 +106,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <FlashcardPractice />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:topicId/quiz"
+            element={
+              <ProtectedRoute>
+                <QuizPractice />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:topicId/quiz/manage"
+            element={
+              <ProtectedRoute>
+                <QuizManagement />
               </ProtectedRoute>
             }
           />

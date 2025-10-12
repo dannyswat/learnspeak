@@ -20,6 +20,7 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	userRepo := repositories.NewUserRepository(database.DB)
 	userJourneyRepo := repositories.NewUserJourneyRepository(database.DB)
 	userProgressRepo := repositories.NewUserProgressRepository(database.DB)
+	quizRepo := repositories.NewQuizRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
@@ -27,6 +28,7 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	topicService := services.NewTopicService(topicRepo, languageRepo)
 	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo, userJourneyRepo, userProgressRepo)
 	userService := services.NewUserService(userRepo)
+	quizService := services.NewQuizService(quizRepo, topicRepo, userProgressRepo)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
@@ -34,6 +36,7 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	topicHandler := handlers.NewTopicHandler(topicService)
 	journeyHandler := handlers.NewJourneyHandler(journeyService)
 	userHandler := handlers.NewUserHandler(userService)
+	quizHandler := handlers.NewQuizHandler(quizService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 
 	// API version 1
@@ -96,6 +99,16 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 		protected.POST("/topics/:id/flashcards/complete", flashcardHandler.CompleteFlashcardActivity)
 		protected.POST("/words/:wordId/bookmark", flashcardHandler.ToggleBookmark)
 		protected.GET("/bookmarks", flashcardHandler.GetBookmarkedWords)
+
+		// Quiz management
+		protected.GET("/quiz", quizHandler.ListQuestions)                               // List all questions with pagination
+		protected.POST("/quiz", quizHandler.CreateQuestion)                             // Create a new question
+		protected.GET("/quiz/:id", quizHandler.GetQuestion)                             // Get question by ID
+		protected.PUT("/quiz/:id", quizHandler.UpdateQuestion)                          // Update question
+		protected.DELETE("/quiz/:id", quizHandler.DeleteQuestion)                       // Delete question
+		protected.GET("/topics/:id/quiz", quizHandler.GetTopicQuestions)                // Get topic questions (teacher view with answers)
+		protected.GET("/topics/:id/quiz/practice", quizHandler.GetTopicQuizForPractice) // Get questions for practice (no answers)
+		protected.POST("/topics/:id/quiz/submit", quizHandler.SubmitQuiz)               // Submit quiz answers
 
 		// File uploads
 		protected.POST("/upload/audio", uploadHandler.UploadAudio)
