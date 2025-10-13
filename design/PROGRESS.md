@@ -525,24 +525,50 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 3.1: AI Text-to-Speech Integration
 **Duration**: 2-3 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Research and select TTS provider (Google Cloud TTS, Azure, ElevenLabs)
-- [ ] Backend: Integrate TTS API
-- [ ] Backend: Audio file storage (local or cloud)
-- [ ] Backend: Audio URL generation and caching
-- [ ] Backend: Generate audio endpoint
-- [ ] Frontend: AI audio generation button in word form
-- [ ] Frontend: Audio regeneration option
-- [ ] Frontend: Loading states
-- [ ] Cost monitoring and caching strategy
-- [ ] Error handling
+- [x] Research and select TTS provider (Azure Cognitive Services selected)
+- [x] Backend: Install Azure Speech SDK v1.43.0
+- [x] Backend: Configure Azure TTS settings in config
+- [x] Backend: Create TTS service with audio file storage
+- [x] Backend: Implement MD5-based audio caching
+- [x] Backend: Generate audio endpoint (POST /api/tts/generate)
+- [x] Frontend: TTS service API wrapper
+- [x] Frontend: AI audio generation button in word form
+- [x] Frontend: AI audio generation in bulk word creation
+- [x] Frontend: Loading states (purple "Generating..." indicator)
+- [x] Cost monitoring with caching strategy (file-based)
+- [x] Error handling with user-friendly messages
 
 **Deliverables**:
-- ✅ AI text-to-speech generation
-- ✅ Audio caching system
-- ✅ Cost-effective implementation
+- ✅ Azure TTS integration with Cantonese voice (zh-HK-HiuGaaiNeural)
+- ✅ File-based audio caching (MD5 cache keys in uploads/tts-cache/)
+- ✅ Cost-effective implementation (aggressive caching)
+- ✅ One-click audio generation from translation text
+
+**Completed**: [Current Date]
+
+**Completed Files**:
+- Backend:
+  - `config/config.go` - Added Azure TTS configuration fields
+  - `services/tts_service.go` - TTS service with Azure Speech SDK integration
+  - `handlers/tts_handler.go` - HTTP handler for TTS generation
+  - `routes/routes.go` - Updated with TTS route
+  - `main.go` - Updated to pass config to routes
+  - `.env.example` - Added Azure TTS environment variables
+- Frontend:
+  - `services/ttsService.ts` - TTS API service
+  - `pages/WordForm.tsx` - Added "🎙️ Generate Audio" button
+  - `pages/BulkWordCreation.tsx` - Added TTS generation in bulk creation
+
+**Technical Details**:
+- Provider: Azure Cognitive Services Speech SDK
+- Voice: zh-HK-HiuGaaiNeural (Cantonese female, neural)
+- Format: MP3 16kHz 32kbps mono
+- Cache Strategy: MD5 hash of (text + voice + language) → filename
+- Cache Location: `uploads/tts-cache/[md5hash].mp3`
+- Cost Optimization: Cached files reused across all features
 
 **User Stories**: 5.1  
 **Dependencies**: Sprint 2.1

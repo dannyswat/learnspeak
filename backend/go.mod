@@ -3,6 +3,7 @@ module dannyswat/learnspeak
 go 1.24.3
 
 require (
+	github.com/Microsoft/cognitive-services-speech-sdk-go v1.43.0
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/joho/godotenv v1.5.1

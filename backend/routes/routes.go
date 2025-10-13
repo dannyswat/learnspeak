@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"dannyswat/learnspeak/config"
 	"dannyswat/learnspeak/database"
 	"dannyswat/learnspeak/handlers"
 	"dannyswat/learnspeak/middleware"
@@ -11,7 +12,7 @@ import (
 )
 
 // SetupRoutes configures all application routes
-func SetupRoutes(e *echo.Echo, uploadDir string) {
+func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	// Initialize repositories
 	wordRepo := repositories.NewWordRepository(database.DB)
 	languageRepo := repositories.NewLanguageRepository(database.DB)
@@ -29,6 +30,7 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo, userJourneyRepo, userProgressRepo)
 	userService := services.NewUserService(userRepo)
 	quizService := services.NewQuizService(quizRepo, topicRepo, userProgressRepo)
+	ttsService := services.NewTTSService(cfg)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
@@ -38,6 +40,7 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 	userHandler := handlers.NewUserHandler(userService)
 	quizHandler := handlers.NewQuizHandler(quizService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
+	ttsHandler := handlers.NewTTSHandler(ttsService)
 
 	// API version 1
 	api := e.Group("/api/v1")
@@ -113,6 +116,9 @@ func SetupRoutes(e *echo.Echo, uploadDir string) {
 		// File uploads
 		protected.POST("/upload/audio", uploadHandler.UploadAudio)
 		protected.POST("/upload/image", uploadHandler.UploadImage)
+
+		// TTS (Text-to-Speech)
+		protected.POST("/tts/generate", ttsHandler.GenerateTTS)
 
 		// Example: Admin-only routes
 		admin := protected.Group("/admin")

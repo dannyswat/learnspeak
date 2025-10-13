@@ -25,21 +25,29 @@ backend/
 
 - Go 1.24.3 or later
 - PostgreSQL 15+
+- **macOS only**: Azure Speech SDK (for TTS features)
 
 ### Installation
 
 1. Clone the repository
-2. Copy `.env.example` to `.env` and configure your environment variables:
+
+2. **macOS only**: Install Azure Speech SDK for TTS functionality:
+   ```bash
+   ./setup-speech-sdk.sh
+   ```
+   This downloads the Azure Speech SDK C library (~12MB) to `lib/speechsdk/`
+
+3. Copy `.env.example` to `.env` and configure your environment variables:
    ```bash
    cp .env.example .env
    ```
 
-3. Install dependencies (already done):
+4. Install dependencies (already done):
    ```bash
    go mod download
    ```
 
-4. Create a PostgreSQL database:
+5. Create a PostgreSQL database:
    ```sql
    CREATE DATABASE learnspeak;
    ```

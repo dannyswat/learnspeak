@@ -75,7 +75,7 @@ func main() {
 	e.Static("/uploads", uploadsDir)
 
 	// Setup routes
-	routes.SetupRoutes(e, uploadsDir)
+	routes.SetupRoutes(e, cfg, uploadsDir)
 
 	// Serve static files from frontend build (production)
 	// The frontend build should be placed in ../frontend/dist
