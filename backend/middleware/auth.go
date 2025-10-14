@@ -47,6 +47,43 @@ func JWTMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func RequireAnyRole(requiredRoles ...string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			roles, ok := c.Get("roles").([]string)
+			if !ok {
+				return c.JSON(http.StatusForbidden, dto.ErrorResponse{
+					Error:   "forbidden",
+					Message: "User roles not found in context",
+				})
+			}
+
+			// Check if user has at least one of the required roles
+			hasRole := false
+			for _, requiredRole := range requiredRoles {
+				for _, role := range roles {
+					if role == requiredRole {
+						hasRole = true
+						break
+					}
+				}
+				if hasRole {
+					break
+				}
+			}
+
+			if !hasRole {
+				return c.JSON(http.StatusForbidden, dto.ErrorResponse{
+					Error:   "forbidden",
+					Message: "Insufficient permissions",
+				})
+			}
+
+			return next(c)
+		}
+	}
+}
+
 // RequireRole middleware checks if user has a specific role
 func RequireRole(requiredRole string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

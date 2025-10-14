@@ -99,9 +99,6 @@ func (h *TopicHandler) UpdateTopic(c echo.Context) error {
 		if err.Error() == "topic not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
 		}
-		if err.Error() == "unauthorized: only the creator can update this topic" {
-			return echo.NewHTTPError(http.StatusForbidden, err.Error())
-		}
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -127,9 +124,6 @@ func (h *TopicHandler) DeleteTopic(c echo.Context) error {
 	if err != nil {
 		if err.Error() == "topic not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
-		}
-		if err.Error() == "unauthorized: only the creator can delete this topic" {
-			return echo.NewHTTPError(http.StatusForbidden, err.Error())
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
@@ -185,11 +179,46 @@ func (h *TopicHandler) ReorderWords(c echo.Context) error {
 		if err.Error() == "topic not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
 		}
-		if err.Error() == "unauthorized: only the creator can reorder words" {
-			return echo.NewHTTPError(http.StatusForbidden, err.Error())
-		}
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Words reordered successfully"})
+}
+
+// AddWordsToTopic adds words to an existing topic
+// POST /api/v1/topics/:id/words
+func (h *TopicHandler) AddWordsToTopic(c echo.Context) error {
+	// Get user ID from context (set by JWT middleware)
+	userID, ok := c.Get("userId").(uint)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, "User ID not found in context")
+	}
+
+	// Parse ID
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid topic ID")
+	}
+
+	// Parse request - reuse ReorderTopicWordsRequest since it has the same structure
+	var req dto.ReorderTopicWordsRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// Validate request
+	if err := c.Validate(&req); err != nil {
+		return err
+	}
+
+	// Add words to topic
+	err = h.topicService.AddWordsToTopic(uint(id), req.WordIDs, userID)
+	if err != nil {
+		if err.Error() == "topic not found" {
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		}
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Words added successfully"})
 }

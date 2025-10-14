@@ -114,11 +114,6 @@ func (s *journeyService) UpdateJourney(id uint, req *dto.UpdateJourneyRequest, u
 		return nil, err
 	}
 
-	// Check ownership (only creator can update)
-	if journey.CreatedBy != userID {
-		return nil, fmt.Errorf("unauthorized: only the creator can update this journey")
-	}
-
 	// Update journey fields
 	if req.Name != nil {
 		journey.Name = *req.Name
@@ -219,14 +214,9 @@ func (s *journeyService) UpdateJourney(id uint, req *dto.UpdateJourneyRequest, u
 // DeleteJourney deletes a journey
 func (s *journeyService) DeleteJourney(id uint, userID uint) error {
 	// Fetch existing journey to check ownership
-	journey, err := s.journeyRepo.GetByID(id, false)
+	_, err := s.journeyRepo.GetByID(id, false)
 	if err != nil {
 		return err
-	}
-
-	// Check ownership (only creator can delete)
-	if journey.CreatedBy != userID {
-		return fmt.Errorf("unauthorized: only the creator can delete this journey")
 	}
 
 	// Check if journey is assigned to users
@@ -291,14 +281,9 @@ func (s *journeyService) ListJourneys(params *dto.JourneyFilterParams) (*dto.Jou
 // ReorderTopics reorders topics in a journey
 func (s *journeyService) ReorderTopics(journeyID uint, topicIDs []uint, userID uint) error {
 	// Fetch journey to check ownership
-	journey, err := s.journeyRepo.GetByID(journeyID, false)
+	_, err := s.journeyRepo.GetByID(journeyID, false)
 	if err != nil {
 		return err
-	}
-
-	// Check ownership
-	if journey.CreatedBy != userID {
-		return fmt.Errorf("unauthorized: only the creator can reorder topics")
 	}
 
 	return s.journeyRepo.ReorderTopics(journeyID, topicIDs)

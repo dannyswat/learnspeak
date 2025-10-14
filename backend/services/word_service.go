@@ -84,11 +84,6 @@ func (s *wordService) UpdateWord(id uint, req *dto.UpdateWordRequest, userID uin
 		return nil, err
 	}
 
-	// Check ownership (only creator can update)
-	if word.CreatedBy != userID {
-		return nil, fmt.Errorf("unauthorized: only the creator can update this word")
-	}
-
 	// Update word fields
 	if req.BaseWord != nil {
 		word.BaseWord = *req.BaseWord
@@ -188,14 +183,9 @@ func (s *wordService) UpdateWord(id uint, req *dto.UpdateWordRequest, userID uin
 // DeleteWord deletes a word
 func (s *wordService) DeleteWord(id uint, userID uint) error {
 	// Fetch existing word to check ownership
-	word, err := s.wordRepo.GetByID(id)
+	_, err := s.wordRepo.GetByID(id)
 	if err != nil {
 		return err
-	}
-
-	// Check ownership (only creator can delete)
-	if word.CreatedBy != userID {
-		return fmt.Errorf("unauthorized: only the creator can delete this word")
 	}
 
 	return s.wordRepo.Delete(id)

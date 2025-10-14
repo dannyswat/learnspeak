@@ -16,6 +16,7 @@ type TopicService interface {
 	DeleteTopic(id uint, userID uint) error
 	ListTopics(params *dto.TopicFilterParams) (*dto.TopicListResponse, error)
 	ReorderWords(topicID uint, wordIDs []uint, userID uint) error
+	AddWordsToTopic(topicID uint, wordIDs []uint, userID uint) error
 }
 
 type topicService struct {
@@ -84,11 +85,6 @@ func (s *topicService) UpdateTopic(id uint, req *dto.UpdateTopicRequest, userID 
 	topic, err := s.topicRepo.GetByID(id, false)
 	if err != nil {
 		return nil, err
-	}
-
-	// Check ownership (only creator can update)
-	if topic.CreatedBy != userID {
-		return nil, fmt.Errorf("unauthorized: only the creator can update this topic")
 	}
 
 	// Update topic fields
@@ -183,14 +179,9 @@ func (s *topicService) UpdateTopic(id uint, req *dto.UpdateTopicRequest, userID 
 // DeleteTopic deletes a topic
 func (s *topicService) DeleteTopic(id uint, userID uint) error {
 	// Fetch existing topic to check ownership
-	topic, err := s.topicRepo.GetByID(id, false)
+	_, err := s.topicRepo.GetByID(id, false)
 	if err != nil {
 		return err
-	}
-
-	// Check ownership (only creator can delete)
-	if topic.CreatedBy != userID {
-		return fmt.Errorf("unauthorized: only the creator can delete this topic")
 	}
 
 	// Check if topic is used in journeys
@@ -256,17 +247,24 @@ func (s *topicService) ListTopics(params *dto.TopicFilterParams) (*dto.TopicList
 // ReorderWords reorders words in a topic
 func (s *topicService) ReorderWords(topicID uint, wordIDs []uint, userID uint) error {
 	// Fetch topic to check ownership
-	topic, err := s.topicRepo.GetByID(topicID, false)
+	_, err := s.topicRepo.GetByID(topicID, false)
 	if err != nil {
 		return err
 	}
 
-	// Check ownership
-	if topic.CreatedBy != userID {
-		return fmt.Errorf("unauthorized: only the creator can reorder words")
+	return s.topicRepo.ReorderWords(topicID, wordIDs)
+}
+
+// AddWordsToTopic adds words to an existing topic
+func (s *topicService) AddWordsToTopic(topicID uint, wordIDs []uint, userID uint) error {
+	// Fetch topic to check ownership
+	_, err := s.topicRepo.GetByID(topicID, false)
+	if err != nil {
+		return err
 	}
 
-	return s.topicRepo.ReorderWords(topicID, wordIDs)
+	// Add words to topic
+	return s.topicRepo.AddWords(topicID, wordIDs)
 }
 
 // toTopicResponse converts a topic model to response DTO

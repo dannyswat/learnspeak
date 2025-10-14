@@ -126,9 +126,6 @@ func (h *WordHandler) UpdateWord(c echo.Context) error {
 		if err.Error() == "word not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
 		}
-		if err.Error() == "unauthorized: only the creator can update this word" {
-			return echo.NewHTTPError(http.StatusForbidden, err.Error())
-		}
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
@@ -163,9 +160,6 @@ func (h *WordHandler) DeleteWord(c echo.Context) error {
 	if err != nil {
 		if err.Error() == "word not found" {
 			return echo.NewHTTPError(http.StatusNotFound, err.Error())
-		}
-		if err.Error() == "unauthorized: only the creator can delete this word" {
-			return echo.NewHTTPError(http.StatusForbidden, err.Error())
 		}
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

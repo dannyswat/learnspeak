@@ -62,32 +62,6 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		// Languages
 		protected.GET("/languages", languageHandler.GetLanguages)
 
-		// Word management
-		protected.GET("/words", wordHandler.ListWords)
-		protected.POST("/words", wordHandler.CreateWord)
-		protected.GET("/words/:id", wordHandler.GetWord)
-		protected.PUT("/words/:id", wordHandler.UpdateWord)
-		protected.DELETE("/words/:id", wordHandler.DeleteWord)
-
-		// Topic management
-		protected.GET("/topics", topicHandler.ListTopics)
-		protected.POST("/topics", topicHandler.CreateTopic)
-		protected.GET("/topics/:id", topicHandler.GetTopic)
-		protected.PUT("/topics/:id", topicHandler.UpdateTopic)
-		protected.DELETE("/topics/:id", topicHandler.DeleteTopic)
-		protected.PUT("/topics/:id/words/reorder", topicHandler.ReorderWords)
-
-		// Journey management
-		protected.GET("/journeys", journeyHandler.ListJourneys)
-		protected.POST("/journeys", journeyHandler.CreateJourney)
-		protected.GET("/journeys/:id", journeyHandler.GetJourney)
-		protected.PUT("/journeys/:id", journeyHandler.UpdateJourney)
-		protected.DELETE("/journeys/:id", journeyHandler.DeleteJourney)
-		protected.POST("/journeys/:id/reorder", journeyHandler.ReorderTopics)
-		protected.POST("/journeys/:id/assign", journeyHandler.AssignJourney)
-		protected.POST("/journeys/:id/unassign", journeyHandler.UnassignJourney)
-		protected.GET("/journeys/:id/assignments", journeyHandler.GetJourneyAssignments)
-
 		// User management
 		protected.GET("/users", userHandler.SearchUsers)
 		protected.GET("/users/learners", userHandler.GetLearners)
@@ -103,22 +77,11 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		protected.POST("/words/:wordId/bookmark", flashcardHandler.ToggleBookmark)
 		protected.GET("/bookmarks", flashcardHandler.GetBookmarkedWords)
 
-		// Quiz management
-		protected.GET("/quiz", quizHandler.ListQuestions)                               // List all questions with pagination
-		protected.POST("/quiz", quizHandler.CreateQuestion)                             // Create a new question
-		protected.GET("/quiz/:id", quizHandler.GetQuestion)                             // Get question by ID
-		protected.PUT("/quiz/:id", quizHandler.UpdateQuestion)                          // Update question
-		protected.DELETE("/quiz/:id", quizHandler.DeleteQuestion)                       // Delete question
+		protected.GET("/words/:id", wordHandler.GetWord)
+
 		protected.GET("/topics/:id/quiz", quizHandler.GetTopicQuestions)                // Get topic questions (teacher view with answers)
 		protected.GET("/topics/:id/quiz/practice", quizHandler.GetTopicQuizForPractice) // Get questions for practice (no answers)
-		protected.POST("/topics/:id/quiz/submit", quizHandler.SubmitQuiz)               // Submit quiz answers
-
-		// File uploads
-		protected.POST("/upload/audio", uploadHandler.UploadAudio)
-		protected.POST("/upload/image", uploadHandler.UploadImage)
-
-		// TTS (Text-to-Speech)
-		protected.POST("/tts/generate", ttsHandler.GenerateTTS)
+		protected.POST("/topics/:id/quiz/submit", quizHandler.SubmitQuiz)
 
 		// Example: Admin-only routes
 		admin := protected.Group("/admin")
@@ -128,10 +91,48 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		}
 
 		// Example: Teacher routes
-		teacher := protected.Group("/teacher")
-		teacher.Use(middleware.RequireRole("teacher"))
+		teacher := protected.Group("")
+		teacher.Use(middleware.RequireAnyRole("teacher", "admin"))
 		{
-			// Add teacher routes here
+			// Word management
+			teacher.GET("/words", wordHandler.ListWords)
+			teacher.POST("/words", wordHandler.CreateWord)
+			teacher.PUT("/words/:id", wordHandler.UpdateWord)
+			teacher.DELETE("/words/:id", wordHandler.DeleteWord)
+
+			// Topic management
+			teacher.GET("/topics", topicHandler.ListTopics)
+			teacher.POST("/topics", topicHandler.CreateTopic)
+			teacher.GET("/topics/:id", topicHandler.GetTopic)
+			teacher.PUT("/topics/:id", topicHandler.UpdateTopic)
+			teacher.DELETE("/topics/:id", topicHandler.DeleteTopic)
+			teacher.POST("/topics/:id/words", topicHandler.AddWordsToTopic)
+			teacher.PUT("/topics/:id/words/reorder", topicHandler.ReorderWords)
+
+			// Journey management
+			teacher.GET("/journeys", journeyHandler.ListJourneys)
+			teacher.POST("/journeys", journeyHandler.CreateJourney)
+			teacher.GET("/journeys/:id", journeyHandler.GetJourney)
+			teacher.PUT("/journeys/:id", journeyHandler.UpdateJourney)
+			teacher.DELETE("/journeys/:id", journeyHandler.DeleteJourney)
+			teacher.POST("/journeys/:id/reorder", journeyHandler.ReorderTopics)
+			teacher.POST("/journeys/:id/assign", journeyHandler.AssignJourney)
+			teacher.POST("/journeys/:id/unassign", journeyHandler.UnassignJourney)
+			teacher.GET("/journeys/:id/assignments", journeyHandler.GetJourneyAssignments)
+
+			// Quiz management
+			teacher.GET("/quiz", quizHandler.ListQuestions)         // List all questions with pagination
+			teacher.POST("/quiz", quizHandler.CreateQuestion)       // Create a new question
+			teacher.GET("/quiz/:id", quizHandler.GetQuestion)       // Get question by ID
+			teacher.PUT("/quiz/:id", quizHandler.UpdateQuestion)    // Update question
+			teacher.DELETE("/quiz/:id", quizHandler.DeleteQuestion) // Delete question           // Submit quiz answers
+
+			// File uploads
+			teacher.POST("/upload/audio", uploadHandler.UploadAudio)
+			teacher.POST("/upload/image", uploadHandler.UploadImage)
+
+			// TTS (Text-to-Speech)
+			teacher.POST("/tts/generate", ttsHandler.GenerateTTS)
 		}
 	}
 

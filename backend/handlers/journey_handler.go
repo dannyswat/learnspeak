@@ -162,9 +162,7 @@ func (h *JourneyHandler) UpdateJourney(c echo.Context) error {
 	journey, err := h.journeyService.UpdateJourney(uint(id), &req, userID)
 	if err != nil {
 		statusCode := http.StatusBadRequest
-		if err.Error() == "unauthorized: only the creator can update this journey" {
-			statusCode = http.StatusForbidden
-		}
+
 		return c.JSON(statusCode, dto.ErrorResponse{
 			Message: "Failed to update journey",
 			Error:   err.Error(),
@@ -209,9 +207,7 @@ func (h *JourneyHandler) DeleteJourney(c echo.Context) error {
 	// Delete journey
 	if err := h.journeyService.DeleteJourney(uint(id), userID); err != nil {
 		statusCode := http.StatusBadRequest
-		if err.Error() == "unauthorized: only the creator can delete this journey" {
-			statusCode = http.StatusForbidden
-		} else if err.Error() == "record not found" {
+		if err.Error() == "record not found" {
 			statusCode = http.StatusNotFound
 		}
 		return c.JSON(statusCode, dto.ErrorResponse{
@@ -331,9 +327,6 @@ func (h *JourneyHandler) ReorderTopics(c echo.Context) error {
 	// Reorder topics
 	if err := h.journeyService.ReorderTopics(uint(id), topicIDs, userID); err != nil {
 		statusCode := http.StatusBadRequest
-		if err.Error() == "unauthorized: only the creator can reorder topics" {
-			statusCode = http.StatusForbidden
-		}
 		return c.JSON(statusCode, dto.ErrorResponse{
 			Message: "Failed to reorder topics",
 			Error:   err.Error(),
