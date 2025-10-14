@@ -27,6 +27,11 @@ type Config struct {
 	AzureTTSRegion  string
 	AzureTTSVoice   string
 	TTSCacheEnabled bool
+	// Azure Translator Configuration
+	AzureTranslatorKey      string
+	AzureTranslatorRegion   string
+	AzureTranslatorEndpoint string
+	TranslatorCacheEnabled  bool
 }
 
 var AppConfig *Config
@@ -41,6 +46,7 @@ func LoadConfig() *Config {
 	jwtExpHours, _ := strconv.Atoi(getEnv("JWT_EXPIRATION_HOURS", "24"))
 	maxUploadSize, _ := strconv.ParseInt(getEnv("MAX_UPLOAD_SIZE", "10485760"), 10, 64)
 	ttsCacheEnabled, _ := strconv.ParseBool(getEnv("TTS_CACHE_ENABLED", "true"))
+	translatorCacheEnabled, _ := strconv.ParseBool(getEnv("TRANSLATOR_CACHE_ENABLED", "true"))
 
 	AppConfig = &Config{
 		Port:               getEnv("PORT", "8080"),
@@ -61,6 +67,11 @@ func LoadConfig() *Config {
 		AzureTTSRegion:  getEnv("AZURE_TTS_REGION", "eastus"),
 		AzureTTSVoice:   getEnv("AZURE_TTS_VOICE", "zh-HK-HiuMaanNeural"),
 		TTSCacheEnabled: ttsCacheEnabled,
+		// Azure Translator Configuration
+		AzureTranslatorKey:      getEnv("AZURE_TRANSLATOR_KEY", ""),
+		AzureTranslatorRegion:   getEnv("AZURE_TRANSLATOR_REGION", "eastus"),
+		AzureTranslatorEndpoint: getEnv("AZURE_TRANSLATOR_ENDPOINT", "https://api.cognitive.microsofttranslator.com"),
+		TranslatorCacheEnabled:  translatorCacheEnabled,
 	}
 
 	return AppConfig

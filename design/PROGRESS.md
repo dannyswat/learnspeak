@@ -575,6 +575,60 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 ---
 
+#### Sprint 3.1.5: AI Translation Integration
+**Duration**: 2-3 hours  
+**Status**: ✅ Complete
+
+**Tasks**:
+- [x] Research and select translation provider (Azure Translator selected)
+- [x] Backend: Integrate Azure Translator REST API
+- [x] Backend: Configure Azure Translator settings in config
+- [x] Backend: Create Translation service with caching
+- [x] Backend: Implement single and batch translation endpoints
+- [x] Frontend: Translation service API wrapper
+- [x] Frontend: Batch translation UI in BulkWordCreation
+- [x] Frontend: "🤖 AI Translate" button
+- [x] Caching strategy (file-based with MD5 keys)
+- [x] Error handling and user feedback
+
+**Deliverables**:
+- ✅ Azure Translator API integration (REST)
+- ✅ Single translation endpoint (POST /api/v1/translate)
+- ✅ Batch translation endpoint (POST /api/v1/translate/batch)
+- ✅ File-based translation caching (MD5 cache keys)
+- ✅ One-click batch translation for teachers
+- ✅ Alternative translations support
+
+**Completed**: October 14, 2025
+
+**Completed Files**:
+- Backend:
+  - `config/config.go` - Added Azure Translator configuration
+  - `services/translation_service.go` - Translation service with Azure REST API
+  - `handlers/translation_handler.go` - HTTP handlers for translation
+  - `routes/routes.go` - Translation routes
+  - `.env.example` - Azure Translator environment variables
+- Frontend:
+  - `services/translationService.ts` - Translation API service
+  - `pages/BulkWordCreation.tsx` - Added "🤖 AI Translate" button
+- Documentation:
+  - `docs/AZURE_TRANSLATOR_SETUP.md` - Complete setup guide
+
+**Technical Details**:
+- Provider: Azure Translator REST API v3.0
+- Languages: English → Traditional Chinese (zh-Hant)
+- Features: Single & batch translation, auto language detection, alternatives
+- Cache Strategy: MD5 hash of (text + fromLang + toLang) → filename
+- Cache Location: `uploads/translation-cache/[md5hash].json`
+- Cost Optimization: Cached translations reused across teachers
+- Free Tier: 2 million characters/month
+- Pricing: $10 per 1 million characters (Standard)
+
+**User Stories**: 2.2, 5.1  
+**Dependencies**: Sprint 2.1
+
+---
+
 #### Sprint 3.2: AI Image Generation
 **Duration**: 2-3 days  
 **Status**: 🔴 Not Started

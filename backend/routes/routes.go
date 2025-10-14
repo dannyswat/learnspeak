@@ -31,6 +31,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	userService := services.NewUserService(userRepo)
 	quizService := services.NewQuizService(quizRepo, topicRepo, userProgressRepo)
 	ttsService := services.NewTTSService(cfg)
+	translationService := services.NewTranslationService(cfg)
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
@@ -41,6 +42,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	quizHandler := handlers.NewQuizHandler(quizService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 	ttsHandler := handlers.NewTTSHandler(ttsService)
+	translationHandler := handlers.NewTranslationHandler(translationService)
 
 	// API version 1
 	api := e.Group("/api/v1")
@@ -133,6 +135,10 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 
 			// TTS (Text-to-Speech)
 			teacher.POST("/tts/generate", ttsHandler.GenerateTTS)
+
+			// Translation (AI-powered)
+			teacher.POST("/translate", translationHandler.Translate)
+			teacher.POST("/translate/batch", translationHandler.BatchTranslate)
 		}
 	}
 

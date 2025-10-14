@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { topicService } from '../services/topicService';
 import { wordService, uploadService } from '../services/wordService';
 import ttsService from '../services/ttsService';
+import translationService from '../services/translationService';
 import Layout from '../components/Layout';
 import type { Language } from '../types/word';
 
@@ -32,6 +33,7 @@ const BulkWordCreation: React.FC = () => {
   const [uploadingImage, setUploadingImage] = useState<number | null>(null);
   const [uploadingAudio, setUploadingAudio] = useState<number | null>(null);
   const [generatingTTS, setGeneratingTTS] = useState<number | null>(null);
+  const [translating, setTranslating] = useState(false);
   const [isRecording, setIsRecording] = useState<number | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   
@@ -213,6 +215,58 @@ const BulkWordCreation: React.FC = () => {
     }
   };
 
+  const handleBatchTranslate = async () => {
+    if (!targetLanguage) {
+      alert('Please select a target language first');
+      return;
+    }
+
+    // Get all base words that don't have translations yet
+    const wordsToTranslate = words.filter(w => w.baseWord.trim() !== '' && w.translation.trim() === '');
+    
+    if (wordsToTranslate.length === 0) {
+      alert('All words already have translations or no words to translate');
+      return;
+    }
+
+    if (!confirm(`Translate ${wordsToTranslate.length} words using AI? This will use Azure Translator API.`)) {
+      return;
+    }
+
+    try {
+      setTranslating(true);
+      const language = languages.find(l => l.id === targetLanguage);
+      
+      const response = await translationService.translateBatch({
+        texts: wordsToTranslate.map(w => w.baseWord),
+        fromLang: 'en',
+        toLang: language?.code || 'zh-Hant',
+      });
+
+      // Update translations
+      let translationIndex = 0;
+      const updatedWords = words.map(word => {
+        if (word.baseWord.trim() !== '' && word.translation.trim() === '') {
+          const result = response.results[translationIndex];
+          translationIndex++;
+          return {
+            ...word,
+            translation: result?.translation || word.translation,
+          };
+        }
+        return word;
+      });
+
+      setWords(updatedWords);
+      alert(`Successfully translated ${response.results.length} words! (${response.cached} from cache)`);
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      alert(error.response?.data?.error || 'Failed to translate words');
+    } finally {
+      setTranslating(false);
+    }
+  };
+
   const formatRecordingTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -386,14 +440,36 @@ const BulkWordCreation: React.FC = () => {
           <div className="bg-white shadow rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Enter Words</h3>
-              <button
-                type="button"
-                onClick={addMoreWords}
-                disabled={wordCount >= 100}
-                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                + Add 5 More
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleBatchTranslate}
+                  disabled={translating || !targetLanguage}
+                  className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {translating ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Translating...
+                    </>
+                  ) : (
+                    <>
+                      🤖 AI Translate
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={addMoreWords}
+                  disabled={wordCount >= 100}
+                  className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  + Add 5 More
+                </button>
+              </div>
             </div>
 
             <div className="space-y-6">
