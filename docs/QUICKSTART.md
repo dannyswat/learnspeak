@@ -34,7 +34,7 @@ createdb learnspeak
 cd backend
 cp .env.example .env
 # Edit .env with your database credentials
-go run main.go
+sh run.sh
 ```
 
 Backend runs at **http://localhost:8080**

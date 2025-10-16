@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { wordService, uploadService } from '../services/wordService';
 import ttsService from '../services/ttsService';
+import imageGenerationService from '../services/imageGenerationService';
 import type { CreateWordRequest, UpdateWordRequest, Language, CreateTranslationInput, UpdateTranslationInput } from '../types/word';
 import Layout from '../components/Layout';
 
@@ -26,6 +27,7 @@ const WordForm: React.FC = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState<number | null>(null);
   const [generatingTTS, setGeneratingTTS] = useState<number | null>(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   // Audio recording state
   const [isRecording, setIsRecording] = useState<number | null>(null);
@@ -178,6 +180,41 @@ const WordForm: React.FC = () => {
       alert(error.response?.data?.message || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!baseWord) {
+      alert('Please enter a base word first');
+      return;
+    }
+
+    // Get the first translation if available
+    const firstTranslation = translations.find(t => t.translation)?.translation || '';
+
+    try {
+      setGeneratingImage(true);
+      const result = await imageGenerationService.generateImage({
+        word: baseWord,
+        translation: firstTranslation,
+        size: '1024x1024',
+        quality: 'standard',
+        style: 'vivid',
+      });
+      
+      // Use the local path if available, otherwise use the URL
+      setImageUrl(result.local_path || result.url);
+      
+      if (result.cached) {
+        alert('Image retrieved from cache');
+      } else {
+        alert('Image generated successfully!');
+      }
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message || 'Failed to generate image');
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -365,6 +402,14 @@ const WordForm: React.FC = () => {
                           className="sr-only"
                         />
                       </label>
+                      <button
+                        type="button"
+                        onClick={handleGenerateImage}
+                        disabled={generatingImage || !baseWord}
+                        className="py-2 px-3 border border-purple-300 rounded-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {generatingImage ? '🎨 Generating...' : '🎨 Generate Image'}
+                      </button>
                       {imageUrl && (
                         <button
                           type="button"

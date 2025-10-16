@@ -107,7 +107,7 @@ learnspeak/
 
 5. **Run the backend**
    ```bash
-   go run main.go
+   ./run.sh
    ```
 
 Backend runs at: http://localhost:8080

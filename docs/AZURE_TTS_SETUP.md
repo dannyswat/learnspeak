@@ -76,7 +76,7 @@ Click **Review + Create**, then **Create**
 1. Start the backend:
    ```bash
    cd backend
-   go run main.go
+   sh run.sh
    ```
 
 2. Log in to the frontend and try creating a word with a translation

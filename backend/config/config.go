@@ -32,6 +32,11 @@ type Config struct {
 	AzureTranslatorRegion   string
 	AzureTranslatorEndpoint string
 	TranslatorCacheEnabled  bool
+	// Azure OpenAI Configuration
+	AzureOpenAIKey        string
+	AzureOpenAIEndpoint   string
+	AzureOpenAIDeployment string
+	ImageCacheEnabled     bool
 }
 
 var AppConfig *Config
@@ -47,6 +52,7 @@ func LoadConfig() *Config {
 	maxUploadSize, _ := strconv.ParseInt(getEnv("MAX_UPLOAD_SIZE", "10485760"), 10, 64)
 	ttsCacheEnabled, _ := strconv.ParseBool(getEnv("TTS_CACHE_ENABLED", "true"))
 	translatorCacheEnabled, _ := strconv.ParseBool(getEnv("TRANSLATOR_CACHE_ENABLED", "true"))
+	imageCacheEnabled, _ := strconv.ParseBool(getEnv("IMAGE_CACHE_ENABLED", "true"))
 
 	AppConfig = &Config{
 		Port:               getEnv("PORT", "8080"),
@@ -72,6 +78,11 @@ func LoadConfig() *Config {
 		AzureTranslatorRegion:   getEnv("AZURE_TRANSLATOR_REGION", "eastus"),
 		AzureTranslatorEndpoint: getEnv("AZURE_TRANSLATOR_ENDPOINT", "https://api.cognitive.microsofttranslator.com"),
 		TranslatorCacheEnabled:  translatorCacheEnabled,
+		// Azure OpenAI Configuration
+		AzureOpenAIKey:        getEnv("AZURE_OPENAI_KEY", ""),
+		AzureOpenAIEndpoint:   getEnv("AZURE_OPENAI_ENDPOINT", ""),
+		AzureOpenAIDeployment: getEnv("AZURE_OPENAI_DEPLOYMENT", "dall-e-3"),
+		ImageCacheEnabled:     imageCacheEnabled,
 	}
 
 	return AppConfig

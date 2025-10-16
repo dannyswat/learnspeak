@@ -24,7 +24,7 @@ Migrations run automatically when the backend starts:
 
 ```bash
 cd backend
-go run main.go
+sh run.sh
 ```
 
 The migration system:

@@ -32,6 +32,11 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	quizService := services.NewQuizService(quizRepo, topicRepo, userProgressRepo)
 	ttsService := services.NewTTSService(cfg)
 	translationService := services.NewTranslationService(cfg)
+	imageGenerationService, err := services.NewImageGenerationService()
+	if err != nil {
+		// Log error but don't fail - image generation is optional
+		e.Logger.Errorf("Failed to initialize image generation service: %v", err)
+	}
 
 	// Initialize handlers
 	wordHandler := handlers.NewWordHandler(wordService)
@@ -43,6 +48,12 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 	ttsHandler := handlers.NewTTSHandler(ttsService)
 	translationHandler := handlers.NewTranslationHandler(translationService)
+
+	// Always create image generation handler (will show proper error if not configured)
+	var imageGenerationHandler *handlers.ImageGenerationHandler
+	if imageGenerationService != nil {
+		imageGenerationHandler = handlers.NewImageGenerationHandler(imageGenerationService)
+	}
 
 	// API version 1
 	api := e.Group("/api/v1")
@@ -139,6 +150,14 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 			// Translation (AI-powered)
 			teacher.POST("/translate", translationHandler.Translate)
 			teacher.POST("/translate/batch", translationHandler.BatchTranslate)
+
+			// Image Generation (AI-powered)
+			if imageGenerationHandler != nil {
+				teacher.POST("/images/generate", imageGenerationHandler.GenerateImage)
+				teacher.POST("/images/generate/batch", imageGenerationHandler.BatchGenerateImages)
+				teacher.GET("/images/cache/stats", imageGenerationHandler.GetCacheStats)
+				teacher.DELETE("/images/cache", imageGenerationHandler.ClearCache)
+			}
 		}
 	}
 

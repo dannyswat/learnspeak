@@ -4,6 +4,7 @@ import { topicService } from '../services/topicService';
 import { wordService, uploadService } from '../services/wordService';
 import ttsService from '../services/ttsService';
 import translationService from '../services/translationService';
+import imageGenerationService from '../services/imageGenerationService';
 import Layout from '../components/Layout';
 import type { Language } from '../types/word';
 
@@ -33,6 +34,7 @@ const BulkWordCreation: React.FC = () => {
   const [uploadingImage, setUploadingImage] = useState<number | null>(null);
   const [uploadingAudio, setUploadingAudio] = useState<number | null>(null);
   const [generatingTTS, setGeneratingTTS] = useState<number | null>(null);
+  const [generatingImage, setGeneratingImage] = useState<number | null>(null);
   const [translating, setTranslating] = useState(false);
   const [isRecording, setIsRecording] = useState<number | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -212,6 +214,33 @@ const BulkWordCreation: React.FC = () => {
       alert(error.response?.data?.error || 'Failed to generate audio');
     } finally {
       setGeneratingTTS(null);
+    }
+  };
+
+  const generateImage = async (index: number) => {
+    const word = words[index];
+    if (!word.baseWord) {
+      alert('Please enter a base word first');
+      return;
+    }
+
+    try {
+      setGeneratingImage(index);
+      const result = await imageGenerationService.generateImage({
+        word: word.baseWord,
+        translation: word.translation,
+        size: '1024x1024',
+        quality: 'standard',
+        style: 'vivid',
+      });
+      
+      // Use the local path if available, otherwise use the URL
+      handleWordChange(index, 'imageUrl', result.local_path || result.url);
+    } catch (err) {
+      const error = err as Error;
+      alert(error.message || 'Failed to generate image');
+    } finally {
+      setGeneratingImage(null);
     }
   };
 
@@ -559,17 +588,27 @@ const BulkWordCreation: React.FC = () => {
                             className="h-16 w-16 object-cover rounded border border-gray-200"
                           />
                         )}
-                        <div className="flex flex-col gap-2">
-                          <label className="cursor-pointer bg-white py-1.5 px-3 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                            {uploadingImage === index ? 'Uploading...' : '📷 Upload Image'}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleImageUpload(index, e)}
-                              disabled={uploadingImage === index}
-                              className="sr-only"
-                            />
-                          </label>
+                        <div className="flex flex-col gap-2 flex-1">
+                          <div className="flex gap-2">
+                            <label className="cursor-pointer bg-white py-1.5 px-3 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors flex-1 text-center">
+                              {uploadingImage === index ? 'Uploading...' : '📷 Upload'}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleImageUpload(index, e)}
+                                disabled={uploadingImage === index}
+                                className="sr-only"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => generateImage(index)}
+                              disabled={generatingImage === index || !word.baseWord}
+                              className="py-1.5 px-3 border border-purple-300 rounded-lg text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1"
+                            >
+                              {generatingImage === index ? '🎨 Generating...' : '🎨 Generate'}
+                            </button>
+                          </div>
                           {word.imageUrl && (
                             <button
                               type="button"

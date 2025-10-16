@@ -54,7 +54,7 @@ backend/
 
 5. Run the application:
    ```bash
-   go run main.go
+   ./run.sh
    ```
 
 The server will start on `http://localhost:8080` (or the port specified in your `.env` file).
@@ -133,7 +133,7 @@ Default roles are seeded automatically:
 
 ### Running in development mode
 ```bash
-ENV=development go run main.go
+ENV=development sh run.sh
 ```
 
 ### Building for production
