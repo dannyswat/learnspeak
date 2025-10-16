@@ -96,6 +96,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		protected.GET("/topics/:id/quiz/practice", quizHandler.GetTopicQuizForPractice) // Get questions for practice (no answers)
 		protected.POST("/topics/:id/quiz/submit", quizHandler.SubmitQuiz)
 
+		protected.GET("/journeys/:id", journeyHandler.GetJourney)
+		protected.GET("/topics/:id", topicHandler.GetTopic)
+
 		// Example: Admin-only routes
 		admin := protected.Group("/admin")
 		admin.Use(middleware.RequireRole("admin"))
@@ -116,7 +119,6 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 			// Topic management
 			teacher.GET("/topics", topicHandler.ListTopics)
 			teacher.POST("/topics", topicHandler.CreateTopic)
-			teacher.GET("/topics/:id", topicHandler.GetTopic)
 			teacher.PUT("/topics/:id", topicHandler.UpdateTopic)
 			teacher.DELETE("/topics/:id", topicHandler.DeleteTopic)
 			teacher.POST("/topics/:id/words", topicHandler.AddWordsToTopic)
@@ -125,7 +127,6 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 			// Journey management
 			teacher.GET("/journeys", journeyHandler.ListJourneys)
 			teacher.POST("/journeys", journeyHandler.CreateJourney)
-			teacher.GET("/journeys/:id", journeyHandler.GetJourney)
 			teacher.PUT("/journeys/:id", journeyHandler.UpdateJourney)
 			teacher.DELETE("/journeys/:id", journeyHandler.DeleteJourney)
 			teacher.POST("/journeys/:id/reorder", journeyHandler.ReorderTopics)
