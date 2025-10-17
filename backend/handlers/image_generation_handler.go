@@ -77,7 +77,7 @@ func (h *ImageGenerationHandler) GenerateImage(c echo.Context) error {
 	}
 
 	// Generate image
-	result, err := h.service.GenerateImage(c.Request().Context(), services.ImageGenerationOptions{
+	result, err := h.service.GenerateImage(c.Request().Context(), services.ImageGeneratorOptions{
 		Word:        req.Word,
 		Translation: req.Translation,
 		Size:        req.Size,
@@ -146,7 +146,7 @@ func (h *ImageGenerationHandler) BatchGenerateImages(c echo.Context) error {
 		}
 
 		// Generate image
-		img, err := h.service.GenerateImage(c.Request().Context(), services.ImageGenerationOptions{
+		img, err := h.service.GenerateImage(c.Request().Context(), services.ImageGeneratorOptions{
 			Word:        wordReq.Word,
 			Translation: wordReq.Translation,
 			Size:        wordReq.Size,
@@ -170,49 +170,5 @@ func (h *ImageGenerationHandler) BatchGenerateImages(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, BatchGenerateImageResponse{
 		Images: results,
-	})
-}
-
-// GetCacheStats handles GET /api/v1/images/cache/stats
-// @Summary Get image cache statistics
-// @Description Get statistics about the image cache (file count and size)
-// @Tags images
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/v1/images/cache/stats [get]
-func (h *ImageGenerationHandler) GetCacheStats(c echo.Context) error {
-	fileCount, totalSize, err := h.service.GetCacheStats()
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error: fmt.Sprintf("Failed to get cache stats: %v", err),
-		})
-	}
-
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"file_count": fileCount,
-		"total_size": totalSize,
-		"size_mb":    float64(totalSize) / (1024 * 1024),
-	})
-}
-
-// ClearCache handles DELETE /api/v1/images/cache
-// @Summary Clear image cache
-// @Description Delete all cached images (admin only)
-// @Tags images
-// @Security BearerAuth
-// @Success 200 {object} dto.SuccessResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/v1/images/cache [delete]
-func (h *ImageGenerationHandler) ClearCache(c echo.Context) error {
-	if err := h.service.ClearCache(); err != nil {
-		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
-			Error: fmt.Sprintf("Failed to clear cache: %v", err),
-		})
-	}
-
-	return c.JSON(http.StatusOK, dto.SuccessResponse{
-		Message: "Cache cleared successfully",
 	})
 }

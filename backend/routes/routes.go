@@ -156,13 +156,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 			if imageGenerationHandler != nil {
 				teacher.POST("/images/generate", imageGenerationHandler.GenerateImage)
 				teacher.POST("/images/generate/batch", imageGenerationHandler.BatchGenerateImages)
-				teacher.GET("/images/cache/stats", imageGenerationHandler.GetCacheStats)
-				teacher.DELETE("/images/cache", imageGenerationHandler.ClearCache)
 			}
 		}
-	}
-
-	// Health check endpoint (public)
+	} // Health check endpoint (public)
 	e.GET("/health", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{
 			"status": "ok",

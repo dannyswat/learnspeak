@@ -37,6 +37,10 @@ type Config struct {
 	AzureOpenAIEndpoint   string
 	AzureOpenAIDeployment string
 	ImageCacheEnabled     bool
+	// Ideogram Configuration
+	IdeogramAPIKey string
+	// Image Generation Provider
+	ImageGenerationProvider string // "azure" or "ideogram"
 }
 
 var AppConfig *Config
@@ -83,6 +87,10 @@ func LoadConfig() *Config {
 		AzureOpenAIEndpoint:   getEnv("AZURE_OPENAI_ENDPOINT", ""),
 		AzureOpenAIDeployment: getEnv("AZURE_OPENAI_DEPLOYMENT", "dall-e-3"),
 		ImageCacheEnabled:     imageCacheEnabled,
+		// Ideogram Configuration
+		IdeogramAPIKey: getEnv("IDEOGRAM_API_KEY", ""),
+		// Image Generation Provider
+		ImageGenerationProvider: getEnv("IMAGE_GENERATION_PROVIDER", "azure"),
 	}
 
 	return AppConfig
