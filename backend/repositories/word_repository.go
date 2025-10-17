@@ -54,7 +54,16 @@ func (r *wordRepository) GetByID(id uint) (*models.Word, error) {
 
 // Update updates an existing word
 func (r *wordRepository) Update(word *models.Word) error {
-	return r.db.Save(word).Error
+	// Use Model().Where().Updates() instead of Save() to ensure we're updating, not creating
+	// Save() can sometimes create a new record if ID is not properly set in GORM context
+	result := r.db.Model(&models.Word{}).Where("id = ?", word.ID).Updates(word)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("word not found")
+	}
+	return nil
 }
 
 // Delete deletes a word by ID
