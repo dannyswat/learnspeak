@@ -120,23 +120,11 @@ func (s *ImageGenerationService) GenerateImage(ctx context.Context, opts ImageGe
 // buildEducationalPrompt creates a child-safe, educational prompt
 func (s *ImageGenerationService) buildEducationalPrompt(opts ImageGenerationOptions) string {
 	word := opts.Word
-	translation := opts.Translation
 
-	// Base template for educational images
-	var prompt string
-	if translation != "" {
-		prompt = fmt.Sprintf(
-			"A simple illustration of '%s' (%s) designed for children learning Cantonese. "+
-				"Clear visual representation suitable for vocabulary learning.",
-			word, translation,
-		)
-	} else {
-		prompt = fmt.Sprintf(
-			"A simple illustration of '%s' designed for children learning Cantonese. "+
-				"Clear visual representation suitable for vocabulary learning.",
-			word,
-		)
-	}
+	prompt := fmt.Sprintf(
+		"A simple image of '%s' with clear visual representation for children language learning. ",
+		word,
+	)
 
 	return prompt
 }
