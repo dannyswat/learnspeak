@@ -18,6 +18,7 @@ type JourneyService interface {
 	ReorderTopics(journeyID uint, topicIDs []uint, userID uint) error
 	AssignJourney(journeyID uint, userIDs []uint, assignedBy uint) (*dto.AssignJourneyResponse, error)
 	UnassignJourney(journeyID uint, userIDs []uint) error
+	StartJourney(journeyID uint, userID uint) error
 	GetUserJourneys(userID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error)
 	GetJourneyAssignments(journeyID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error)
 }
@@ -400,6 +401,16 @@ func (s *journeyService) UnassignJourney(journeyID uint, userIDs []uint) error {
 			return fmt.Errorf("failed to unassign journey from user %d: %w", userID, err)
 		}
 	}
+	return nil
+}
+
+// StartJourney marks a user journey as in_progress
+func (s *journeyService) StartJourney(journeyID uint, userID uint) error {
+	// Mark journey as started (will only update if status is 'assigned')
+	if err := s.userJourneyRepo.MarkAsStarted(userID, journeyID); err != nil {
+		return fmt.Errorf("failed to start journey: %w", err)
+	}
+
 	return nil
 }
 

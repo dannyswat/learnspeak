@@ -454,6 +454,50 @@ func (h *JourneyHandler) UnassignJourney(c echo.Context) error {
 	})
 }
 
+// StartJourney godoc
+// @Summary Start a journey
+// @Description Mark a journey as in_progress for the current user
+// @Tags journeys
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Success 200 {object} dto.SuccessResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/start [post]
+func (h *JourneyHandler) StartJourney(c echo.Context) error {
+	// Get user ID from context
+	userID, ok := c.Get("userId").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "User ID not found in context",
+			Error:   "unauthorized",
+		})
+	}
+
+	// Parse journey ID
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Start journey
+	if err := h.journeyService.StartJourney(uint(id), userID); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to start journey",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResponse{
+		Success: true,
+		Message: "Journey started successfully",
+	})
+}
+
 // GetUserJourneys godoc
 // @Summary Get journeys assigned to a user
 // @Description Get all journeys assigned to a specific user

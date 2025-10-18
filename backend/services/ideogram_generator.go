@@ -64,10 +64,13 @@ func (g *IdeogramGenerator) GenerateImage(ctx context.Context, opts ImageGenerat
 
 	// Build educational prompt or use custom prompt
 	var prompt string
+	var magicPrompt string
 	if opts.CustomPrompt != "" {
 		prompt = opts.CustomPrompt
+		magicPrompt = "OFF" // Disable magic prompt for custom prompts to preserve user intent
 	} else {
 		prompt = g.buildEducationalPrompt(opts)
+		magicPrompt = "AUTO" // Enable magic prompt enhancement for default prompts
 	}
 
 	// Convert size to aspect ratio
@@ -81,8 +84,8 @@ func (g *IdeogramGenerator) GenerateImage(ctx context.Context, opts ImageGenerat
 	writer.WriteField("prompt", prompt)
 	writer.WriteField("aspect_ratio", aspectRatio)
 	writer.WriteField("rendering_speed", "FLASH") // Use FLASH model (3.0 flash)
-	writer.WriteField("magic_prompt", "AUTO")     // Enable magic prompt enhancement
-	writer.WriteField("style_type", "DESIGN")     // Use design style for educational illustrations
+	writer.WriteField("magic_prompt", magicPrompt)
+	writer.WriteField("style_type", "DESIGN") // Use design style for educational illustrations
 	writer.WriteField("negative_prompt", "violence, scary, dark, inappropriate, adult content, text, words, letters")
 
 	// Close the writer to finalize the multipart message

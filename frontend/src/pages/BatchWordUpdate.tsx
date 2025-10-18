@@ -101,11 +101,7 @@ const BatchWordUpdate: React.FC = () => {
       alert('No changes detected');
       return;
     }
-
-    if (!confirm(`Update ${changedWords.length} word(s)?`)) {
-      return;
-    }
-
+    
     try {
       setSaving(true);
       setError('');
@@ -166,10 +162,6 @@ const BatchWordUpdate: React.FC = () => {
     
     if (wordsNeedingAudio.length === 0) {
       alert('All words with translations already have audio or no translations available');
-      return;
-    }
-
-    if (!confirm(`Generate audio for ${wordsNeedingAudio.length} words using Azure TTS?`)) {
       return;
     }
 

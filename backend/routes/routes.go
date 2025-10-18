@@ -99,6 +99,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 
 		protected.GET("/journeys/:id", journeyHandler.GetJourney)
 		protected.GET("/topics/:id", topicHandler.GetTopic)
+		protected.POST("/journeys/:id/start", journeyHandler.StartJourney)
 
 		// Example: Admin-only routes
 		admin := protected.Group("/admin")

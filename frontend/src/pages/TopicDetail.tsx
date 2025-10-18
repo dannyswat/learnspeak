@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { topicService } from '../services/topicService';
 import type { Topic } from '../types/topic';
@@ -12,14 +12,64 @@ const TopicDetail: React.FC = () => {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   const isTeacher = user?.roles?.some(role => role === 'teacher' || role === 'admin');
+
+  // Get words with images for navigation
+  const wordsWithImages = topic?.words?.filter(word => word.imageUrl) || [];
+
+  // Navigation handlers
+  const handlePreviousImage = useCallback(() => {
+    if (selectedImageIndex !== null && selectedImageIndex > 0) {
+      setSelectedImageIndex(selectedImageIndex - 1);
+    }
+  }, [selectedImageIndex]);
+
+  const handleNextImage = useCallback(() => {
+    if (selectedImageIndex !== null && selectedImageIndex < wordsWithImages.length - 1) {
+      setSelectedImageIndex(selectedImageIndex + 1);
+    }
+  }, [selectedImageIndex, wordsWithImages.length]);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedImageIndex(null);
+  }, []);
+
+  const handleImageClick = (wordId: number) => {
+    const index = wordsWithImages.findIndex(w => w.id === wordId);
+    if (index !== -1) {
+      setSelectedImageIndex(index);
+    }
+  };
 
   useEffect(() => {
     if (id) {
       loadTopic(parseInt(id));
     }
   }, [id]);
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (selectedImageIndex === null) return;
+
+      if (e.key === 'ArrowLeft') {
+        handlePreviousImage();
+      } else if (e.key === 'ArrowRight') {
+        handleNextImage();
+      } else if (e.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+
+    if (selectedImageIndex !== null) {
+      window.addEventListener('keydown', handleKeyPress);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [selectedImageIndex, wordsWithImages.length, handlePreviousImage, handleNextImage, handleCloseModal]);
 
   const loadTopic = async (topicId: number) => {
     try {
@@ -245,7 +295,9 @@ const TopicDetail: React.FC = () => {
                       <img
                         src={word.imageUrl}
                         alt={word.baseWord}
-                        className="w-12 h-12 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => handleImageClick(word.id)}
+                        title="Click to view larger image"
                       />
                     )}
                   </div>
@@ -273,6 +325,97 @@ const TopicDetail: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Image Modal */}
+        {selectedImageIndex !== null && wordsWithImages[selectedImageIndex] && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+            onClick={handleCloseModal}
+          >
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors z-10"
+              title="Close (Esc)"
+            >
+              ×
+            </button>
+
+            {/* Previous Button */}
+            {selectedImageIndex > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePreviousImage();
+                }}
+                className="absolute left-4 text-white text-5xl hover:text-gray-300 transition-colors z-10"
+                title="Previous (←)"
+              >
+                ‹
+              </button>
+            )}
+
+            {/* Next Button */}
+            {selectedImageIndex < wordsWithImages.length - 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextImage();
+                }}
+                className="absolute right-4 text-white text-5xl hover:text-gray-300 transition-colors z-10"
+                title="Next (→)"
+              >
+                ›
+              </button>
+            )}
+
+            {/* Image Container */}
+            <div
+              className="max-w-5xl max-h-[90vh] flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={wordsWithImages[selectedImageIndex].imageUrl}
+                alt={wordsWithImages[selectedImageIndex].baseWord}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+              />
+
+              {/* Word Info */}
+              <div className="mt-6 bg-white rounded-lg p-4 shadow-xl max-w-md">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
+                    {wordsWithImages[selectedImageIndex].baseWord}
+                  </div>
+                  <div className="text-xl text-gray-700 mb-1">
+                    {wordsWithImages[selectedImageIndex].translation}
+                  </div>
+                  {wordsWithImages[selectedImageIndex].romanization && (
+                    <div className="text-sm text-gray-500">
+                      {wordsWithImages[selectedImageIndex].romanization}
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-400 mt-2">
+                    {selectedImageIndex + 1} / {wordsWithImages.length}
+                  </div>
+                </div>
+
+                {/* Audio Player */}
+                {wordsWithImages[selectedImageIndex].audioUrl && (
+                  <div className="mt-3">
+                    <audio controls className="w-full">
+                      <source src={wordsWithImages[selectedImageIndex].audioUrl} />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                )}
+              </div>
+
+              {/* Navigation Hint */}
+              <div className="mt-4 text-white text-sm text-center opacity-75">
+                Use arrow keys (← →) or click arrows to navigate • Press Esc to close
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

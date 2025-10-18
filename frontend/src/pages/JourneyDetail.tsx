@@ -112,7 +112,23 @@ const JourneyDetail: React.FC = () => {
     if (isTopicLocked(topicId, sequenceOrder)) {
       return; // Don't navigate if locked
     }
-    navigate(`/topics/${topicId}`);
+    navigate(`/topics/${topicId}?journeyId=${id}`);
+  };
+
+  const handleStartJourney = async () => {
+    if (!id || !userJourney?.nextTopic) return;
+
+    try {
+      // Call start journey API to update status to in_progress
+      await journeyService.startJourney(parseInt(id));
+      
+      // Navigate to the next topic with journeyId
+      navigate(`/topics/${userJourney.nextTopic.id}?journeyId=${id}`);
+    } catch (err) {
+      console.error('Failed to start journey:', err);
+      // Still navigate even if API call fails
+      navigate(`/topics/${userJourney.nextTopic.id}?journeyId=${id}`);
+    }
   };
 
   const getLevelBadgeColor = (level: string) => {
@@ -259,7 +275,7 @@ const JourneyDetail: React.FC = () => {
                     )}
                   </div>
                   <button
-                    onClick={() => navigate(`/topics/${userJourney.nextTopic!.id}`)}
+                    onClick={handleStartJourney}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                   >
                     Start Learning

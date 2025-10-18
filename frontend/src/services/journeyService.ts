@@ -68,4 +68,12 @@ export const journeyService = {
   async reorderTopics(id: number, topicIds: number[]): Promise<void> {
     await api.post(`${JOURNEYS_ENDPOINT}/${id}/reorder`, topicIds);
   },
+
+  /**
+   * Start a journey (mark as in_progress)
+   */
+  async startJourney(id: number): Promise<{ message: string }> {
+    const response = await api.post<{ success: boolean; message: string }>(`${JOURNEYS_ENDPOINT}/${id}/start`);
+    return response.data;
+  },
 };

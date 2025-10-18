@@ -66,13 +66,19 @@ const TopicLearner: React.FC = () => {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (journeyId) {
+                navigate(`/journeys/${journeyId}`);
+              } else {
+                navigate(-1);
+              }
+            }}
             className="text-gray-600 hover:text-gray-900 mb-4 flex items-center"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back
+            {journeyId ? 'Back to Journey' : 'Back'}
           </button>
 
           <div className="flex items-start justify-between">
