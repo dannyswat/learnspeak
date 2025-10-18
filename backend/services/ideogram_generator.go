@@ -7,45 +7,33 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"time"
 
 	"dannyswat/learnspeak/config"
 )
 
-// IdeogramGenerator implements ImageGenerator using Ideogram API
+// IdeogramGenerator implements ImageGenerator using Ideogram API (v3)
 type IdeogramGenerator struct {
 	apiKey   string
 	endpoint string
 }
 
-// IdeogramRequest represents a request to Ideogram API
-type IdeogramRequest struct {
-	ImageRequest IdeogramImageRequest `json:"image_request"`
-}
-
-// IdeogramImageRequest contains the image generation parameters
-type IdeogramImageRequest struct {
-	Prompt            string `json:"prompt"`
-	AspectRatio       string `json:"aspect_ratio,omitempty"`        // "ASPECT_1_1", "ASPECT_16_9", "ASPECT_9_16"
-	Model             string `json:"model,omitempty"`               // "V_2", "V_2_TURBO"
-	MagicPromptOption string `json:"magic_prompt_option,omitempty"` // "AUTO", "ON", "OFF"
-	StyleType         string `json:"style_type,omitempty"`          // "GENERAL", "REALISTIC", "DESIGN", "RENDER_3D", "ANIME"
-	NegativePrompt    string `json:"negative_prompt,omitempty"`
-}
-
-// IdeogramResponse represents the response from Ideogram API
+// IdeogramResponse represents the response from Ideogram API v3
 type IdeogramResponse struct {
-	Created int64           `json:"created"`
+	Created string          `json:"created"`
 	Data    []IdeogramImage `json:"data"`
 }
 
-// IdeogramImage represents a single generated image
+// IdeogramImage represents a single generated image from v3 API
 type IdeogramImage struct {
 	URL         string `json:"url"`
 	Prompt      string `json:"prompt"`
 	Resolution  string `json:"resolution"`
 	IsImageSafe bool   `json:"is_image_safe"`
+	Seed        int    `json:"seed,omitempty"`
+	StyleType   string `json:"style_type,omitempty"`
 }
 
 // NewIdeogramGenerator creates a new Ideogram image generator
@@ -57,17 +45,17 @@ func NewIdeogramGenerator() (*IdeogramGenerator, error) {
 		log.Println("Warning: Ideogram API key not configured")
 		return &IdeogramGenerator{
 			apiKey:   "",
-			endpoint: "https://api.ideogram.ai/generate",
+			endpoint: "https://api.ideogram.ai/v1/ideogram-v3/generate",
 		}, nil
 	}
 
 	return &IdeogramGenerator{
 		apiKey:   cfg.IdeogramAPIKey,
-		endpoint: "https://api.ideogram.ai/generate",
+		endpoint: "https://api.ideogram.ai/v1/ideogram-v3/generate",
 	}, nil
 }
 
-// GenerateImage generates an educational image using Ideogram API
+// GenerateImage generates an educational image using Ideogram API v3
 func (g *IdeogramGenerator) GenerateImage(ctx context.Context, opts ImageGeneratorOptions) (*GeneratedImageResult, error) {
 	// Check if API key is configured
 	if g.apiKey == "" {
@@ -80,34 +68,35 @@ func (g *IdeogramGenerator) GenerateImage(ctx context.Context, opts ImageGenerat
 	// Convert size to aspect ratio
 	aspectRatio := g.sizeToAspectRatio(opts.Size)
 
-	// Prepare request
-	reqBody := IdeogramRequest{
-		ImageRequest: IdeogramImageRequest{
-			Prompt:            prompt,
-			AspectRatio:       aspectRatio,
-			Model:             "V_2",
-			MagicPromptOption: "AUTO",
-			StyleType:         "DESIGN", // Use design style for educational illustrations
-			NegativePrompt:    "violence, scary, dark, inappropriate, adult content",
-		},
-	}
+	// Prepare multipart form data
+	var requestBody bytes.Buffer
+	writer := multipart.NewWriter(&requestBody)
 
-	jsonData, err := json.Marshal(reqBody)
+	// Add form fields
+	writer.WriteField("prompt", prompt)
+	writer.WriteField("aspect_ratio", aspectRatio)
+	writer.WriteField("rendering_speed", "FLASH") // Use FLASH model (3.0 flash)
+	writer.WriteField("magic_prompt", "AUTO")     // Enable magic prompt enhancement
+	writer.WriteField("style_type", "DESIGN")     // Use design style for educational illustrations
+	writer.WriteField("negative_prompt", "violence, scary, dark, inappropriate, adult content, text, words, letters")
+
+	// Close the writer to finalize the multipart message
+	err := writer.Close()
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
 	}
 
 	// Create HTTP request with timeout
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctxWithTimeout, "POST", g.endpoint, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctxWithTimeout, "POST", g.endpoint, &requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Set headers
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Api-Key", g.apiKey)
 
 	// Make API call
@@ -168,7 +157,7 @@ func (g *IdeogramGenerator) IsConfigured() bool {
 	return g.apiKey != ""
 }
 
-// buildEducationalPrompt creates a child-safe, educational prompt
+// buildEducationalPrompt creates a child-safe, educational prompt for Ideogram v3
 func (g *IdeogramGenerator) buildEducationalPrompt(opts ImageGeneratorOptions) string {
 	word := opts.Word
 
@@ -184,12 +173,12 @@ func (g *IdeogramGenerator) buildEducationalPrompt(opts ImageGeneratorOptions) s
 func (g *IdeogramGenerator) sizeToAspectRatio(size string) string {
 	switch size {
 	case "1024x1024":
-		return "ASPECT_1_1"
+		return "1x1"
 	case "1792x1024":
-		return "ASPECT_16_9"
+		return "16:9"
 	case "1024x1792":
-		return "ASPECT_9_16"
+		return "9:16"
 	default:
-		return "ASPECT_1_1"
+		return "1x1"
 	}
 }
