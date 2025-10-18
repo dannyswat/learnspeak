@@ -78,8 +78,12 @@ func (s *ImageGenerationService) GenerateImage(ctx context.Context, opts ImageGe
 		size = "1024x1024"
 	}
 
-	// Check cache first
-	if config.AppConfig.ImageCacheEnabled {
+	// Determine if we should use cache
+	// Skip cache if custom prompt is provided (user wants fresh generation)
+	useCache := config.AppConfig.ImageCacheEnabled && opts.CustomPrompt == ""
+
+	// Check cache first (only if not using custom prompt)
+	if useCache {
 		cachedImage, err := s.cache.GetCachedImage(prompt, size)
 		if err == nil {
 			log.Printf("✅ Using cached image for prompt: %s", prompt)
@@ -95,12 +99,16 @@ func (s *ImageGenerationService) GenerateImage(ctx context.Context, opts ImageGe
 	}
 
 	// Download and cache image
+	// If custom prompt was used, this will override any existing cache
 	if config.AppConfig.ImageCacheEnabled && result.URL != "" {
 		localPath, err := s.cache.CacheImage(result.URL, prompt, size)
 		if err != nil {
 			log.Printf("⚠️  Warning: failed to cache image: %v", err)
 		} else {
 			result.LocalPath = "/" + localPath
+			if opts.CustomPrompt != "" {
+				log.Printf("✅ Cached custom prompt image, overriding previous cache for: %s", prompt)
+			}
 		}
 	}
 
