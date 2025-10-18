@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { topicService } from '../services/topicService';
-import { wordService } from '../services/wordService';
+import { wordService, uploadService } from '../services/wordService';
 import translationService from '../services/translationService';
 import ttsService from '../services/ttsService';
 import Layout from '../components/Layout';
@@ -154,11 +154,14 @@ const BulkWordCreation: React.FC = () => {
             language: language?.code,
           });
 
-          // Update the word with audio URL
+          // Update the word with audio URL (with cache buster)
           const wordIndex = words.findIndex(w => w === word);
           if (wordIndex !== -1) {
             const updatedWords = [...words];
-            updatedWords[wordIndex] = { ...updatedWords[wordIndex], audioUrl: response.audioUrl };
+            updatedWords[wordIndex] = { 
+              ...updatedWords[wordIndex], 
+              audioUrl: uploadService.addCacheBuster(response.audioUrl) 
+            };
             setWords(updatedWords);
           }
           

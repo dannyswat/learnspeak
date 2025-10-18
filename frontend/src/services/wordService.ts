@@ -85,13 +85,29 @@ export const uploadService = {
   },
 
   // Get full URL for an uploaded file
-  getFileUrl(path: string): string {
+  getFileUrl(path: string, bustCache: boolean = false): string {
     if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      return path;
+    
+    let url = path;
+    if (!path.startsWith('http://') && !path.startsWith('https://')) {
+      // In development with Vite proxy, or production, just use the path directly
+      // The Vite proxy will forward /uploads requests to the backend
+      url = path;
     }
-    // In development with Vite proxy, or production, just use the path directly
-    // The Vite proxy will forward /uploads requests to the backend
-    return path;
+    
+    // Add cache-busting timestamp if requested
+    if (bustCache) {
+      const separator = url.includes('?') ? '&' : '?';
+      url = `${url}${separator}t=${Date.now()}`;
+    }
+    
+    return url;
+  },
+
+  // Add cache-busting timestamp to any URL
+  addCacheBuster(url: string): string {
+    if (!url) return '';
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
   },
 };

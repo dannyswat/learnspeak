@@ -49,7 +49,8 @@ const AudioInput: React.FC<AudioInputProps> = ({
     try {
       setUploadingAudio(true);
       const response = await uploadService.uploadAudio(file);
-      onChange(response.url);
+      // Add cache buster to force browser to reload the newly uploaded audio
+      onChange(uploadService.addCacheBuster(response.url));
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to upload audio');
@@ -80,7 +81,8 @@ const AudioInput: React.FC<AudioInputProps> = ({
         try {
           setUploadingAudio(true);
           const response = await uploadService.uploadAudio(audioFile);
-          onChange(response.url);
+          // Add cache buster to force browser to reload the newly recorded audio
+          onChange(uploadService.addCacheBuster(response.url));
         } catch (err) {
           const error = err as { response?: { data?: { message?: string } } };
           alert(error.response?.data?.message || 'Failed to upload audio');
@@ -134,7 +136,8 @@ const AudioInput: React.FC<AudioInputProps> = ({
         language: languageCode || 'en-US',
       });
 
-      onChange(result.audioUrl);
+      // Add cache buster to force browser to reload the newly generated audio
+      onChange(uploadService.addCacheBuster(result.audioUrl));
       
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };

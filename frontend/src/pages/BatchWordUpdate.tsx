@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { topicService } from '../services/topicService';
-import { wordService } from '../services/wordService';
+import { wordService, uploadService } from '../services/wordService';
 import ttsService from '../services/ttsService';
 import Layout from '../components/Layout';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
@@ -101,7 +101,7 @@ const BatchWordUpdate: React.FC = () => {
       alert('No changes detected');
       return;
     }
-    
+
     try {
       setSaving(true);
       setError('');
@@ -180,11 +180,14 @@ const BatchWordUpdate: React.FC = () => {
             language: language?.code,
           });
 
-          // Update the word with audio URL
+          // Update the word with audio URL (with cache buster)
           const wordIndex = words.findIndex(w => w.id === word.id);
           if (wordIndex !== -1) {
             const updatedWords = [...words];
-            updatedWords[wordIndex] = { ...updatedWords[wordIndex], audioUrl: response.audioUrl };
+            updatedWords[wordIndex] = { 
+              ...updatedWords[wordIndex], 
+              audioUrl: uploadService.addCacheBuster(response.audioUrl) 
+            };
             setWords(updatedWords);
           }
           

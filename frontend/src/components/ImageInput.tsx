@@ -31,7 +31,8 @@ const ImageInput: React.FC<ImageInputProps> = ({
     try {
       setUploadingImage(true);
       const response = await uploadService.uploadImage(file);
-      onChange(response.url);
+      // Add cache buster to force browser to reload the newly uploaded image
+      onChange(uploadService.addCacheBuster(response.url));
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to upload image');
@@ -75,7 +76,9 @@ const ImageInput: React.FC<ImageInputProps> = ({
       const result = await imageGenerationService.generateImage(requestData);
 
       // Use the local path if available, otherwise use the URL
-      onChange(result.local_path || result.url);
+      // Add cache buster to force browser to reload the image
+      const imagePath = result.local_path || result.url;
+      onChange(uploadService.addCacheBuster(imagePath));
 
       // Reset custom prompt state after successful generation
       if (useCustomPrompt) {
