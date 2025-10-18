@@ -62,8 +62,13 @@ func (g *IdeogramGenerator) GenerateImage(ctx context.Context, opts ImageGenerat
 		return nil, fmt.Errorf("Ideogram API is not configured. Please add IDEOGRAM_API_KEY to your .env file")
 	}
 
-	// Build educational prompt
-	prompt := g.buildEducationalPrompt(opts)
+	// Build educational prompt or use custom prompt
+	var prompt string
+	if opts.CustomPrompt != "" {
+		prompt = opts.CustomPrompt
+	} else {
+		prompt = g.buildEducationalPrompt(opts)
+	}
 
 	// Convert size to aspect ratio
 	aspectRatio := g.sizeToAspectRatio(opts.Size)

@@ -15,11 +15,12 @@ type ImageGenerationHandler struct {
 }
 
 type GenerateImageRequest struct {
-	Word        string `json:"word" validate:"required"`
-	Translation string `json:"translation"`
-	Size        string `json:"size"`    // "1024x1024", "1792x1024", "1024x1792"
-	Quality     string `json:"quality"` // "standard" or "hd"
-	Style       string `json:"style"`   // "vivid" or "natural"
+	Word         string `json:"word" validate:"required"`
+	Translation  string `json:"translation"`
+	Size         string `json:"size"`         // "1024x1024", "1792x1024", "1024x1792"
+	Quality      string `json:"quality"`      // "standard" or "hd"
+	Style        string `json:"style"`        // "vivid" or "natural"
+	CustomPrompt string `json:"customPrompt"` // Custom prompt to override the default
 }
 
 type GenerateImageResponse struct {
@@ -78,11 +79,12 @@ func (h *ImageGenerationHandler) GenerateImage(c echo.Context) error {
 
 	// Generate image
 	result, err := h.service.GenerateImage(c.Request().Context(), services.ImageGeneratorOptions{
-		Word:        req.Word,
-		Translation: req.Translation,
-		Size:        req.Size,
-		Quality:     req.Quality,
-		Style:       req.Style,
+		Word:         req.Word,
+		Translation:  req.Translation,
+		Size:         req.Size,
+		Quality:      req.Quality,
+		Style:        req.Style,
+		CustomPrompt: req.CustomPrompt,
 	})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
@@ -147,11 +149,12 @@ func (h *ImageGenerationHandler) BatchGenerateImages(c echo.Context) error {
 
 		// Generate image
 		img, err := h.service.GenerateImage(c.Request().Context(), services.ImageGeneratorOptions{
-			Word:        wordReq.Word,
-			Translation: wordReq.Translation,
-			Size:        wordReq.Size,
-			Quality:     wordReq.Quality,
-			Style:       wordReq.Style,
+			Word:         wordReq.Word,
+			Translation:  wordReq.Translation,
+			Size:         wordReq.Size,
+			Quality:      wordReq.Quality,
+			Style:        wordReq.Style,
+			CustomPrompt: wordReq.CustomPrompt,
 		})
 
 		if err != nil {

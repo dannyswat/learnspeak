@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { topicService } from '../services/topicService';
 import { wordService } from '../services/wordService';
+import ttsService from '../services/ttsService';
 import Layout from '../components/Layout';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
@@ -18,6 +19,7 @@ const BatchWordUpdate: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [generatingAudio, setGeneratingAudio] = useState(false);
   const [topicName, setTopicName] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
   const [words, setWords] = useState<WordWithId[]>([]);
@@ -153,6 +155,67 @@ const BatchWordUpdate: React.FC = () => {
     }
   };
 
+  const handleBatchGenerateAudio = async () => {
+    if (!targetLanguage) {
+      alert('Please select a target language first');
+      return;
+    }
+
+    // Get all words with translations but no audio
+    const wordsNeedingAudio = words.filter(w => w.translation.trim() !== '' && !w.audioUrl);
+    
+    if (wordsNeedingAudio.length === 0) {
+      alert('All words with translations already have audio or no translations available');
+      return;
+    }
+
+    if (!confirm(`Generate audio for ${wordsNeedingAudio.length} words using Azure TTS?`)) {
+      return;
+    }
+
+    try {
+      setGeneratingAudio(true);
+      const language = languages.find(l => l.id === targetLanguage);
+      
+      let successCount = 0;
+      const errors: string[] = [];
+
+      // Generate audio for each word
+      for (const word of wordsNeedingAudio) {
+        try {
+          const response = await ttsService.generateAudio({
+            text: word.translation,
+            language: language?.code,
+          });
+
+          // Update the word with audio URL
+          const wordIndex = words.findIndex(w => w.id === word.id);
+          if (wordIndex !== -1) {
+            const updatedWords = [...words];
+            updatedWords[wordIndex] = { ...updatedWords[wordIndex], audioUrl: response.audioUrl };
+            setWords(updatedWords);
+          }
+          
+          successCount++;
+        } catch (err) {
+          const error = err as { response?: { data?: { error?: string } } };
+          errors.push(`"${word.translation}": ${error.response?.data?.error || 'Failed'}`);
+        }
+      }
+
+      if (errors.length > 0) {
+        alert(`Generated audio for ${successCount}/${wordsNeedingAudio.length} words.\n\nFailed:\n${errors.join('\n')}`);
+      } else {
+        alert(`Successfully generated audio for ${successCount} words!`);
+      }
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      alert(error.response?.data?.error || 'Failed to generate audio');
+    } finally {
+      setGeneratingAudio(false);
+    }
+  };
+
   const hasChanges = () => {
     return words.some((word, index) => {
       const original = originalWords[index];
@@ -219,6 +282,26 @@ const BatchWordUpdate: React.FC = () => {
                 Words to Update ({words.length})
               </h3>
               <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleBatchGenerateAudio}
+                  disabled={generatingAudio || !targetLanguage || saving}
+                  className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {generatingAudio ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      🔊 Batch Generate Audio
+                    </>
+                  )}
+                </button>
                 {hasChanges() && (
                   <button
                     type="button"

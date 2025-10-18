@@ -53,8 +53,13 @@ func (g *AzureOpenAIGenerator) GenerateImage(ctx context.Context, opts ImageGene
 
 	cfg := config.AppConfig
 
-	// Build educational prompt
-	prompt := g.buildEducationalPrompt(opts)
+	// Build educational prompt or use custom prompt
+	var prompt string
+	if opts.CustomPrompt != "" {
+		prompt = opts.CustomPrompt
+	} else {
+		prompt = g.buildEducationalPrompt(opts)
+	}
 
 	// Set defaults
 	size := opts.Size

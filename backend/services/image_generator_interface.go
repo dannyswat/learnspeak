@@ -6,11 +6,12 @@ import (
 
 // ImageGeneratorOptions contains options for image generation
 type ImageGeneratorOptions struct {
-	Word        string
-	Translation string
-	Size        string // "1024x1024", "1792x1024", "1024x1792"
-	Quality     string // "standard" or "hd"
-	Style       string // "vivid" or "natural"
+	Word         string
+	Translation  string
+	Size         string // "1024x1024", "1792x1024", "1024x1792"
+	Quality      string // "standard" or "hd"
+	Style        string // "vivid" or "natural"
+	CustomPrompt string // Custom prompt to override the default
 }
 
 // GeneratedImageResult represents the result of image generation
