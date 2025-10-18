@@ -264,7 +264,7 @@ const FlashcardPractice: React.FC = () => {
                 <img
                   src={currentCard.imageUrl}
                   alt={currentCard.baseWord}
-                  className="w-48 h-48 object-cover rounded-lg mb-6"
+                  className="h-[300px] object-cover rounded-lg mb-6"
                 />
               )}
               <h2 className="text-4xl font-bold text-gray-900 text-center">
@@ -292,7 +292,7 @@ const FlashcardPractice: React.FC = () => {
                   <img
                     src={currentCard.imageUrl}
                     alt={currentCard.baseWord}
-                    className="w-32 h-32 object-cover rounded-lg mb-4 mx-auto border-4 border-white shadow-lg"
+                    className="h-[200px] object-cover rounded-lg mb-4 mx-auto border-4 border-white shadow-lg"
                   />
                 )}
                 {currentCard?.translations.map((translation, idx) => (
