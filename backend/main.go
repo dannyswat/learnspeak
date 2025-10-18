@@ -83,8 +83,8 @@ func main() {
 	routes.SetupRoutes(e, cfg, uploadsDir)
 
 	// Serve static files from frontend build (production)
-	// The frontend build should be placed in ../frontend/dist
-	staticDir := "../frontend/dist"
+	// The frontend build should be placed in ./frontend
+	staticDir := "./frontend"
 	if _, err := os.Stat(staticDir); err == nil {
 		e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 			Root:   staticDir,

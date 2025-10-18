@@ -142,7 +142,7 @@ go build -o learnspeak-api main.go
 ./learnspeak-api
 ```
 
-The backend will serve both the API and frontend static files from `../frontend/dist`.
+The backend will serve both the API and frontend static files from `./frontend`.
 
 ## Static File Serving
 
