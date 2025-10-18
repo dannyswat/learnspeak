@@ -13,6 +13,9 @@ type UserRepository interface {
 	// GetByUsername retrieves a user by username
 	GetByUsername(username string) (*models.User, error)
 
+	// GetByEmail retrieves a user by email
+	GetByEmail(email string) (*models.User, error)
+
 	// GetByRole retrieves users with a specific role
 	GetByRole(roleName string, page, pageSize int) ([]models.User, int64, error)
 
@@ -30,6 +33,12 @@ type UserRepository interface {
 
 	// Delete soft deletes a user
 	Delete(user *models.User) error
+
+	// Create creates a new user
+	Create(user *models.User) error
+
+	// GetRoleByName retrieves a role by name
+	GetRoleByName(name string) (*models.Role, error)
 }
 
 type userRepository struct {
@@ -129,4 +138,23 @@ func (r *userRepository) Update(user *models.User) error {
 // Delete soft deletes a user
 func (r *userRepository) Delete(user *models.User) error {
 	return r.db.Delete(user).Error
+}
+
+// GetByEmail retrieves a user by email with roles preloaded
+func (r *userRepository) GetByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := r.db.Preload("Roles").Where("email = ?", email).First(&user).Error
+	return &user, err
+}
+
+// Create creates a new user with associated roles
+func (r *userRepository) Create(user *models.User) error {
+	return r.db.Create(user).Error
+}
+
+// GetRoleByName retrieves a role by name
+func (r *userRepository) GetRoleByName(name string) (*models.Role, error) {
+	var role models.Role
+	err := r.db.Where("name = ?", name).First(&role).Error
+	return &role, err
 }

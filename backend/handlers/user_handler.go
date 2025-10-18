@@ -264,6 +264,51 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+// CreateUser godoc
+// @Summary Create a new user (Admin only)
+// @Description Create a new user with specified roles. Only administrators can create users with any role.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body dto.CreateUserRequest true "User data"
+// @Success 201 {object} dto.UserResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /admin/users [post]
+func (h *UserHandler) CreateUser(c echo.Context) error {
+	var req dto.CreateUserRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid request body",
+			Error:   err.Error(),
+		})
+	}
+
+	// Validate request
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Validation failed",
+			Error:   err.Error(),
+		})
+	}
+
+	// Create user
+	user, err := h.userService.CreateUser(&req)
+	if err != nil {
+		statusCode := http.StatusBadRequest
+		if err.Error() == "username already exists" || err.Error() == "email already exists" {
+			statusCode = http.StatusConflict
+		}
+		return c.JSON(statusCode, dto.ErrorResponse{
+			Message: "Failed to create user",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusCreated, user)
+}
+
 // DeleteUser godoc
 // @Summary Delete a user (Admin only)
 // @Description Soft delete a user by ID

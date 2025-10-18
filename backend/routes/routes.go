@@ -105,6 +105,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		admin.Use(middleware.RequireRole("admin"))
 		{
 			// User management
+			admin.POST("/users", userHandler.CreateUser)
 			admin.GET("/users", userHandler.SearchUsers)
 			admin.GET("/users/:id", userHandler.GetUser)
 			admin.PUT("/users/:id", userHandler.UpdateUser)

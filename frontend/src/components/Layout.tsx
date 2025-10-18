@@ -25,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       .slice(0, 2);
   };
 
-  const isTeacher = user?.roles?.includes('teacher') || user?.roles?.includes('admin');
+  const isTeacher = user?.roles?.includes('teacher');
   const isLearner = user?.roles?.includes('learner');
 
   return (

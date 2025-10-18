@@ -139,4 +139,18 @@ export const userService = {
     const response = await api.get<UserListResponse>(url);
     return response.data;
   },
+
+  /**
+   * Create a new user (Admin only)
+   */
+  async createUser(data: {
+    username: string;
+    password: string;
+    email: string;
+    name: string;
+    roles: string[];
+  }): Promise<User> {
+    const response = await api.post<User>('/admin/users', data);
+    return response.data;
+  },
 };

@@ -24,6 +24,7 @@ import BulkWordCreation from './pages/BulkWordCreation';
 import BatchWordUpdate from './pages/BatchWordUpdate';
 import ChangePassword from './pages/ChangePassword';
 import AdminUsers from './pages/AdminUsers';
+import CreateUser from './pages/CreateUser';
 import './App.css';
 
 function App() {
@@ -222,6 +223,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminUsers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users/new"
+            element={
+              <ProtectedRoute>
+                <CreateUser />
               </ProtectedRoute>
             }
           />

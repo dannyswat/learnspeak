@@ -78,10 +78,14 @@ func Register(c echo.Context) error {
 		})
 	}
 
-	// Assign role (default to "learner" if not specified)
-	roleName := req.Role
-	if roleName == "" {
-		roleName = "learner"
+	// Assign role - Only allow "learner" role for self-registration
+	// Teachers and admins must be created by an administrator
+	roleName := "learner"
+	if req.Role != "" && req.Role != "learner" {
+		return c.JSON(http.StatusForbidden, dto.ErrorResponse{
+			Error:   "forbidden",
+			Message: "Self-registration is only allowed for learner role. Contact an administrator to create teacher or admin accounts.",
+		})
 	}
 
 	var role models.Role

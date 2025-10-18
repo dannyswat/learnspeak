@@ -7,6 +7,7 @@ import (
 	"dannyswat/learnspeak/dto"
 	"dannyswat/learnspeak/models"
 	"dannyswat/learnspeak/repositories"
+	"dannyswat/learnspeak/utils"
 )
 
 type UserService interface {
@@ -16,6 +17,7 @@ type UserService interface {
 	SearchUsers(params *dto.UserFilterParams) (*dto.UserListResponse, error)
 	UpdateUser(id uint, req *dto.UpdateUserRequest) (*dto.UserResponse, error)
 	DeleteUser(id uint) error
+	CreateUser(req *dto.CreateUserRequest) (*dto.UserResponse, error)
 }
 
 type userService struct {
@@ -194,4 +196,57 @@ func (s *userService) DeleteUser(id uint) error {
 	}
 
 	return nil
+}
+
+// CreateUser creates a new user with specified roles (admin only)
+func (s *userService) CreateUser(req *dto.CreateUserRequest) (*dto.UserResponse, error) {
+	// Check if username already exists
+	existingUser, err := s.userRepo.GetByUsername(req.Username)
+	if err == nil && existingUser != nil {
+		return nil, fmt.Errorf("username already exists")
+	}
+
+	// Check if email already exists
+	existingEmail, err := s.userRepo.GetByEmail(req.Email)
+	if err == nil && existingEmail != nil {
+		return nil, fmt.Errorf("email already exists")
+	}
+
+	// Hash password
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Create user
+	user := &models.User{
+		Username:     req.Username,
+		PasswordHash: hashedPassword,
+		Email:        req.Email,
+		Name:         req.Name,
+	}
+
+	// Get roles
+	roles := make([]models.Role, 0, len(req.Roles))
+	for _, roleName := range req.Roles {
+		role, err := s.userRepo.GetRoleByName(roleName)
+		if err != nil {
+			return nil, fmt.Errorf("role '%s' not found: %w", roleName, err)
+		}
+		roles = append(roles, *role)
+	}
+	user.Roles = roles
+
+	// Save user with roles
+	if err := s.userRepo.Create(user); err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Load user with all associations
+	createdUser, err := s.userRepo.GetByID(user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve created user: %w", err)
+	}
+
+	return s.toUserResponse(createdUser), nil
 }

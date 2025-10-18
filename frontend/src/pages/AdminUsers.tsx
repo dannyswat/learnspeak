@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
 import type { User, UserListResponse } from '../types/user';
 import Layout from '../components/Layout';
 
 const AdminUsers: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,9 +68,18 @@ const AdminUsers: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">👥 User Management</h2>
-          <p className="text-gray-600 mt-2">Manage all users in the system</p>
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">👥 User Management</h2>
+            <p className="text-gray-600 mt-2">Manage all users in the system</p>
+          </div>
+          <button
+            onClick={() => navigate('/admin/users/new')}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center gap-2"
+          >
+            <span>+</span>
+            <span>Create User</span>
+          </button>
         </div>
 
         {/* Filters */}
