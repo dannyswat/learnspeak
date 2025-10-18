@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { topicService } from '../services/topicService';
-import { wordService } from '../services/wordService';
 import type { Topic, TopicFilterParams } from '../types/topic';
-import type { Language } from '../types/word';
 import Layout from '../components/Layout';
+import LanguageSelect from '../components/LanguageSelect';
+import { useLanguages } from '../hooks/useLanguages';
 
 const TopicList: React.FC = () => {
   const navigate = useNavigate();
+  const { languages } = useLanguages();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [languages, setLanguages] = useState<Language[]>([]);
   
   // Filter state
   const [search, setSearch] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<number | null>(null);
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -23,22 +23,9 @@ const TopicList: React.FC = () => {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    loadLanguages();
-  }, []);
-
-  useEffect(() => {
     loadTopics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search, selectedLevel, selectedLanguage]);
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await wordService.getLanguages();
-      setLanguages(langs);
-    } catch (err) {
-      console.error('Error loading languages:', err);
-    }
-  };
 
   const loadTopics = async () => {
     try {
@@ -50,7 +37,10 @@ const TopicList: React.FC = () => {
 
       if (search) params.search = search;
       if (selectedLevel) params.level = selectedLevel;
-      if (selectedLanguage) params.languageCode = selectedLanguage;
+      if (selectedLanguage) {
+        const lang = languages.find(l => l.id === selectedLanguage);
+        if (lang) params.languageCode = lang.code;
+      }
 
       const response = await topicService.getTopics(params);
       setTopics(response.topics);
@@ -144,23 +134,16 @@ const TopicList: React.FC = () => {
             </div>
 
             {/* Language Filter */}
-            <div>
-              <select
-                value={selectedLanguage}
-                onChange={(e) => {
-                  setSelectedLanguage(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">All Languages</option>
-                {languages.map((lang) => (
-                  <option key={lang.id} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <LanguageSelect
+              value={selectedLanguage}
+              onChange={(langId) => {
+                setSelectedLanguage(langId);
+                setPage(1);
+              }}
+              languages={languages}
+              placeholder="All Languages"
+              showLabel={false}
+            />
           </div>
         </div>
 

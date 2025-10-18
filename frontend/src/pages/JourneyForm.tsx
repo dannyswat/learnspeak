@@ -2,33 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { journeyService } from '../services/journeyService';
 import { topicService } from '../services/topicService';
-import { wordService } from '../services/wordService';
 import type { CreateJourneyRequest, UpdateJourneyRequest } from '../types/journey';
 import type { Topic } from '../types/topic';
-import type { Language } from '../types/word';
 import Layout from '../components/Layout';
+import LanguageSelect from '../components/LanguageSelect';
+import { useLanguages } from '../hooks/useLanguages';
 
 const JourneyForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const { languages } = useLanguages();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [languages, setLanguages] = useState<Language[]>([]);
   const [availableTopics, setAvailableTopics] = useState<Topic[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<Topic[]>([]);
 
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [languageCode, setLanguageCode] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<number | null>(null);
 
   // Topic selection
   const [topicSearch, setTopicSearch] = useState('');
 
   useEffect(() => {
-    loadLanguages();
+    // Auto-select first language if creating new journey
+    if (!isEditMode && languages.length > 0 && !selectedLanguage) {
+      setSelectedLanguage(languages[0].id);
+    }
+  }, [languages, isEditMode, selectedLanguage]);
+
+  useEffect(() => {
     if (isEditMode && id) {
       loadJourney(parseInt(id));
     }
@@ -36,31 +42,22 @@ const JourneyForm: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if (languageCode) {
+    if (selectedLanguage) {
       loadTopics();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [languageCode, topicSearch]);
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await wordService.getLanguages();
-      setLanguages(langs);
-      if (!isEditMode && langs.length > 0) {
-        setLanguageCode(langs[0].code);
-      }
-    } catch (err) {
-      console.error('Error loading languages:', err);
-    }
-  };
+  }, [selectedLanguage, topicSearch]);
 
   const loadTopics = async () => {
     try {
+      const lang = languages.find(l => l.id === selectedLanguage);
+      if (!lang) return;
+      
       const response = await topicService.getTopics({
         page: 1,
         pageSize: 100,
         search: topicSearch,
-        languageCode,
+        languageCode: lang.code,
       });
       setAvailableTopics(response.topics);
     } catch (err) {
@@ -75,7 +72,9 @@ const JourneyForm: React.FC = () => {
 
       setName(journey.name);
       setDescription(journey.description);
-      setLanguageCode(journey.language?.code || '');
+      if (journey.language?.id) {
+        setSelectedLanguage(journey.language.id);
+      }
 
       // Load selected topics
       if (journey.topics && journey.topics.length > 0) {
@@ -112,8 +111,14 @@ const JourneyForm: React.FC = () => {
       return;
     }
 
-    if (!languageCode) {
+    if (!selectedLanguage) {
       setError('Please select a language');
+      return;
+    }
+
+    const lang = languages.find(l => l.id === selectedLanguage);
+    if (!lang) {
+      setError('Invalid language selected');
       return;
     }
 
@@ -127,7 +132,7 @@ const JourneyForm: React.FC = () => {
         const request: UpdateJourneyRequest = {
           name,
           description,
-          languageCode,
+          languageCode: lang.code,
           topicIds,
         };
         await journeyService.updateJourney(parseInt(id), request);
@@ -135,7 +140,7 @@ const JourneyForm: React.FC = () => {
         const request: CreateJourneyRequest = {
           name,
           description,
-          languageCode,
+          languageCode: lang.code,
           topicIds,
         };
         await journeyService.createJourney(request);
@@ -261,27 +266,16 @@ const JourneyForm: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Language <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={languageCode}
-                  onChange={(e) => {
-                    setLanguageCode(e.target.value);
-                    setSelectedTopics([]);
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">Select a language</option>
-                  {languages.map((lang) => (
-                    <option key={lang.id} value={lang.code}>
-                      {lang.name} ({lang.nativeName})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <LanguageSelect
+                label="Language"
+                value={selectedLanguage}
+                onChange={(langId) => {
+                  setSelectedLanguage(langId);
+                  setSelectedTopics([]);
+                }}
+                languages={languages}
+                required={true}
+              />
             </div>
           </div>
 
@@ -301,7 +295,7 @@ const JourneyForm: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent mb-3"
                 />
                 <div className="border border-gray-200 rounded-lg max-h-96 overflow-y-auto">
-                  {languageCode ? (
+                  {selectedLanguage ? (
                     availableTopics.length > 0 ? (
                       availableTopics
                         .filter(topic => !selectedTopics.find(t => t.id === topic.id))

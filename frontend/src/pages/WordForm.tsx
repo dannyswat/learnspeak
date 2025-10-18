@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { wordService, uploadService } from '../services/wordService';
-import ttsService from '../services/ttsService';
-import imageGenerationService from '../services/imageGenerationService';
-import type { CreateWordRequest, UpdateWordRequest, Language, CreateTranslationInput, UpdateTranslationInput } from '../types/word';
+import { wordService } from '../services/wordService';
+import type { CreateWordRequest, UpdateWordRequest, CreateTranslationInput, UpdateTranslationInput } from '../types/word';
 import Layout from '../components/Layout';
+import ImageInput from '../components/ImageInput';
+import AudioInput from '../components/AudioInput';
+import LanguageSelect from '../components/LanguageSelect';
+import { useLanguages } from '../hooks/useLanguages';
 
 const WordForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const { languages } = useLanguages();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [languages, setLanguages] = useState<Language[]>([]);
 
   // Form state
   const [baseWord, setBaseWord] = useState('');
@@ -23,56 +25,26 @@ const WordForm: React.FC = () => {
     { languageId: 0, translation: '', romanization: '', audioUrl: '' }
   ]);
 
-  // Upload state
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingAudio, setUploadingAudio] = useState<number | null>(null);
-  const [generatingTTS, setGeneratingTTS] = useState<number | null>(null);
-  const [generatingImage, setGeneratingImage] = useState(false);
-
-  // Audio recording state
-  const [isRecording, setIsRecording] = useState<number | null>(null);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingTimerRef = useRef<number | null>(null);
-
   useEffect(() => {
-    loadLanguages();
     if (isEditMode && id) {
       loadWord(parseInt(id));
     }
-    
-    // Cleanup on unmount
-    return () => {
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-      }
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.stop();
-      }
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const loadLanguages = async () => {
-    try {
-      const langs = await wordService.getLanguages();
-      setLanguages(langs);
-      
-      // If creating a new word, prefill with preferred language
-      if (!isEditMode && translations.length === 1 && translations[0].languageId === 0) {
-        const preferredLanguageId = localStorage.getItem('preferredLanguageId');
-        if (preferredLanguageId) {
-          const langId = parseInt(preferredLanguageId);
-          if (langs.find(l => l.id === langId)) {
-            updateTranslation(0, 'languageId', langId);
-          }
+  useEffect(() => {
+    // If creating a new word, prefill with preferred language
+    if (!isEditMode && languages.length > 0 && translations.length === 1 && translations[0].languageId === 0) {
+      const preferredLanguageId = localStorage.getItem('preferredLanguageId');
+      if (preferredLanguageId) {
+        const langId = parseInt(preferredLanguageId);
+        if (languages.find(l => l.id === langId)) {
+          updateTranslation(0, 'languageId', langId);
         }
       }
-    } catch (err) {
-      console.error('Error loading languages:', err);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [languages, isEditMode]);
 
   const loadWord = async (wordId: number) => {
     try {
@@ -167,162 +139,6 @@ const WordForm: React.FC = () => {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setUploadingImage(true);
-      const response = await uploadService.uploadImage(file);
-      setImageUrl(response.url);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to upload image');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleGenerateImage = async () => {
-    if (!baseWord) {
-      alert('Please enter a base word first');
-      return;
-    }
-
-    // Get the first translation if available
-    const firstTranslation = translations.find(t => t.translation)?.translation || '';
-
-    try {
-      setGeneratingImage(true);
-      const result = await imageGenerationService.generateImage({
-        word: baseWord,
-        translation: firstTranslation,
-        size: '1024x1024',
-        quality: 'standard',
-        style: 'vivid',
-      });
-      
-      // Use the local path if available, otherwise use the URL
-      setImageUrl(result.local_path || result.url);
-      
-      if (result.cached) {
-        alert('Image retrieved from cache');
-      } else {
-        alert('Image generated successfully!');
-      }
-    } catch (err) {
-      const error = err as Error;
-      alert(error.message || 'Failed to generate image');
-    } finally {
-      setGeneratingImage(false);
-    }
-  };
-
-  const handleAudioUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setUploadingAudio(index);
-      const response = await uploadService.uploadAudio(file);
-      updateTranslation(index, 'audioUrl', response.url);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to upload audio');
-    } finally {
-      setUploadingAudio(null);
-    }
-  };
-
-  const startRecording = async (index: number) => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        // Create audio file from recorded chunks
-        // WebM format is widely supported and works across browsers
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioFile = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
-        
-        // Upload the recorded audio
-        try {
-          setUploadingAudio(index);
-          const response = await uploadService.uploadAudio(audioFile);
-          updateTranslation(index, 'audioUrl', response.url);
-        } catch (err) {
-          const error = err as { response?: { data?: { message?: string } } };
-          alert(error.response?.data?.message || 'Failed to upload audio');
-        } finally {
-          setUploadingAudio(null);
-        }
-
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
-        setIsRecording(null);
-        setRecordingTime(0);
-        if (recordingTimerRef.current) {
-          clearInterval(recordingTimerRef.current);
-        }
-      };
-
-      mediaRecorder.start();
-      setIsRecording(index);
-      setRecordingTime(0);
-
-      // Start timer
-      recordingTimerRef.current = window.setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } catch (err) {
-      console.error('Error starting recording:', err);
-      alert('Failed to start recording. Please check microphone permissions.');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-  };
-
-  const generateTTS = async (index: number) => {
-    const translation = translations[index];
-    if (!translation.translation) {
-      alert('Please enter a translation first');
-      return;
-    }
-
-    try {
-      setGeneratingTTS(index);
-      const language = languages.find(l => l.id === translation.languageId);
-      const response = await ttsService.generateAudio({
-        text: translation.translation,
-        language: language?.code || 'zh-HK',
-      });
-      updateTranslation(index, 'audioUrl', response.audioUrl);
-    } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      alert(error.response?.data?.error || 'Failed to generate audio');
-    } finally {
-      setGeneratingTTS(null);
-    }
-  };
-
-  const formatRecordingTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   if (loading && isEditMode) {
     return (
       <Layout>
@@ -380,47 +196,17 @@ const WordForm: React.FC = () => {
                   </div>
 
                   {/* Image */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Image
-                    </label>
-                    <div className="mt-1 flex items-center space-x-4">
-                      {imageUrl && (
-                        <img
-                          src={uploadService.getFileUrl(imageUrl)}
-                          alt="Word"
-                          className="h-20 w-20 object-cover rounded"
-                        />
-                      )}
-                      <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        {uploadingImage ? 'Uploading...' : 'Upload Image'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          disabled={uploadingImage}
-                          className="sr-only"
-                        />
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleGenerateImage}
-                        disabled={generatingImage || !baseWord}
-                        className="py-2 px-3 border border-purple-300 rounded-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {generatingImage ? '🎨 Generating...' : '🎨 Generate Image'}
-                      </button>
-                      {imageUrl && (
-                        <button
-                          type="button"
-                          onClick={() => setImageUrl('')}
-                          className="text-sm text-red-600 hover:text-red-500"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  <ImageInput
+                    label="Image"
+                    value={imageUrl}
+                    onChange={setImageUrl}
+                    onGenerateImage={async () => {
+                      const firstTranslation = translations.find(t => t.translation)?.translation || '';
+                      return { word: baseWord, translation: firstTranslation };
+                    }}
+                    showGenerateButton={true}
+                    disabled={loading}
+                  />
 
                   {/* Notes */}
                   <div>
@@ -468,24 +254,14 @@ const WordForm: React.FC = () => {
 
                       <div className="space-y-3">
                         {/* Language */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            Language *
-                          </label>
-                          <select
-                            value={trans.languageId}
-                            onChange={(e) => updateTranslation(index, 'languageId', parseInt(e.target.value))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            required
-                          >
-                            <option value={0}>Select language...</option>
-                            {languages.map((lang) => (
-                              <option key={lang.id} value={lang.id}>
-                                {lang.name} ({lang.nativeName})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        <LanguageSelect
+                          label="Language"
+                          value={trans.languageId || null}
+                          onChange={(languageId) => updateTranslation(index, 'languageId', languageId)}
+                          languages={languages}
+                          required={true}
+                          placeholder="Select language..."
+                        />
 
                         {/* Translation */}
                         <div>
@@ -515,94 +291,18 @@ const WordForm: React.FC = () => {
                         </div>
 
                         {/* Audio */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">
-                            Audio
-                          </label>
-                          <div className="mt-1 space-y-2">
-                            {/* Audio Player */}
-                            {trans.audioUrl && (
-                              <div className="flex items-center space-x-2">
-                                <audio
-                                  src={uploadService.getFileUrl(trans.audioUrl)}
-                                  controls
-                                  className="h-10 flex-1"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => updateTranslation(index, 'audioUrl', '')}
-                                  className="text-sm text-red-600 hover:text-red-500 font-medium"
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                            )}
-                            
-                            {/* Recording Controls */}
-                            <div className="flex items-center space-x-2">
-                              {isRecording === index ? (
-                                <div className="flex items-center space-x-2 flex-1">
-                                  <div className="flex items-center space-x-2 bg-red-50 border border-red-200 px-4 py-2 rounded-lg flex-1">
-                                    <span className="inline-block w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                                    <span className="text-sm font-medium text-red-700">
-                                      Recording: {formatRecordingTime(recordingTime)}
-                                    </span>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={stopRecording}
-                                    className="bg-red-600 text-white py-2 px-4 rounded-lg shadow-sm text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                                  >
-                                    ⏹ Stop
-                                  </button>
-                                </div>
-                              ) : uploadingAudio === index ? (
-                                <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg">
-                                  <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  <span className="text-sm font-medium text-blue-700">Uploading...</span>
-                                </div>
-                              ) : generatingTTS === index ? (
-                                <div className="flex items-center space-x-2 bg-purple-50 border border-purple-200 px-4 py-2 rounded-lg">
-                                  <svg className="animate-spin h-5 w-5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  <span className="text-sm font-medium text-purple-700">Generating...</span>
-                                </div>
-                              ) : (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => generateTTS(index)}
-                                    className="bg-purple-500 text-white py-2 px-4 rounded-lg shadow-sm text-sm font-medium hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
-                                  >
-                                    🎙️ Generate Audio
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => startRecording(index)}
-                                    className="bg-green-500 text-white py-2 px-4 rounded-lg shadow-sm text-sm font-medium hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                                  >
-                                    🎤 Record Audio
-                                  </button>
-                                  <span className="text-gray-400">or</span>
-                                  <label className="cursor-pointer bg-white py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
-                                    📁 Upload File
-                                    <input
-                                      type="file"
-                                      accept="audio/*"
-                                      onChange={(e) => handleAudioUpload(index, e)}
-                                      className="sr-only"
-                                    />
-                                  </label>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                        <AudioInput
+                          label="Audio"
+                          value={trans.audioUrl || ''}
+                          onChange={(url) => updateTranslation(index, 'audioUrl', url)}
+                          onGenerateTTS={async () => ({
+                            text: trans.translation,
+                            languageCode: languages.find(l => l.id === trans.languageId)?.code
+                          })}
+                          showRecordButton={true}
+                          showTTSButton={true}
+                          disabled={loading}
+                        />
                       </div>
                     </div>
                   ))}
