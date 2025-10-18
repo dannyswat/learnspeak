@@ -31,14 +31,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Bar */}
-      <nav className="bg-white px-6 py-4 shadow-sm sticky top-0 z-50">
+      <nav className="bg-white px-6 py-2 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Left side - Logo */}
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-green-500 font-['Poppins']">
-                🌱 LearnSpeak
-              </span>
+              <img src="/learnspeak.png" alt="LearnSpeak" className="h-12" />
             </div>
           </div>
 

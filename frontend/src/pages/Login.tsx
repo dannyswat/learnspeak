@@ -44,11 +44,7 @@ export const Login: React.FC = () => {
         {/* Logo Section */}
         <div className="logo-section">
           <div className="logo">
-            <span className="logo-icon">🌟</span>
-            <span>
-              <span style={{ color: '#111827', marginRight: 0 }}>Learn</span>
-              <span style={{ marginLeft: 0 }}>Speak</span>
-            </span>
+            <img src="/learnspeak.png" alt="LearnSpeak" className="h-[120px]" />
           </div>
           <p className="tagline">Learn Languages Playfully!</p>
         </div>
