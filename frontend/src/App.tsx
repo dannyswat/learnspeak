@@ -21,6 +21,7 @@ import FlashcardPractice from './pages/FlashcardPractice';
 import QuizPractice from './pages/QuizPractice';
 import QuizManagement from './pages/QuizManagement';
 import BulkWordCreation from './pages/BulkWordCreation';
+import BatchWordUpdate from './pages/BatchWordUpdate';
 import './App.css';
 
 function App() {
@@ -131,6 +132,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <BulkWordCreation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:topicId/words/batch-update"
+            element={
+              <ProtectedRoute>
+                <BatchWordUpdate />
               </ProtectedRoute>
             }
           />

@@ -135,7 +135,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
       });
 
       onChange(result.audioUrl);
-      alert('Audio generated successfully!');
+      
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to generate audio');

@@ -4,19 +4,9 @@ import { topicService } from '../services/topicService';
 import { wordService } from '../services/wordService';
 import translationService from '../services/translationService';
 import Layout from '../components/Layout';
-import ImageInput from '../components/ImageInput';
-import AudioInput from '../components/AudioInput';
 import LanguageSelect from '../components/LanguageSelect';
+import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
-
-interface WordEntry {
-  baseWord: string;
-  translation: string;
-  romanization: string;
-  notes: string;
-  imageUrl: string;
-  audioUrl: string;
-}
 
 const BulkWordCreation: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -26,7 +16,7 @@ const BulkWordCreation: React.FC = () => {
   const [wordCount, setWordCount] = useState<number>(5);
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
   const [topicName, setTopicName] = useState<string>('');
-  const [words, setWords] = useState<WordEntry[]>([]);
+  const [words, setWords] = useState<WordEntryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -71,7 +61,7 @@ const BulkWordCreation: React.FC = () => {
     }
   };
 
-  const handleWordChange = (index: number, field: keyof WordEntry, value: string) => {
+  const handleWordChange = (index: number, field: keyof WordEntryData, value: string) => {
     const newWords = [...words];
     newWords[index] = { ...newWords[index], [field]: value };
     setWords(newWords);
@@ -319,106 +309,18 @@ const BulkWordCreation: React.FC = () => {
 
             <div className="space-y-6">
               {words.map((word, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-green-300 transition-colors">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center font-medium text-green-700">
-                      {index + 1}
-                    </div>
-
-                    <div className="flex-1 grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          English Word *
-                        </label>
-                        <input
-                          type="text"
-                          value={word.baseWord}
-                          onChange={(e) => handleWordChange(index, 'baseWord', e.target.value)}
-                          placeholder="e.g., Hello"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Translation *
-                        </label>
-                        <input
-                          type="text"
-                          value={word.translation}
-                          onChange={(e) => handleWordChange(index, 'translation', e.target.value)}
-                          placeholder="e.g., 你好"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Romanization
-                        </label>
-                        <input
-                          type="text"
-                          value={word.romanization}
-                          onChange={(e) => handleWordChange(index, 'romanization', e.target.value)}
-                          placeholder="e.g., nei5 hou2"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">
-                          Notes (optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={word.notes}
-                          onChange={(e) => handleWordChange(index, 'notes', e.target.value)}
-                          placeholder="e.g., Informal greeting"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => removeWord(index)}
-                      className="flex-shrink-0 w-8 h-8 text-red-500 hover:bg-red-50 rounded-lg flex items-center justify-center"
-                      title="Remove word"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {/* Image and Audio Section - Side by Side */}
-                  <div className="ml-12 grid grid-cols-2 gap-6">
-                    {/* Image Upload Section - Left */}
-                    <ImageInput
-                      label="Image (optional)"
-                      value={word.imageUrl}
-                      onChange={(url) => handleWordChange(index, 'imageUrl', url)}
-                      onGenerateImage={async () => ({
-                        word: word.baseWord,
-                        translation: word.translation
-                      })}
-                      showGenerateButton={true}
-                      disabled={saving}
-                    />
-
-                    {/* Audio Recording Section - Right */}
-                    <AudioInput
-                      label="Audio Pronunciation (optional)"
-                      value={word.audioUrl}
-                      onChange={(url) => handleWordChange(index, 'audioUrl', url)}
-                      onGenerateTTS={async () => ({
-                        text: word.translation,
-                        languageCode: languages.find(l => l.id === targetLanguage)?.code
-                      })}
-                      showRecordButton={true}
-                      showTTSButton={true}
-                      disabled={saving}
-                    />
-                  </div>
-                </div>
+                <WordEntryForm
+                  key={index}
+                  word={word}
+                  index={index}
+                  onChange={handleWordChange}
+                  onRemove={removeWord}
+                  languages={languages}
+                  targetLanguage={targetLanguage}
+                  disabled={saving}
+                  showRemoveButton={true}
+                  readOnlyBaseWord={false}
+                />
               ))}
             </div>
 

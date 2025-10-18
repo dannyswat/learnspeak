@@ -61,11 +61,6 @@ const ImageInput: React.FC<ImageInputProps> = ({
       // Use the local path if available, otherwise use the URL
       onChange(result.local_path || result.url);
 
-      if (result.cached) {
-        alert('Image retrieved from cache');
-      } else {
-        alert('Image generated successfully!');
-      }
     } catch (err) {
       const error = err as Error;
       alert(error.message || 'Failed to generate image');
