@@ -34,6 +34,11 @@ func main() {
 		log.Fatalf("Failed to seed default roles: %v", err)
 	}
 
+	// Seed admin user
+	if err := database.SeedAdminUser(); err != nil {
+		log.Fatalf("Failed to seed admin user: %v", err)
+	}
+
 	// Initialize Echo
 	e := echo.New()
 

@@ -27,6 +27,9 @@ type UserRepository interface {
 
 	// Update updates a user's information
 	Update(user *models.User) error
+
+	// Delete soft deletes a user
+	Delete(user *models.User) error
 }
 
 type userRepository struct {
@@ -121,4 +124,9 @@ func (r *userRepository) Search(query string, roleName *string, page, pageSize i
 // Update updates a user's information
 func (r *userRepository) Update(user *models.User) error {
 	return r.db.Save(user).Error
+}
+
+// Delete soft deletes a user
+func (r *userRepository) Delete(user *models.User) error {
+	return r.db.Delete(user).Error
 }

@@ -30,3 +30,9 @@ type UserSummary struct {
 	ProfilePicURL *string  `json:"profilePicUrl"`
 	Roles         []string `json:"roles"`
 }
+
+// ChangePasswordRequest represents password change data
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword" validate:"required,min=6"`
+	NewPassword     string `json:"newPassword" validate:"required,min=6"`
+}

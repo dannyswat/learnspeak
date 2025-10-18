@@ -107,26 +107,36 @@ export const userService = {
   },
 
   /**
-   * Unassign journey from users
+   * Unassign journey from a user
    */
-  async unassignJourney(journeyId: number, data: UnassignJourneyRequest): Promise<void> {
-    await api.post(`/journeys/${journeyId}/unassign`, data);
+  async unassignUserJourney(userId: number, journeyId: number, request: UnassignJourneyRequest): Promise<void> {
+    const response = await api.post<void>(`${USERS_ENDPOINT}/${userId}/journeys/${journeyId}/unassign`, request);
+    return response.data;
   },
 
   /**
-   * Get users assigned to a journey
+   * Delete a user (Admin only)
    */
-  async getJourneyAssignments(journeyId: number, status?: string, page = 1, pageSize = 20): Promise<UserJourneyListResponse> {
+  async deleteUser(id: number): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`/admin/users/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Search all users (Admin only)
+   */
+  async searchAllUsers(params?: UserFilterParams): Promise<UserListResponse> {
     const queryParams = new URLSearchParams();
     
-    if (status) queryParams.append('status', status);
-    queryParams.append('page', page.toString());
-    queryParams.append('pageSize', pageSize.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.role) queryParams.append('role', params.role);
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
 
     const queryString = queryParams.toString();
-    const url = `/journeys/${journeyId}/assignments?${queryString}`;
+    const url = queryString ? `/admin/users?${queryString}` : '/admin/users';
 
-    const response = await api.get<UserJourneyListResponse>(url);
+    const response = await api.get<UserListResponse>(url);
     return response.data;
   },
 };

@@ -17,6 +17,14 @@ export const authService = {
     return response.data;
   },
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/auth/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return response.data;
+  },
+
   saveAuth(authResponse: AuthResponse): void {
     localStorage.setItem('token', authResponse.token);
     localStorage.setItem('user', JSON.stringify(authResponse.user));

@@ -108,6 +108,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </button>
             )}
 
+            {/* Admin Users Link - Only for admins */}
+            {user?.roles?.includes('admin') && (
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="flex items-center gap-2 text-purple-700 hover:bg-purple-50 px-4 py-2 rounded-lg transition-colors font-medium"
+              >
+                <span>⚙️</span>
+                <span>Manage Users</span>
+              </button>
+            )}
+
             {/* Profile Dropdown */}
             <div className="relative">
               <button
@@ -150,6 +161,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   >
                     ⚙️ Settings
                   </button>
+                  <button
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      navigate('/change-password');
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    🔑 Change Password
+                  </button>
+                  {user?.roles?.includes('admin') && (
+                    <>
+                      <hr className="my-2" />
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          navigate('/admin/users');
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 transition-colors font-medium"
+                      >
+                        ⚙️ Manage Users
+                      </button>
+                    </>
+                  )}
                   <hr className="my-2" />
                   <button
                     onClick={handleLogout}

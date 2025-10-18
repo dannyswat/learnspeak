@@ -15,6 +15,7 @@ type UserService interface {
 	GetTeachers(params *dto.UserFilterParams) (*dto.UserListResponse, error)
 	SearchUsers(params *dto.UserFilterParams) (*dto.UserListResponse, error)
 	UpdateUser(id uint, req *dto.UpdateUserRequest) (*dto.UserResponse, error)
+	DeleteUser(id uint) error
 }
 
 type userService struct {
@@ -179,4 +180,18 @@ func (s *userService) buildUserListResponse(users []models.User, total int64, pa
 		PageSize:   pageSize,
 		TotalPages: totalPages,
 	}
+}
+
+// DeleteUser soft deletes a user by ID
+func (s *userService) DeleteUser(id uint) error {
+	user, err := s.userRepo.GetByID(id)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	if err := s.userRepo.Delete(user); err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	return nil
 }

@@ -263,3 +263,45 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, user)
 }
+
+// DeleteUser godoc
+// @Summary Delete a user (Admin only)
+// @Description Soft delete a user by ID
+// @Tags users
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /admin/users/{id} [delete]
+func (h *UserHandler) DeleteUser(c echo.Context) error {
+	// Parse user ID
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid user ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Prevent deleting yourself
+	currentUserID := c.Get("user_id").(uint)
+	if uint(id) == currentUserID {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Cannot delete your own account",
+		})
+	}
+
+	// Delete user
+	if err := h.userService.DeleteUser(uint(id)); err != nil {
+		return c.JSON(http.StatusNotFound, dto.ErrorResponse{
+			Message: "Failed to delete user",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "User deleted successfully",
+	})
+}

@@ -96,6 +96,10 @@ export const Dashboard: React.FC = () => {
             <button onClick={() => navigate('/words')} className="w-full text-left px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">View All Words →</button>
             <button onClick={() => navigate('/topics')} className="w-full text-left px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">View All Topics →</button>
             <button onClick={() => navigate('/journeys')} className="w-full text-left px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">View All Journeys →</button>
+            <button onClick={() => navigate('/change-password')} className="w-full text-left px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">Change Password →</button>
+            {user?.roles?.includes('admin') && (
+              <button onClick={() => navigate('/admin/users')} className="w-full text-left px-4 py-3 bg-red-50 rounded-lg hover:bg-red-100 transition-colors text-red-700 font-medium">⚙️ Manage Users (Admin) →</button>
+            )}
           </div>
         </div>
       </Layout>
@@ -131,7 +135,14 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
       {loading && <div className="flex justify-center py-12"><div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent"></div></div>}
-      {!loading && (<><div className="flex justify-between items-center mb-6">
+      {!loading && (<>
+      <div className="mb-6 bg-white rounded-xl shadow-sm p-4">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-700 font-medium">Account Settings</span>
+          <button onClick={() => navigate('/change-password')} className="text-green-600 text-sm font-semibold hover:text-green-700 hover:underline transition-colors">Change Password →</button>
+        </div>
+      </div>
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 font-['Poppins']">🗺️ Your Learning Journeys</h2>
         <button onClick={() => navigate('/my-journeys')} className="text-green-600 text-sm font-semibold hover:text-green-700 hover:underline transition-colors">View All →</button>
       </div>

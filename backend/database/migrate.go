@@ -2,6 +2,7 @@ package database
 
 import (
 	"dannyswat/learnspeak/models"
+	"dannyswat/learnspeak/utils"
 	"fmt"
 	"log"
 	"os"
@@ -104,6 +105,50 @@ func SeedDefaultRoles() error {
 			}
 		}
 	}
+
+	return nil
+}
+
+// SeedAdminUser creates the default admin user if it doesn't exist
+func SeedAdminUser() error {
+	// Check if admin user already exists
+	var existingUser models.User
+	if err := DB.Where("username = ?", "admin").First(&existingUser).Error; err == nil {
+		log.Println("Admin user already exists. Skipping admin user creation.")
+		return nil
+	}
+
+	// Get admin role
+	var adminRole models.Role
+	if err := DB.Where("name = ?", "admin").First(&adminRole).Error; err != nil {
+		return fmt.Errorf("admin role not found: %w", err)
+	}
+
+	// Hash the default password
+	passwordHash, err := utils.HashPassword("PleaseChange")
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Create admin user
+	adminUser := models.User{
+		Username:     "admin",
+		PasswordHash: passwordHash,
+		Email:        "admin@learnspeak.local",
+		Name:         "System Administrator",
+		Roles:        []models.Role{adminRole},
+	}
+
+	if err := DB.Create(&adminUser).Error; err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	log.Println("========================================")
+	log.Println("✓ Admin user created successfully")
+	log.Println("  Username: admin")
+	log.Println("  Password: PleaseChange")
+	log.Println("  IMPORTANT: Please change this password immediately after first login!")
+	log.Println("========================================")
 
 	return nil
 }

@@ -193,6 +193,85 @@ func Login(c echo.Context) error {
 	})
 }
 
+// ChangePassword handles password change for authenticated users
+func ChangePassword(c echo.Context) error {
+	// Get user ID from JWT token
+	userID := c.Get("user_id").(uint)
+
+	var req dto.ChangePasswordRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Error:   "bad_request",
+			Message: "Invalid request body",
+		})
+	}
+
+	// Validate request
+	if err := validate.Struct(req); err != nil {
+		validationErrors := make(map[string]string)
+		for _, err := range err.(validator.ValidationErrors) {
+			validationErrors[err.Field()] = err.Tag()
+		}
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Error:   "validation_error",
+			Message: "Validation failed",
+			Details: validationErrors,
+		})
+	}
+
+	// Get user from database
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.JSON(http.StatusNotFound, dto.ErrorResponse{
+				Error:   "not_found",
+				Message: "User not found",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:   "internal_error",
+			Message: "Failed to retrieve user",
+		})
+	}
+
+	// Verify current password
+	if !utils.CheckPassword(user.PasswordHash, req.CurrentPassword) {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Current password is incorrect",
+		})
+	}
+
+	// Prevent setting the same password
+	if utils.CheckPassword(user.PasswordHash, req.NewPassword) {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Error:   "bad_request",
+			Message: "New password must be different from current password",
+		})
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:   "internal_error",
+			Message: "Failed to process new password",
+		})
+	}
+
+	// Update password
+	if err := database.DB.Model(&user).Update("password_hash", hashedPassword).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:   "internal_error",
+			Message: "Failed to update password",
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "Password changed successfully",
+	})
+}
+
 // GetProfile returns the current user's profile
 func GetProfile(c echo.Context) error {
 	userId := c.Get("userId").(uint)
@@ -210,14 +289,12 @@ func GetProfile(c echo.Context) error {
 		roles[i] = role.Name
 	}
 
-	userSummary := dto.UserSummary{
+	return c.JSON(http.StatusOK, dto.UserSummary{
 		ID:            user.ID,
 		Username:      user.Username,
 		Email:         user.Email,
 		Name:          user.Name,
 		ProfilePicURL: user.ProfilePicURL,
 		Roles:         roles,
-	}
-
-	return c.JSON(http.StatusOK, userSummary)
+	})
 }

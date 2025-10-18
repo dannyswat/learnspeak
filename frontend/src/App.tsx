@@ -22,6 +22,8 @@ import QuizPractice from './pages/QuizPractice';
 import QuizManagement from './pages/QuizManagement';
 import BulkWordCreation from './pages/BulkWordCreation';
 import BatchWordUpdate from './pages/BatchWordUpdate';
+import ChangePassword from './pages/ChangePassword';
+import AdminUsers from './pages/AdminUsers';
 import './App.css';
 
 function App() {
@@ -204,6 +206,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyJourneys />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <AdminUsers />
               </ProtectedRoute>
             }
           />

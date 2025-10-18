@@ -71,6 +71,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	{
 		// User profile
 		protected.GET("/profile", handlers.GetProfile)
+		protected.POST("/auth/change-password", handlers.ChangePassword)
 
 		// Languages
 		protected.GET("/languages", languageHandler.GetLanguages)
@@ -103,7 +104,11 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		admin := protected.Group("/admin")
 		admin.Use(middleware.RequireRole("admin"))
 		{
-			// Add admin routes here
+			// User management
+			admin.GET("/users", userHandler.SearchUsers)
+			admin.GET("/users/:id", userHandler.GetUser)
+			admin.PUT("/users/:id", userHandler.UpdateUser)
+			admin.DELETE("/users/:id", userHandler.DeleteUser)
 		}
 
 		// Example: Teacher routes
