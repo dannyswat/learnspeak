@@ -22,6 +22,12 @@ type JourneyRepository interface {
 	GetTopicCount(journeyID uint) (int64, error)
 	GetTotalWords(journeyID uint) (int, error)
 	GetAssignedUserCount(journeyID uint) (int64, error)
+	// Invitation methods
+	CreateInvitation(invitation *models.JourneyInvitation) error
+	GetInvitationByToken(token string) (*models.JourneyInvitation, error)
+	UpdateInvitationUses(id uint) error
+	DeactivateInvitation(id uint) error
+	GetJourneyInvitations(journeyID uint) ([]models.JourneyInvitation, error)
 }
 
 type journeyRepository struct {
@@ -220,4 +226,51 @@ func (r *journeyRepository) GetAssignedUserCount(journeyID uint) (int64, error) 
 	// Assuming there's a user_journeys table
 	err := r.db.Table("user_journeys").Where("journey_id = ?", journeyID).Count(&count).Error
 	return count, err
+}
+
+// CreateInvitation creates a new journey invitation
+func (r *journeyRepository) CreateInvitation(invitation *models.JourneyInvitation) error {
+	return r.db.Create(invitation).Error
+}
+
+// GetInvitationByToken retrieves an invitation by its token
+func (r *journeyRepository) GetInvitationByToken(token string) (*models.JourneyInvitation, error) {
+	var invitation models.JourneyInvitation
+	err := r.db.
+		Preload("Journey").
+		Preload("Journey.Language").
+		Preload("Creator").
+		Where("invitation_token = ?", token).
+		First(&invitation).Error
+	if err != nil {
+		return nil, err
+	}
+	return &invitation, nil
+}
+
+// UpdateInvitationUses increments the current_uses counter
+func (r *journeyRepository) UpdateInvitationUses(id uint) error {
+	return r.db.Model(&models.JourneyInvitation{}).
+		Where("id = ?", id).
+		UpdateColumn("current_uses", gorm.Expr("current_uses + 1")).
+		Error
+}
+
+// DeactivateInvitation sets an invitation to inactive
+func (r *journeyRepository) DeactivateInvitation(id uint) error {
+	return r.db.Model(&models.JourneyInvitation{}).
+		Where("id = ?", id).
+		Update("is_active", false).
+		Error
+}
+
+// GetJourneyInvitations retrieves all invitations for a journey
+func (r *journeyRepository) GetJourneyInvitations(journeyID uint) ([]models.JourneyInvitation, error) {
+	var invitations []models.JourneyInvitation
+	err := r.db.
+		Preload("Creator").
+		Where("journey_id = ?", journeyID).
+		Order("created_at DESC").
+		Find(&invitations).Error
+	return invitations, err
 }

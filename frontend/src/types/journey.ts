@@ -71,3 +71,45 @@ export interface AssignJourneyRequest {
   userIds: number[];
   message?: string;
 }
+
+export interface CreateInvitationRequest {
+  expiresInDays?: number; // 1-365 days
+  maxUses?: number;        // >= 1
+}
+
+export interface InvitationResponse {
+  id: number;
+  journeyId: number;
+  journey?: Journey;
+  invitationToken: string;
+  invitationUrl: string;
+  createdBy?: {
+    id: number;
+    username: string;
+    name: string;
+    email: string;
+  };
+  expiresAt?: string;
+  maxUses?: number;
+  currentUses: number;
+  isActive: boolean;
+  isValid: boolean;
+  createdAt: string;
+}
+
+export interface InvitationDetailsResponse {
+  journeyId: number;
+  journeyName: string;
+  journeyDescription: string;
+  language: {
+    code: string;
+    name: string;
+    nativeName: string;
+  };
+  topicCount: number;
+  totalWords: number;
+  creatorName: string;
+  isValid: boolean;
+  message?: string;
+}
+

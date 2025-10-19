@@ -615,3 +615,211 @@ func (h *JourneyHandler) GetJourneyAssignments(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, assignments)
 }
+
+// GenerateInvitation godoc
+// @Summary Generate an invitation link for a journey
+// @Description Create a new invitation link that allows users to join a journey
+// @Tags journeys
+// @Accept json
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Param request body dto.CreateInvitationRequest true "Invitation parameters"
+// @Success 201 {object} dto.InvitationResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/invite [post]
+func (h *JourneyHandler) GenerateInvitation(c echo.Context) error {
+	// Get user ID from context
+	userID, ok := c.Get("userId").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "User ID not found in context",
+			Error:   "unauthorized",
+		})
+	}
+
+	// Get journey ID from path
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Parse request body
+	var req dto.CreateInvitationRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid request body",
+			Error:   err.Error(),
+		})
+	}
+
+	// Generate invitation
+	invitation, err := h.journeyService.GenerateInvitation(uint(id), &req, userID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to generate invitation",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusCreated, invitation)
+}
+
+// GetInvitationInfo godoc
+// @Summary Get invitation details
+// @Description Get public details about a journey invitation (no authentication required)
+// @Tags invitations
+// @Produce json
+// @Param token path string true "Invitation Token"
+// @Success 200 {object} dto.InvitationDetailsResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /invitations/{token} [get]
+func (h *JourneyHandler) GetInvitationInfo(c echo.Context) error {
+	token := c.Param("token")
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invitation token is required",
+			Error:   "invalid_token",
+		})
+	}
+
+	details, err := h.journeyService.GetInvitationDetails(token)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Message: "Failed to get invitation details",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, details)
+}
+
+// AcceptInvitation godoc
+// @Summary Accept a journey invitation
+// @Description Accept an invitation and assign the journey to the authenticated user
+// @Tags invitations
+// @Produce json
+// @Param token path string true "Invitation Token"
+// @Success 200 {object} dto.SuccessResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /invitations/{token}/accept [post]
+func (h *JourneyHandler) AcceptInvitation(c echo.Context) error {
+	// Get user ID from context
+	userID, ok := c.Get("userId").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "User ID not found in context",
+			Error:   "unauthorized",
+		})
+	}
+
+	token := c.Param("token")
+	if token == "" {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invitation token is required",
+			Error:   "invalid_token",
+		})
+	}
+
+	// Accept invitation
+	if err := h.journeyService.AcceptInvitation(token, userID); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to accept invitation",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResponse{
+		Message: "Successfully joined the journey!",
+	})
+}
+
+// GetJourneyInvitations godoc
+// @Summary Get all invitations for a journey
+// @Description Get list of all invitation links for a journey (teacher only)
+// @Tags journeys
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Success 200 {array} dto.InvitationResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/invitations [get]
+func (h *JourneyHandler) GetJourneyInvitations(c echo.Context) error {
+	// Get journey ID from path
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	invitations, err := h.journeyService.GetJourneyInvitations(uint(id))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to get invitations",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, invitations)
+}
+
+// DeactivateInvitation godoc
+// @Summary Deactivate an invitation link
+// @Description Deactivate an invitation link so it can no longer be used
+// @Tags journeys
+// @Produce json
+// @Param id path int true "Journey ID"
+// @Param invitationId path int true "Invitation ID"
+// @Success 200 {object} dto.SuccessResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /journeys/{id}/invitations/{invitationId} [delete]
+func (h *JourneyHandler) DeactivateInvitation(c echo.Context) error {
+	// Get user ID from context
+	userID, ok := c.Get("userId").(uint)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Message: "User ID not found in context",
+			Error:   "unauthorized",
+		})
+	}
+
+	// Get journey ID from path
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid journey ID",
+			Error:   err.Error(),
+		})
+	}
+
+	// Get invitation ID from path
+	invitationID, err := strconv.Atoi(c.Param("invitationId"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Invalid invitation ID",
+			Error:   err.Error(),
+		})
+	}
+
+	if err := h.journeyService.DeactivateInvitation(uint(invitationID), uint(id), userID); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
+			Message: "Failed to deactivate invitation",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, dto.SuccessResponse{
+		Message: "Invitation deactivated successfully",
+	})
+}

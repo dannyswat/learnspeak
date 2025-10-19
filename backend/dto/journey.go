@@ -128,3 +128,38 @@ type UserJourneyListResponse struct {
 	PageSize     int                   `json:"pageSize"`
 	TotalPages   int                   `json:"totalPages"`
 }
+
+// CreateInvitationRequest represents the request to create a journey invitation
+type CreateInvitationRequest struct {
+	ExpiresInDays *int `json:"expiresInDays" validate:"omitempty,min=1,max=365"` // NULL means no expiration
+	MaxUses       *int `json:"maxUses" validate:"omitempty,min=1"`               // NULL means unlimited
+}
+
+// InvitationResponse represents a journey invitation
+type InvitationResponse struct {
+	ID              uint             `json:"id"`
+	JourneyID       uint             `json:"journeyId"`
+	Journey         *JourneyResponse `json:"journey,omitempty"`
+	InvitationToken string           `json:"invitationToken"`
+	InvitationURL   string           `json:"invitationUrl"`
+	CreatedBy       *UserInfo        `json:"createdBy,omitempty"`
+	ExpiresAt       *string          `json:"expiresAt,omitempty"`
+	MaxUses         *int             `json:"maxUses,omitempty"`
+	CurrentUses     int              `json:"currentUses"`
+	IsActive        bool             `json:"isActive"`
+	IsValid         bool             `json:"isValid"`
+	CreatedAt       string           `json:"createdAt"`
+}
+
+// InvitationDetailsResponse represents public invitation details (for non-authenticated users)
+type InvitationDetailsResponse struct {
+	JourneyID          uint          `json:"journeyId"`
+	JourneyName        string        `json:"journeyName"`
+	JourneyDescription string        `json:"journeyDescription"`
+	Language           *LanguageInfo `json:"language"`
+	TopicCount         int           `json:"topicCount"`
+	TotalWords         int           `json:"totalWords"`
+	CreatorName        string        `json:"creatorName"`
+	IsValid            bool          `json:"isValid"`
+	Message            string        `json:"message,omitempty"` // For validation errors
+}

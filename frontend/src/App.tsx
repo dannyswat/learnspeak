@@ -13,6 +13,7 @@ import TopicRouter from './pages/TopicRouter';
 import JourneyList from './pages/JourneyList';
 import JourneyForm from './pages/JourneyForm';
 import JourneyDetail from './pages/JourneyDetail';
+import JourneyInvitation from './pages/JourneyInvitation';
 import StudentList from './pages/StudentList';
 import StudentDetail from './pages/StudentDetail';
 import JourneyAssignment from './pages/JourneyAssignment';
@@ -34,6 +35,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/invite/:token" element={<JourneyInvitation />} />
           <Route
             path="/dashboard"
             element={

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { journeyService } from '../services/journeyService';
 import { userService } from '../services/userService';
-import type { Journey } from '../types/journey';
+import type { Journey, InvitationResponse, CreateInvitationRequest } from '../types/journey';
 import type { UserJourney } from '../types/user';
 import Layout from '../components/Layout';
+import InvitationModal from '../components/InvitationModal';
+import InvitationListPanel from '../components/InvitationListPanel';
 import { useAuth } from '../hooks/useAuth';
 
 const JourneyDetail: React.FC = () => {
@@ -16,6 +18,12 @@ const JourneyDetail: React.FC = () => {
   const [completedTopicIds, setCompletedTopicIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Invitation state
+  const [showInvitationModal, setShowInvitationModal] = useState(false);
+  const [invitations, setInvitations] = useState<InvitationResponse[]>([]);
+  const [showInvitationList, setShowInvitationList] = useState(false);
+  const [loadingInvitations, setLoadingInvitations] = useState(false);
 
   const isTeacher = user?.roles?.some(role => role === 'teacher' || role === 'admin');
   const isLearner = user?.roles?.some(role => role === 'learner');
@@ -144,6 +152,43 @@ const JourneyDetail: React.FC = () => {
     }
   };
 
+  // Invitation handlers
+  const loadInvitations = async () => {
+    if (!id) return;
+    
+    setLoadingInvitations(true);
+    try {
+      const data = await journeyService.getJourneyInvitations(parseInt(id));
+      setInvitations(data);
+    } catch (err) {
+      console.error('Failed to load invitations:', err);
+    } finally {
+      setLoadingInvitations(false);
+    }
+  };
+
+  const handleGenerateInvitation = async (data: CreateInvitationRequest): Promise<InvitationResponse> => {
+    if (!id) throw new Error('Journey ID not found');
+    
+    const invitation = await journeyService.generateInvitation(parseInt(id), data);
+    // Reload invitations list
+    await loadInvitations();
+    return invitation;
+  };
+
+  const handleDeactivateInvitation = async (invitationId: number) => {
+    if (!id) return;
+    
+    await journeyService.deactivateInvitation(parseInt(id), invitationId);
+  };
+
+  const handleShowInvitations = async () => {
+    setShowInvitationList(!showInvitationList);
+    if (!showInvitationList) {
+      await loadInvitations();
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -205,6 +250,18 @@ const JourneyDetail: React.FC = () => {
             {isTeacher && (
               <div className="flex gap-2">
                 <button
+                  onClick={() => setShowInvitationModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Generate Invitation Link
+                </button>
+                <button
+                  onClick={handleShowInvitations}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  {showInvitationList ? 'Hide Invitations' : 'View Invitations'}
+                </button>
+                <button
                   onClick={() => navigate(`/journeys/${journey.id}/edit`)}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                 >
@@ -226,6 +283,23 @@ const JourneyDetail: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
             <p className="text-gray-700 whitespace-pre-wrap">{journey.description}</p>
+          </div>
+        )}
+
+        {/* Invitation List Panel (Teacher Only) */}
+        {isTeacher && showInvitationList && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Invitation Links</h3>
+              {loadingInvitations && (
+                <span className="text-sm text-gray-500">Loading...</span>
+              )}
+            </div>
+            <InvitationListPanel
+              invitations={invitations}
+              onDeactivate={handleDeactivateInvitation}
+              onRefresh={loadInvitations}
+            />
           </div>
         )}
 
@@ -465,8 +539,16 @@ const JourneyDetail: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Invitation Modal */}
+      <InvitationModal
+        isOpen={showInvitationModal}
+        onClose={() => setShowInvitationModal(false)}
+        onGenerate={handleGenerateInvitation}
+      />
     </Layout>
   );
 };
 
 export default JourneyDetail;
+

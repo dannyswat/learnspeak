@@ -5,6 +5,9 @@ import type {
   CreateJourneyRequest,
   UpdateJourneyRequest,
   JourneyFilterParams,
+  CreateInvitationRequest,
+  InvitationResponse,
+  InvitationDetailsResponse,
 } from '../types/journey';
 
 const JOURNEYS_ENDPOINT = '/journeys';
@@ -74,6 +77,46 @@ export const journeyService = {
    */
   async startJourney(id: number): Promise<{ message: string }> {
     const response = await api.post<{ success: boolean; message: string }>(`${JOURNEYS_ENDPOINT}/${id}/start`);
+    return response.data;
+  },
+
+  /**
+   * Generate an invitation link for a journey
+   */
+  async generateInvitation(id: number, data: CreateInvitationRequest): Promise<InvitationResponse> {
+    const response = await api.post<InvitationResponse>(`${JOURNEYS_ENDPOINT}/${id}/invite`, data);
+    return response.data;
+  },
+
+  /**
+   * Get all invitations for a journey
+   */
+  async getJourneyInvitations(id: number): Promise<InvitationResponse[]> {
+    const response = await api.get<InvitationResponse[]>(`${JOURNEYS_ENDPOINT}/${id}/invitations`);
+    return response.data;
+  },
+
+  /**
+   * Deactivate an invitation
+   */
+  async deactivateInvitation(journeyId: number, invitationId: number): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`${JOURNEYS_ENDPOINT}/${journeyId}/invitations/${invitationId}`);
+    return response.data;
+  },
+
+  /**
+   * Get invitation details (public, no auth required)
+   */
+  async getInvitationDetails(token: string): Promise<InvitationDetailsResponse> {
+    const response = await api.get<InvitationDetailsResponse>(`/invitations/${token}`);
+    return response.data;
+  },
+
+  /**
+   * Accept an invitation
+   */
+  async acceptInvitation(token: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>(`/invitations/${token}/accept`);
     return response.data;
   },
 };

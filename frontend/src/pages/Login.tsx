@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { journeyService } from '../services/journeyService';
 import { useAuth } from '../hooks/useAuth';
 import './Login.css';
 
@@ -23,7 +24,21 @@ export const Login: React.FC = () => {
     try {
       const response = await authService.login({ username, password });
       login(response.user, response.token);
-      navigate('/dashboard');
+      
+      // Check if there's an invitation token from the invitation page
+      const invitationToken = sessionStorage.getItem('invitationToken');
+      if (invitationToken) {
+        try {
+          await journeyService.acceptInvitation(invitationToken);
+          sessionStorage.removeItem('invitationToken');
+          navigate('/my-journeys'); // Redirect to user's journeys after accepting
+        } catch (inviteErr) {
+          console.error('Failed to accept invitation:', inviteErr);
+          navigate('/dashboard'); // Still log in even if invitation fails
+        }
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';

@@ -3,6 +3,8 @@ package services
 import (
 	"fmt"
 	"math"
+	"math/rand"
+	"time"
 
 	"dannyswat/learnspeak/dto"
 	"dannyswat/learnspeak/models"
@@ -21,6 +23,12 @@ type JourneyService interface {
 	StartJourney(journeyID uint, userID uint) error
 	GetUserJourneys(userID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error)
 	GetJourneyAssignments(journeyID uint, status *string, page, pageSize int) (*dto.UserJourneyListResponse, error)
+	// Invitation methods
+	GenerateInvitation(journeyID uint, req *dto.CreateInvitationRequest, createdBy uint) (*dto.InvitationResponse, error)
+	GetInvitationDetails(token string) (*dto.InvitationDetailsResponse, error)
+	AcceptInvitation(token string, userID uint) error
+	GetJourneyInvitations(journeyID uint) ([]dto.InvitationResponse, error)
+	DeactivateInvitation(invitationID uint, journeyID uint, userID uint) error
 }
 
 type journeyService struct {
@@ -599,4 +607,198 @@ func (s *journeyService) getNextTopic(userID, journeyID uint) *dto.JourneyTopicI
 
 	// All topics completed
 	return nil
+}
+
+// GenerateInvitation creates a new invitation link for a journey
+func (s *journeyService) GenerateInvitation(journeyID uint, req *dto.CreateInvitationRequest, createdBy uint) (*dto.InvitationResponse, error) {
+	// Verify journey exists
+	journey, err := s.journeyRepo.GetByID(journeyID, false)
+	if err != nil {
+		return nil, fmt.Errorf("journey not found")
+	}
+
+	// Generate unique token
+	token := generateInvitationToken()
+
+	// Calculate expiration time
+	var expiresAt *time.Time
+	if req.ExpiresInDays != nil {
+		expiry := time.Now().Add(time.Duration(*req.ExpiresInDays) * 24 * time.Hour)
+		expiresAt = &expiry
+	}
+
+	invitation := &models.JourneyInvitation{
+		JourneyID:       journeyID,
+		InvitationToken: token,
+		CreatedBy:       createdBy,
+		ExpiresAt:       expiresAt,
+		MaxUses:         req.MaxUses,
+		CurrentUses:     0,
+		IsActive:        true,
+	}
+
+	if err := s.journeyRepo.CreateInvitation(invitation); err != nil {
+		return nil, fmt.Errorf("failed to create invitation: %w", err)
+	}
+
+	// Get full invitation with relations
+	fullInvitation, err := s.journeyRepo.GetInvitationByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapToInvitationResponse(fullInvitation, journey), nil
+}
+
+// GetInvitationDetails retrieves public invitation details (for unauthenticated users)
+func (s *journeyService) GetInvitationDetails(token string) (*dto.InvitationDetailsResponse, error) {
+	invitation, err := s.journeyRepo.GetInvitationByToken(token)
+	if err != nil {
+		return &dto.InvitationDetailsResponse{
+			IsValid: false,
+			Message: "Invitation not found",
+		}, nil
+	}
+
+	// Check if invitation is valid
+	if !invitation.IsValid() {
+		message := "This invitation link has expired or is no longer valid"
+		if invitation.MaxUses != nil && invitation.CurrentUses >= *invitation.MaxUses {
+			message = "This invitation link has reached its maximum usage limit"
+		}
+		return &dto.InvitationDetailsResponse{
+			IsValid: false,
+			Message: message,
+		}, nil
+	}
+
+	// Get journey details
+	topicCount, _ := s.journeyRepo.GetTopicCount(invitation.JourneyID)
+	totalWords, _ := s.journeyRepo.GetTotalWords(invitation.JourneyID)
+
+	return &dto.InvitationDetailsResponse{
+		JourneyID:          invitation.Journey.ID,
+		JourneyName:        invitation.Journey.Name,
+		JourneyDescription: invitation.Journey.Description,
+		Language: &dto.LanguageInfo{
+			Code:       invitation.Journey.Language.Code,
+			Name:       invitation.Journey.Language.Name,
+			NativeName: invitation.Journey.Language.NativeName,
+		},
+		TopicCount:  int(topicCount),
+		TotalWords:  totalWords,
+		CreatorName: invitation.Creator.Name,
+		IsValid:     true,
+	}, nil
+}
+
+// AcceptInvitation assigns the journey to the user via invitation
+func (s *journeyService) AcceptInvitation(token string, userID uint) error {
+	invitation, err := s.journeyRepo.GetInvitationByToken(token)
+	if err != nil {
+		return fmt.Errorf("invitation not found")
+	}
+
+	// Check if invitation is valid
+	if !invitation.IsValid() {
+		return fmt.Errorf("invitation is no longer valid")
+	}
+
+	// Check if user is already assigned
+	isAssigned, err := s.userJourneyRepo.IsAssigned(userID, invitation.JourneyID)
+	if err != nil {
+		return err
+	}
+
+	if isAssigned {
+		return fmt.Errorf("you are already enrolled in this journey")
+	}
+
+	// Assign journey to user
+	_, err = s.userJourneyRepo.AssignJourney(userID, invitation.JourneyID, invitation.CreatedBy)
+	if err != nil {
+		return fmt.Errorf("failed to assign journey: %w", err)
+	}
+
+	// Increment invitation usage count
+	if err := s.journeyRepo.UpdateInvitationUses(invitation.ID); err != nil {
+		// Log error but don't fail the assignment
+		fmt.Printf("Warning: failed to update invitation uses: %v\n", err)
+	}
+
+	return nil
+}
+
+// GetJourneyInvitations retrieves all invitations for a journey
+func (s *journeyService) GetJourneyInvitations(journeyID uint) ([]dto.InvitationResponse, error) {
+	invitations, err := s.journeyRepo.GetJourneyInvitations(journeyID)
+	if err != nil {
+		return nil, err
+	}
+
+	journey, err := s.journeyRepo.GetByID(journeyID, false)
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]dto.InvitationResponse, len(invitations))
+	for i, inv := range invitations {
+		responses[i] = *s.mapToInvitationResponse(&inv, journey)
+	}
+
+	return responses, nil
+}
+
+// DeactivateInvitation deactivates an invitation link
+func (s *journeyService) DeactivateInvitation(invitationID uint, journeyID uint, userID uint) error {
+	// Verify the invitation belongs to this journey
+	invitation, err := s.journeyRepo.GetInvitationByToken("")
+	if err == nil && invitation.JourneyID != journeyID {
+		return fmt.Errorf("invitation does not belong to this journey")
+	}
+
+	return s.journeyRepo.DeactivateInvitation(invitationID)
+}
+
+// Helper function to generate a secure random token
+func generateInvitationToken() string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	const tokenLength = 32
+
+	b := make([]byte, tokenLength)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// Helper to map invitation model to response DTO
+func (s *journeyService) mapToInvitationResponse(inv *models.JourneyInvitation, journey *models.Journey) *dto.InvitationResponse {
+	var expiresAt *string
+	if inv.ExpiresAt != nil {
+		expiry := inv.ExpiresAt.Format(time.RFC3339)
+		expiresAt = &expiry
+	}
+
+	// Return relative path - frontend will construct full URL
+	invitationURL := fmt.Sprintf("/invite/%s", inv.InvitationToken)
+
+	return &dto.InvitationResponse{
+		ID:              inv.ID,
+		JourneyID:       inv.JourneyID,
+		InvitationToken: inv.InvitationToken,
+		InvitationURL:   invitationURL,
+		CreatedBy: &dto.UserInfo{
+			ID:       inv.Creator.ID,
+			Username: inv.Creator.Username,
+			Name:     inv.Creator.Name,
+			Email:    inv.Creator.Email,
+		},
+		ExpiresAt:   expiresAt,
+		MaxUses:     inv.MaxUses,
+		CurrentUses: inv.CurrentUses,
+		IsActive:    inv.IsActive,
+		IsValid:     inv.IsValid(),
+		CreatedAt:   inv.CreatedAt.Format(time.RFC3339),
+	}
 }

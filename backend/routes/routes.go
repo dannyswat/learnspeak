@@ -65,6 +65,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		auth.POST("/login", handlers.Login)
 	}
 
+	// Public invitation routes (no authentication required)
+	api.GET("/invitations/:token", journeyHandler.GetInvitationInfo)
+
 	// Protected routes (authentication required)
 	protected := api.Group("")
 	protected.Use(middleware.JWTMiddleware)
@@ -100,6 +103,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		protected.GET("/journeys/:id", journeyHandler.GetJourney)
 		protected.GET("/topics/:id", topicHandler.GetTopic)
 		protected.POST("/journeys/:id/start", journeyHandler.StartJourney)
+
+		// Invitation acceptance (authenticated users)
+		protected.POST("/invitations/:token/accept", journeyHandler.AcceptInvitation)
 
 		// Example: Admin-only routes
 		admin := protected.Group("/admin")
@@ -140,6 +146,11 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 			teacher.POST("/journeys/:id/assign", journeyHandler.AssignJourney)
 			teacher.POST("/journeys/:id/unassign", journeyHandler.UnassignJourney)
 			teacher.GET("/journeys/:id/assignments", journeyHandler.GetJourneyAssignments)
+
+			// Journey invitations
+			teacher.POST("/journeys/:id/invite", journeyHandler.GenerateInvitation)
+			teacher.GET("/journeys/:id/invitations", journeyHandler.GetJourneyInvitations)
+			teacher.DELETE("/journeys/:id/invitations/:invitationId", journeyHandler.DeactivateInvitation)
 
 			// Quiz management
 			teacher.GET("/quiz", quizHandler.ListQuestions)         // List all questions with pagination

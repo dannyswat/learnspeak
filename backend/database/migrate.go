@@ -30,6 +30,7 @@ func Migrate() error {
 		&models.TopicWord{},
 		&models.Journey{},
 		&models.JourneyTopic{},
+		&models.JourneyInvitation{},
 		&models.QuizQuestion{},
 
 		// User progress models
