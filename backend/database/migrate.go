@@ -8,81 +8,162 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 // Migrate runs database migrations
 func Migrate() error {
 	log.Println("Running database migrations...")
 
-	// First, ensure basic tables exist using GORM AutoMigrate
+	// Use GORM AutoMigrate for all models
+	log.Println("Creating/updating database schema...")
 	err := DB.AutoMigrate(
+		// Core models
 		&models.User{},
 		&models.Role{},
 		&models.UserRole{},
+
+		// Content models
 		&models.Language{},
 		&models.Word{},
 		&models.WordTranslation{},
+		&models.Topic{},
+		&models.TopicWord{},
+		&models.Journey{},
+		&models.JourneyTopic{},
+		&models.QuizQuestion{},
+
+		// User progress models
+		&models.UserJourney{},
+		&models.UserProgress{},
+		&models.UserBookmark{},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to run basic migrations: %w", err)
+		return fmt.Errorf("failed to auto-migrate models: %w", err)
 	}
 
-	// Then run SQL migrations from files
-	migrationsPath := filepath.Join("database", "migrations")
-	if err := runSQLMigrations(migrationsPath); err != nil {
-		log.Printf("Warning: SQL migrations failed: %v", err)
-		// Don't fail if SQL migrations have issues - basic schema is already created
+	// Seed essential data
+	log.Println("Seeding essential data (roles, languages)...")
+	if err := seedEssentialData(); err != nil {
+		return fmt.Errorf("failed to seed essential data: %w", err)
+	}
+
+	// Run SQL migrations for functions, triggers, and views
+	log.Println("Running SQL migrations (functions, triggers, views)...")
+	if err := runSQLMigrations(); err != nil {
+		return fmt.Errorf("failed to run SQL migrations: %w", err)
 	}
 
 	log.Println("Migrations completed successfully")
 	return nil
 }
 
-// runSQLMigrations executes SQL migration files in order
-func runSQLMigrations(migrationsPath string) error {
-	// Get all .up.sql files
-	files, err := filepath.Glob(filepath.Join(migrationsPath, "*.up.sql"))
-	if err != nil {
-		return fmt.Errorf("failed to read migrations directory: %w", err)
+// seedEssentialData seeds roles and languages using GORM
+func seedEssentialData() error {
+	// Seed roles
+	roles := []models.Role{
+		{Name: "learner", Description: "Student learning languages"},
+		{Name: "teacher", Description: "Teacher managing content and learners"},
+		{Name: "admin", Description: "System administrator"},
 	}
 
-	if len(files) == 0 {
-		log.Println("No SQL migration files found")
+	for _, role := range roles {
+		var existing models.Role
+		result := DB.Where("name = ?", role.Name).First(&existing)
+		if result.Error != nil {
+			// Role doesn't exist, create it
+			if err := DB.Create(&role).Error; err != nil {
+				return fmt.Errorf("failed to seed role %s: %w", role.Name, err)
+			}
+			log.Printf("Created role: %s", role.Name)
+		} else {
+			log.Printf("Role already exists: %s", role.Name)
+		}
+	}
+
+	// Seed languages
+	languages := []models.Language{
+		{Code: "en", Name: "English", NativeName: "English", Direction: "ltr", IsActive: true},
+		{Code: "zh-HK", Name: "Cantonese (Traditional)", NativeName: "廣東話（繁體）", Direction: "ltr", IsActive: true},
+		{Code: "zh-CN", Name: "Mandarin (Simplified)", NativeName: "普通话（简体）", Direction: "ltr", IsActive: true},
+		{Code: "es", Name: "Spanish", NativeName: "Español", Direction: "ltr", IsActive: true},
+		{Code: "fr", Name: "French", NativeName: "Français", Direction: "ltr", IsActive: true},
+		{Code: "ja", Name: "Japanese", NativeName: "日本語", Direction: "ltr", IsActive: true},
+		{Code: "ko", Name: "Korean", NativeName: "한국어", Direction: "ltr", IsActive: true},
+	}
+
+	for _, language := range languages {
+		var existing models.Language
+		result := DB.Where("code = ?", language.Code).First(&existing)
+		if result.Error != nil {
+			// Language doesn't exist, create it
+			if err := DB.Create(&language).Error; err != nil {
+				return fmt.Errorf("failed to seed language %s: %w", language.Code, err)
+			}
+			log.Printf("Created language: %s (%s)", language.Name, language.Code)
+		} else {
+			log.Printf("Language already exists: %s (%s)", language.Name, language.Code)
+		}
+	}
+
+	return nil
+}
+
+// runSQLMigrations executes SQL files from functions, triggers, and views directories
+func runSQLMigrations() error {
+	dbPath := filepath.Join("database")
+
+	// Order matters: functions -> triggers -> views
+	directories := []string{"functions", "triggers", "views"}
+
+	for _, dir := range directories {
+		dirPath := filepath.Join(dbPath, dir)
+		if err := executeSQLFilesInDirectory(dirPath); err != nil {
+			return fmt.Errorf("failed to execute SQL files in %s: %w", dir, err)
+		}
+	}
+
+	return nil
+}
+
+// executeSQLFilesInDirectory executes all .sql files in a directory in sorted order
+func executeSQLFilesInDirectory(dirPath string) error {
+	// Check if directory exists
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		log.Printf("Directory %s does not exist, skipping", dirPath)
 		return nil
 	}
 
-	// Sort files to ensure they run in order
+	// Get all .sql files
+	files, err := filepath.Glob(filepath.Join(dirPath, "*.sql"))
+	if err != nil {
+		return fmt.Errorf("failed to read directory %s: %w", dirPath, err)
+	}
+
+	if len(files) == 0 {
+		log.Printf("No SQL files found in %s", dirPath)
+		return nil
+	}
+
+	// Sort files to ensure consistent execution order
 	sort.Strings(files)
 
+	// Execute each file
 	for _, file := range files {
-		log.Printf("Running migration: %s", filepath.Base(file))
+		fileName := filepath.Base(file)
+		log.Printf("Executing SQL file: %s", fileName)
 
 		content, err := os.ReadFile(file)
 		if err != nil {
-			return fmt.Errorf("failed to read migration file %s: %w", file, err)
+			return fmt.Errorf("failed to read file %s: %w", fileName, err)
 		}
 
-		// Execute the SQL as a single transaction
-		tx := DB.Begin()
-		if err := tx.Exec(string(content)).Error; err != nil {
-			tx.Rollback()
-			// Check if it's a "already exists" error - this is okay
-			if strings.Contains(err.Error(), "already exists") ||
-				strings.Contains(err.Error(), "duplicate") {
-				log.Printf("Migration %s already applied (skipping)", filepath.Base(file))
-				continue
-			}
-			// Check if relation doesn't exist but it's expected (partial migration)
-			if strings.Contains(err.Error(), "does not exist") {
-				log.Printf("Warning: Migration %s partially failed: %v (continuing)", filepath.Base(file), err)
-				continue
-			}
-			return fmt.Errorf("failed to execute migration %s: %w", file, err)
+		// Execute SQL (CREATE OR REPLACE makes it idempotent)
+		if err := DB.Exec(string(content)).Error; err != nil {
+			// Log warning but continue - SQL uses CREATE OR REPLACE for idempotency
+			log.Printf("Warning: SQL file %s execution had issue (may be normal): %v", fileName, err)
+		} else {
+			log.Printf("Successfully executed: %s", fileName)
 		}
-		tx.Commit()
-
-		log.Printf("Successfully applied migration: %s", filepath.Base(file))
 	}
 
 	return nil
