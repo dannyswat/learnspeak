@@ -292,8 +292,8 @@ const BulkWordCreation: React.FC = () => {
             <span className="text-gray-900">Quick Add Words</span>
           </div>
 
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Quick Add Words</h2>
-          <p className="text-gray-600">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Quick Add Words</h2>
+          <p className="text-sm sm:text-base text-gray-600">
             Quickly create multiple words and add them to "{topicName}" in one go
           </p>
         </div>
@@ -305,10 +305,10 @@ const BulkWordCreation: React.FC = () => {
         )}
 
         {/* Configuration */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Setup</h3>
           
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 How many words do you want to add?
@@ -320,9 +320,9 @@ const BulkWordCreation: React.FC = () => {
                   max="100"
                   value={wordCount}
                   onChange={handleCountChange}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-20 sm:w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                <span className="text-sm text-gray-600">words (max 100)</span>
+                <span className="text-xs sm:text-sm text-gray-600">words (max 100)</span>
               </div>
             </div>
 
@@ -338,15 +338,15 @@ const BulkWordCreation: React.FC = () => {
 
         {/* Word Entry Form */}
         <form onSubmit={handleSubmit}>
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <h3 className="text-lg font-semibold">Enter Words</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
                   onClick={handleBatchTranslate}
                   disabled={translating || !targetLanguage}
-                  className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {translating ? (
                     <>
@@ -366,7 +366,7 @@ const BulkWordCreation: React.FC = () => {
                   type="button"
                   onClick={handleBatchGenerateAudio}
                   disabled={generatingAudio || !targetLanguage}
-                  className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {generatingAudio ? (
                     <>
@@ -378,7 +378,7 @@ const BulkWordCreation: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      🔊 Batch Generate Audio
+                      🔊 <span className="hidden sm:inline">Batch Generate Audio</span><span className="sm:hidden">Audio</span>
                     </>
                   )}
                 </button>
@@ -386,7 +386,7 @@ const BulkWordCreation: React.FC = () => {
                   type="button"
                   onClick={addMoreWords}
                   disabled={wordCount >= 100}
-                  className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   + Add 5 More
                 </button>
@@ -416,23 +416,23 @@ const BulkWordCreation: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between bg-white shadow rounded-lg p-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white shadow rounded-lg p-4 sm:p-6">
             <button
               type="button"
               onClick={handleCancel}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium"
+              className="w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium"
             >
               Cancel
             </button>
 
-            <div className="flex gap-3">
-              <div className="text-sm text-gray-600 self-center">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+              <div className="text-xs sm:text-sm text-gray-600 self-center text-center sm:text-left">
                 {words.filter(w => w.baseWord.trim() && w.translation.trim()).length} valid entries
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Creating Words...' : `Create & Add Words`}
               </button>

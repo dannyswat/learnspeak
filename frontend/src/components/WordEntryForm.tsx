@@ -39,13 +39,13 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
   readOnlyBaseWord = false,
 }) => {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:border-green-300 transition-colors">
-      <div className="flex items-start gap-4 mb-4">
+    <div className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4">
         <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center font-medium text-green-700">
           {index + 1}
         </div>
 
-        <div className="flex-1 grid grid-cols-2 gap-4">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
               English Word *
@@ -56,7 +56,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'baseWord', e.target.value)}
               placeholder="e.g., Hello"
               disabled={disabled || readOnlyBaseWord}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -70,7 +70,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'translation', e.target.value)}
               placeholder="e.g., 你好"
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -84,7 +84,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'romanization', e.target.value)}
               placeholder="e.g., nei5 hou2"
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -98,7 +98,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'notes', e.target.value)}
               placeholder="e.g., Informal greeting"
               disabled={disabled}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
             type="button"
             onClick={() => onRemove(index)}
             disabled={disabled}
-            className="flex-shrink-0 w-8 h-8 text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-shrink-0 w-8 h-8 text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
             title="Remove word"
           >
             ✕
@@ -116,9 +116,9 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
         )}
       </div>
 
-      {/* Image and Audio Section - Side by Side */}
-      <div className="ml-12 grid grid-cols-2 gap-6">
-        {/* Image Upload Section - Left */}
+      {/* Image and Audio Section - Stacked on mobile, side by side on desktop */}
+      <div className="sm:ml-12 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Image Upload Section */}
         <ImageInput
           label="Image (optional)"
           value={word.imageUrl}
@@ -131,7 +131,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
           disabled={disabled}
         />
 
-        {/* Audio Recording Section - Right */}
+        {/* Audio Recording Section */}
         <AudioInput
           label="Audio Pronunciation (optional)"
           value={word.audioUrl}

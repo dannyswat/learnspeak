@@ -220,7 +220,7 @@ const JourneyDetail: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 mb-2">
             <button
               onClick={() => navigate('/journeys')}
               className="hover:text-green-600"
@@ -228,15 +228,15 @@ const JourneyDetail: React.FC = () => {
               Journeys
             </button>
             <span>›</span>
-            <span className="text-gray-900">{journey.name}</span>
+            <span className="text-gray-900 truncate">{journey.name}</span>
           </div>
 
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">
                 {journey.name}
               </h2>
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                 <span className="text-gray-600">{journey.language?.name}</span>
                 {journey.createdBy && (
                   <>
@@ -248,28 +248,29 @@ const JourneyDetail: React.FC = () => {
             </div>
 
             {isTeacher && (
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   onClick={() => setShowInvitationModal(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Generate Invitation Link
+                  <span className="hidden sm:inline">Generate Invitation Link</span>
+                  <span className="sm:hidden">Invite</span>
                 </button>
                 <button
                   onClick={handleShowInvitations}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  {showInvitationList ? 'Hide Invitations' : 'View Invitations'}
+                  {showInvitationList ? 'Hide' : 'View'} <span className="hidden sm:inline">Invitations</span>
                 </button>
                 <button
                   onClick={() => navigate(`/journeys/${journey.id}/edit`)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                 >
                   Edit
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                 >
                   Delete
                 </button>
@@ -280,19 +281,19 @@ const JourneyDetail: React.FC = () => {
 
         {/* Description */}
         {journey.description && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{journey.description}</p>
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Description</h3>
+            <p className="text-sm sm:text-base text-gray-700 whitespace-pre-wrap">{journey.description}</p>
           </div>
         )}
 
         {/* Invitation List Panel (Teacher Only) */}
         {isTeacher && showInvitationList && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Invitation Links</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Invitation Links</h3>
               {loadingInvitations && (
-                <span className="text-sm text-gray-500">Loading...</span>
+                <span className="text-xs sm:text-sm text-gray-500">Loading...</span>
               )}
             </div>
             <InvitationListPanel
@@ -305,16 +306,16 @@ const JourneyDetail: React.FC = () => {
 
         {/* Learner Progress Card */}
         {isLearner && userJourney && (
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg shadow-sm p-6 mb-6 border border-blue-200">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg shadow-sm p-4 sm:p-6 mb-6 border border-blue-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Your Progress</h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Your Progress</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   {userJourney.completedTopics || 0} of {userJourney.totalTopics || journey.topicCount} topics completed
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-green-600">
+              <div className="text-left sm:text-right">
+                <div className="text-2xl sm:text-3xl font-bold text-green-600">
                   {userJourney.progress || 0}%
                 </div>
                 <div className={`
@@ -330,9 +331,9 @@ const JourneyDetail: React.FC = () => {
             </div>
             
             {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3 overflow-hidden">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 sm:h-3 rounded-full transition-all duration-500"
                 style={{ width: `${userJourney.progress || 0}%` }}
               />
             </div>
@@ -340,17 +341,17 @@ const JourneyDetail: React.FC = () => {
             {/* Next Topic Info */}
             {userJourney.nextTopic && userJourney.status !== 'completed' && (
               <div className="mt-4 pt-4 border-t border-blue-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">Next Topic:</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">{userJourney.nextTopic.name}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">Next Topic:</p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base">{userJourney.nextTopic.name}</p>
                     {userJourney.nextTopic.description && (
-                      <p className="text-sm text-gray-600 mt-1">{userJourney.nextTopic.description}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">{userJourney.nextTopic.description}</p>
                     )}
                   </div>
                   <button
                     onClick={handleStartJourney}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                    className="w-full sm:w-auto px-3 sm:px-4 py-2 text-xs sm:text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                   >
                     Start Learning
                   </button>
@@ -360,11 +361,11 @@ const JourneyDetail: React.FC = () => {
 
             {userJourney.status === 'completed' && (
               <div className="mt-4 pt-4 border-t border-green-200 text-center">
-                <div className="flex items-center justify-center text-green-600">
-                  <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex flex-col sm:flex-row items-center justify-center text-green-600 gap-2">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  <span className="font-semibold">Congratulations! You've completed this journey!</span>
+                  <span className="font-semibold text-sm sm:text-base">Congratulations! You've completed this journey!</span>
                 </div>
               </div>
             )}
@@ -372,58 +373,58 @@ const JourneyDetail: React.FC = () => {
         )}
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 sm:p-3 bg-blue-100 rounded-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Topics</p>
-                <p className="text-2xl font-bold text-gray-900">{journey.topicCount}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Topics</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{journey.topicCount}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 sm:p-3 bg-green-100 rounded-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Words</p>
-                <p className="text-2xl font-bold text-gray-900">{journey.totalWords}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Words</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{journey.totalWords}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
             <div className="flex items-center">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-2 sm:p-3 bg-purple-100 rounded-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Assigned Users</p>
-                <p className="text-2xl font-bold text-gray-900">{journey.assignedToCount}</p>
+              <div className="ml-3 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Assigned Users</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{journey.assignedToCount}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Topics */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
             Topics ({journey.topics?.length || 0})
           </h3>
 
           {journey.topics && journey.topics.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {journey.topics.map((topic, index) => {
                 const locked = isTopicLocked(topic.id, topic.sequenceOrder);
                 const completed = isTopicCompleted(topic.id);
@@ -433,7 +434,7 @@ const JourneyDetail: React.FC = () => {
                   <div
                     key={topic.id}
                     className={`
-                      border rounded-lg p-4 transition-all
+                      border rounded-lg p-3 sm:p-4 transition-all
                       ${locked 
                         ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60' 
                         : completed
@@ -445,10 +446,10 @@ const JourneyDetail: React.FC = () => {
                     `}
                     onClick={() => handleTopicClick(topic.id, topic.sequenceOrder)}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       {/* Topic Number / Status Icon */}
                       <div className={`
-                        flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold
+                        flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm sm:text-base font-semibold
                         ${completed 
                           ? 'bg-green-500 text-white' 
                           : isNext
@@ -459,11 +460,11 @@ const JourneyDetail: React.FC = () => {
                         }
                       `}>
                         {completed ? (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         ) : locked ? (
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                           </svg>
                         ) : (
@@ -472,10 +473,10 @@ const JourneyDetail: React.FC = () => {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className={`text-lg font-semibold ${locked ? 'text-gray-500' : 'text-gray-900'}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className={`text-base sm:text-lg font-semibold ${locked ? 'text-gray-500' : 'text-gray-900'}`}>
                                 {topic.name}
                               </h4>
                               {isNext && (
@@ -490,25 +491,25 @@ const JourneyDetail: React.FC = () => {
                               )}
                             </div>
                             {topic.description && (
-                              <p className={`text-sm mt-1 ${locked ? 'text-gray-400' : 'text-gray-600'}`}>
+                              <p className={`text-xs sm:text-sm mt-1 ${locked ? 'text-gray-400' : 'text-gray-600'}`}>
                                 {topic.description}
                               </p>
                             )}
                           </div>
-                          <span className={`ml-2 px-2 py-1 text-xs rounded ${getLevelBadgeColor(topic.level)}`}>
+                          <span className={`ml-0 sm:ml-2 px-2 py-1 text-xs rounded whitespace-nowrap ${getLevelBadgeColor(topic.level)}`}>
                             {topic.level}
                           </span>
                         </div>
                         
-                        <div className={`flex items-center gap-4 text-sm ${locked ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <div className={`flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm ${locked ? 'text-gray-400' : 'text-gray-500'}`}>
                           <div className="flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
                             {topic.wordCount} words
                           </div>
                           <div className="flex items-center">
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
                             {topic.quizCount} quizzes
@@ -527,11 +528,11 @@ const JourneyDetail: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>No topics in this journey yet</p>
+            <div className="text-center py-6 sm:py-8 text-gray-500">
+              <p className="text-sm sm:text-base">No topics in this journey yet</p>
               <button
                 onClick={() => navigate(`/journeys/${journey.id}/edit`)}
-                className="mt-4 text-green-600 hover:text-green-700 font-medium"
+                className="mt-4 text-sm sm:text-base text-green-600 hover:text-green-700 font-medium"
               >
                 Add Topics
               </button>

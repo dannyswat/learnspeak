@@ -240,22 +240,22 @@ const BatchWordUpdate: React.FC = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 📝 Batch Update Words
               </h1>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-sm sm:text-base text-gray-600">
                 Topic: <span className="font-semibold">{topicName}</span>
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
                 Update multiple words at once. Changes are highlighted.
               </p>
             </div>
             <button
               type="button"
               onClick={() => navigate(`/topics/${topicId}`)}
-              className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               ← Back to Topic
             </button>
@@ -264,24 +264,24 @@ const BatchWordUpdate: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg whitespace-pre-wrap">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-3 text-sm rounded-lg whitespace-pre-wrap">
             {error}
           </div>
         )}
 
         {/* Word Entry Form */}
         <form onSubmit={handleSubmit}>
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
+          <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <h3 className="text-base sm:text-lg font-semibold">
                 Words to Update ({words.length})
               </h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
                   onClick={handleBatchGenerateAudio}
                   disabled={generatingAudio || !targetLanguage || saving}
-                  className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {generatingAudio ? (
                     <>
@@ -293,7 +293,7 @@ const BatchWordUpdate: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      🔊 Batch Generate Audio
+                      🔊 <span className="hidden sm:inline">Batch Generate Audio</span><span className="sm:hidden">Audio</span>
                     </>
                   )}
                 </button>
@@ -302,7 +302,7 @@ const BatchWordUpdate: React.FC = () => {
                     type="button"
                     onClick={handleReset}
                     disabled={saving}
-                    className="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     ↺ Reset Changes
                   </button>
@@ -310,7 +310,7 @@ const BatchWordUpdate: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {words.map((word, index) => (
                 <WordEntryForm
                   key={word.id}
@@ -335,19 +335,19 @@ const BatchWordUpdate: React.FC = () => {
 
           {/* Action Buttons */}
           {words.length > 0 && (
-            <div className="flex justify-end gap-3 mb-8">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mb-8">
               <button
                 type="button"
                 onClick={() => navigate(`/topics/${topicId}`)}
                 disabled={saving}
-                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving || !hasChanges()}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>

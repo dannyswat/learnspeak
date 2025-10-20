@@ -155,37 +155,37 @@ const TopicDetail: React.FC = () => {
             <span className="text-gray-900">{topic.name}</span>
           </div>
 
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">
                 {topic.name}
               </h2>
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
                 <span className={`px-3 py-1 rounded-full font-medium ${getLevelBadgeColor(topic.level)}`}>
                   {topic.level}
                 </span>
-                <span className="text-gray-600">•</span>
+                <span className="text-gray-600 hidden sm:inline">•</span>
                 <span className="text-gray-600">{topic.language?.name}</span>
                 {topic.createdBy && (
                   <>
-                    <span className="text-gray-600">•</span>
-                    <span className="text-gray-600">Created by {topic.createdBy.name}</span>
+                    <span className="text-gray-600 hidden sm:inline">•</span>
+                    <span className="text-gray-600 text-xs sm:text-sm">Created by {topic.createdBy.name}</span>
                   </>
                 )}
               </div>
             </div>
 
             {isTeacher && (
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3 flex-shrink-0">
                 <button
                   onClick={() => navigate(`/topics/${id}/edit`)}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm sm:text-base"
                 >
                   Edit
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base"
                 >
                   Delete
                 </button>
@@ -237,15 +237,15 @@ const TopicDetail: React.FC = () => {
 
         {/* Quiz Management */}
         {isTeacher && (
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Quiz Questions</h3>
                 <p className="text-sm text-gray-600">Manage quiz questions for this topic</p>
               </div>
               <button
                 onClick={() => navigate(`/topics/${id}/quiz/manage`)}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm sm:text-base"
               >
                 Manage Quiz
               </button>
@@ -257,10 +257,10 @@ const TopicDetail: React.FC = () => {
         )}
 
         {/* Words */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <h3 className="text-lg font-medium text-gray-900">Words in Topic</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => navigate(`/topics/${id}/words/bulk`)}
                 className="text-sm px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600"
@@ -275,7 +275,7 @@ const TopicDetail: React.FC = () => {
               </button>
               <button
                 onClick={() => navigate(`/topics/${id}/edit`)}
-                className="text-sm text-green-600 hover:text-green-700"
+                className="text-sm px-3 py-1.5 text-green-600 hover:text-green-700 border border-green-600 hover:bg-green-50 rounded"
               >
                 Manage Words
               </button>
@@ -283,7 +283,7 @@ const TopicDetail: React.FC = () => {
           </div>
 
           {topic.words && topic.words.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {topic.words.map((word, index) => (
                 <div
                   key={word.id}
@@ -295,7 +295,7 @@ const TopicDetail: React.FC = () => {
                       <img
                         src={word.imageUrl}
                         alt={word.baseWord}
-                        className="w-12 h-12 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                        className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => handleImageClick(word.id)}
                         title="Click to view larger image"
                       />
@@ -303,8 +303,8 @@ const TopicDetail: React.FC = () => {
                   </div>
 
                   <div className="mb-2">
-                    <div className="font-semibold text-gray-900 mb-1">{word.baseWord}</div>
-                    <div className="text-lg text-gray-700">{word.translation}</div>
+                    <div className="font-semibold text-gray-900 mb-1 text-base sm:text-lg">{word.baseWord}</div>
+                    <div className="text-base sm:text-lg text-gray-700">{word.translation}</div>
                     {word.romanization && (
                       <div className="text-sm text-gray-500">{word.romanization}</div>
                     )}
@@ -329,12 +329,12 @@ const TopicDetail: React.FC = () => {
         {/* Image Modal */}
         {selectedImageIndex !== null && wordsWithImages[selectedImageIndex] && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-2 sm:p-4"
             onClick={handleCloseModal}
           >
             <button
               onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300 transition-colors z-10"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white text-3xl sm:text-4xl hover:text-gray-300 transition-colors z-10"
               title="Close (Esc)"
             >
               ×
@@ -347,7 +347,7 @@ const TopicDetail: React.FC = () => {
                   e.stopPropagation();
                   handlePreviousImage();
                 }}
-                className="absolute left-4 text-white text-5xl hover:text-gray-300 transition-colors z-10"
+                className="absolute left-2 sm:left-4 text-white text-4xl sm:text-5xl hover:text-gray-300 transition-colors z-10"
                 title="Previous (←)"
               >
                 ‹
@@ -361,7 +361,7 @@ const TopicDetail: React.FC = () => {
                   e.stopPropagation();
                   handleNextImage();
                 }}
-                className="absolute right-4 text-white text-5xl hover:text-gray-300 transition-colors z-10"
+                className="absolute right-2 sm:right-4 text-white text-4xl sm:text-5xl hover:text-gray-300 transition-colors z-10"
                 title="Next (→)"
               >
                 ›
@@ -370,22 +370,22 @@ const TopicDetail: React.FC = () => {
 
             {/* Image Container */}
             <div
-              className="max-w-5xl max-h-[90vh] flex flex-col items-center"
+              className="max-w-5xl max-h-[90vh] flex flex-col items-center w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={wordsWithImages[selectedImageIndex].imageUrl}
                 alt={wordsWithImages[selectedImageIndex].baseWord}
-                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                className="max-w-full max-h-[60vh] sm:max-h-[70vh] object-contain rounded-lg shadow-2xl"
               />
 
               {/* Word Info */}
-              <div className="mt-6 bg-white rounded-lg p-4 shadow-xl max-w-md">
+              <div className="mt-4 sm:mt-6 bg-white rounded-lg p-3 sm:p-4 shadow-xl max-w-md w-full mx-2">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 mb-2">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                     {wordsWithImages[selectedImageIndex].baseWord}
                   </div>
-                  <div className="text-xl text-gray-700 mb-1">
+                  <div className="text-lg sm:text-xl text-gray-700 mb-1">
                     {wordsWithImages[selectedImageIndex].translation}
                   </div>
                   {wordsWithImages[selectedImageIndex].romanization && (
@@ -410,8 +410,9 @@ const TopicDetail: React.FC = () => {
               </div>
 
               {/* Navigation Hint */}
-              <div className="mt-4 text-white text-sm text-center opacity-75">
-                Use arrow keys (← →) or click arrows to navigate • Press Esc to close
+              <div className="mt-2 sm:mt-4 text-white text-xs sm:text-sm text-center opacity-75 px-2">
+                <span className="hidden sm:inline">Use arrow keys (← →) or click arrows to navigate • Press Esc to close</span>
+                <span className="sm:hidden">Tap arrows to navigate • Tap × to close</span>
               </div>
             </div>
           </div>
