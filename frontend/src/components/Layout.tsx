@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
@@ -44,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Left side - Logo */}
           <div className="flex items-center gap-3 sm:gap-5">
             <div className="flex items-center gap-2">
-              <img src="/learnspeak.png" alt="LearnSpeak" className="h-10 sm:h-12" />
+              <NavLink to="/"><img src="/learnspeak.png" alt="LearnSpeak" className="h-10 sm:h-12" /></NavLink>
             </div>
           </div>
 
