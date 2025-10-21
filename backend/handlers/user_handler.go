@@ -331,7 +331,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	}
 
 	// Prevent deleting yourself
-	currentUserID := c.Get("user_id").(uint)
+	currentUserID := c.Get("userId").(uint)
 	if uint(id) == currentUserID {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResponse{
 			Message: "Cannot delete your own account",

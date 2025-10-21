@@ -200,7 +200,7 @@ func Login(c echo.Context) error {
 // ChangePassword handles password change for authenticated users
 func ChangePassword(c echo.Context) error {
 	// Get user ID from JWT token
-	userID := c.Get("user_id").(uint)
+	userID := c.Get("userId").(uint)
 
 	var req dto.ChangePasswordRequest
 	if err := c.Bind(&req); err != nil {
