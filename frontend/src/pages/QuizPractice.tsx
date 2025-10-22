@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quizService';
+import { uploadService } from '../services/wordService';
 import Layout from '../components/Layout';
 import type { QuizQuestionForPractice, QuizAnswer, QuizResult } from '../types/quiz';
 
@@ -20,12 +21,26 @@ const QuizPractice: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<QuizResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     if (topicId) {
       loadQuiz(parseInt(topicId));
     }
   }, [topicId]);
+
+  // Autoplay audio for listening questions when question changes
+  useEffect(() => {
+    if (questions.length > 0) {
+      const currentQuestion = questions[currentIndex];
+      if (currentQuestion.questionType === 'listening' && currentQuestion.audioUrl && audioRef.current) {
+        audioRef.current.load();
+        audioRef.current.play().catch(err => {
+          console.error('Audio autoplay failed:', err);
+        });
+      }
+    }
+  }, [currentIndex, questions]);
 
   const loadQuiz = async (id: number) => {
     try {
@@ -214,6 +229,9 @@ const QuizPractice: React.FC = () => {
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded mr-2">
+                        {result.questionType}
+                      </span>
                       <span className="font-medium text-gray-700">Q{index + 1}.</span>
                       <span className="text-gray-900">{result.questionText}</span>
                     </div>
@@ -223,6 +241,30 @@ const QuizPractice: React.FC = () => {
                       <span className="text-red-600 font-medium">✗ Incorrect</span>
                     )}
                   </div>
+
+                  {/* Audio Player for Listening Questions in Review */}
+                  {result.questionType === 'listening' && result.audioUrl && (
+                    <div className="mb-3">
+                      <audio
+                        controls
+                        className="w-full max-w-md"
+                        src={uploadService.getFileUrl(result.audioUrl)}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  )}
+
+                  {/* Image for Image Questions in Review */}
+                  {result.questionType === 'image' && result.imageUrl && (
+                    <div className="mb-3 flex justify-center">
+                      <img
+                        src={uploadService.getFileUrl(result.imageUrl)}
+                        alt="Question"
+                        className="max-w-xs max-h-48 rounded-lg shadow-sm object-contain"
+                      />
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {(['a', 'b', 'c', 'd'] as const).map((option) => {
@@ -290,9 +332,34 @@ const QuizPractice: React.FC = () => {
             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full mb-4">
               {currentQuestion.questionType}
             </span>
-            <h2 className="text-2xl font-semibold text-gray-900">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               {currentQuestion.questionText}
             </h2>
+
+            {/* Audio Player for Listening Questions */}
+            {currentQuestion.questionType === 'listening' && currentQuestion.audioUrl && (
+              <div className="mt-4 mb-4">
+                <audio
+                  ref={audioRef}
+                  controls
+                  className="w-full max-w-md"
+                  src={uploadService.getFileUrl(currentQuestion.audioUrl)}
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
+
+            {/* Image for Image Questions */}
+            {currentQuestion.questionType === 'image' && currentQuestion.imageUrl && (
+              <div className="mt-4 mb-4 flex justify-center">
+                <img
+                  src={uploadService.getFileUrl(currentQuestion.imageUrl)}
+                  alt="Question"
+                  className="max-w-md max-h-64 rounded-lg shadow-md object-contain"
+                />
+              </div>
+            )}
           </div>
 
           {/* Answer Options */}
