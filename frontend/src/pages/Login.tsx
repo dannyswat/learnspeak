@@ -29,9 +29,13 @@ export const Login: React.FC = () => {
       const invitationToken = sessionStorage.getItem('invitationToken');
       if (invitationToken) {
         try {
-          await journeyService.acceptInvitation(invitationToken);
-          sessionStorage.removeItem('invitationToken');
-          navigate('/my-journeys'); // Redirect to user's journeys after accepting
+          if (response.user.roles.includes('learner')) {
+            await journeyService.acceptInvitation(invitationToken);
+            sessionStorage.removeItem('invitationToken');
+            navigate('/my-journeys'); // Redirect to user's journeys after accepting
+          } else {
+            navigate('/dashboard'); // Non-learners go to dashboard
+          }
         } catch (inviteErr) {
           console.error('Failed to accept invitation:', inviteErr);
           navigate('/dashboard'); // Still log in even if invitation fails
