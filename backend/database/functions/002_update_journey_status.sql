@@ -25,11 +25,19 @@ BEGIN
         IF NEW.completed = TRUE THEN
             SELECT COUNT(*) INTO total_topics FROM journey_topics WHERE journey_id = v_journey_id;
             
+            -- Count topics where flashcard is completed AND (no quizzes exist OR quiz is completed)
             SELECT COUNT(DISTINCT jt.topic_id) INTO completed_topics
             FROM journey_topics jt
+            INNER JOIN topics t ON t.id = jt.topic_id
             WHERE jt.journey_id = v_journey_id
                 AND EXISTS (SELECT 1 FROM user_progress up WHERE up.user_id = NEW.user_id AND up.topic_id = jt.topic_id AND up.activity_type = 'flashcard' AND up.completed = TRUE)
-                AND EXISTS (SELECT 1 FROM user_progress up WHERE up.user_id = NEW.user_id AND up.topic_id = jt.topic_id AND up.activity_type = 'quiz' AND up.completed = TRUE);
+                AND (
+                    -- Either topic has no quizzes
+                    (SELECT COUNT(*) FROM topic_quizzes WHERE topic_id = t.id) = 0
+                    OR
+                    -- Or quiz is completed
+                    EXISTS (SELECT 1 FROM user_progress up WHERE up.user_id = NEW.user_id AND up.topic_id = jt.topic_id AND up.activity_type = 'quiz' AND up.completed = TRUE)
+                );
             
             IF completed_topics >= total_topics AND total_topics > 0 THEN
                 UPDATE user_journeys

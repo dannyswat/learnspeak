@@ -48,13 +48,39 @@ func (r *userProgressRepository) GetUserTopicProgress(userID, topicID uint) ([]m
 }
 
 // GetCompletedTopicIDs gets all topic IDs completed by a user in a journey
+// A topic is considered completed when:
+// 1. Flashcard activity is completed, AND
+// 2. If the topic has quizzes, the quiz activity must also be completed
 func (r *userProgressRepository) GetCompletedTopicIDs(userID, journeyID uint) ([]uint, error) {
 	var topicIDs []uint
 
-	err := r.db.Model(&models.UserProgress{}).
-		Select("DISTINCT topic_id").
-		Where("user_id = ? AND journey_id = ? AND completed = ? AND topic_id IS NOT NULL", userID, journeyID, true).
-		Pluck("topic_id", &topicIDs).Error
+	// Find topics where flashcard is completed
+	// AND either (topic has no quizzes) OR (quiz is also completed)
+	err := r.db.Raw(`
+		SELECT DISTINCT up1.topic_id
+		FROM user_progress up1
+		INNER JOIN topics t ON t.id = up1.topic_id
+		WHERE up1.user_id = ?
+			AND up1.journey_id = ?
+			AND up1.topic_id IS NOT NULL
+			AND up1.activity_type = 'flashcard'
+			AND up1.completed = true
+			AND (
+				-- Either topic has no quizzes (quiz_count = 0 or NULL)
+				(SELECT COUNT(*) FROM topic_quizzes WHERE topic_id = t.id) = 0
+				OR
+				-- Or quiz is completed
+				EXISTS (
+					SELECT 1 
+					FROM user_progress up2
+					WHERE up2.user_id = up1.user_id
+						AND up2.topic_id = up1.topic_id
+						AND up2.journey_id = up1.journey_id
+						AND up2.activity_type = 'quiz'
+						AND up2.completed = true
+				)
+			)
+	`, userID, journeyID).Pluck("topic_id", &topicIDs).Error
 
 	return topicIDs, err
 }
@@ -73,12 +99,33 @@ func (r *userProgressRepository) GetJourneyProgress(userID, journeyID uint) (*Jo
 	}
 	stats.TotalTopics = int(totalTopics)
 
-	// Get completed topics
+	// Get completed topics (flashcard completed AND quiz completed if topic has quizzes)
 	var completedTopicIDs []uint
-	err = r.db.Model(&models.UserProgress{}).
-		Select("DISTINCT topic_id").
-		Where("user_id = ? AND journey_id = ? AND completed = ? AND topic_id IS NOT NULL", userID, journeyID, true).
-		Pluck("topic_id", &completedTopicIDs).Error
+	err = r.db.Raw(`
+		SELECT DISTINCT up1.topic_id
+		FROM user_progress up1
+		INNER JOIN topics t ON t.id = up1.topic_id
+		WHERE up1.user_id = ?
+			AND up1.journey_id = ?
+			AND up1.topic_id IS NOT NULL
+			AND up1.activity_type = 'flashcard'
+			AND up1.completed = true
+			AND (
+				-- Either topic has no quizzes
+				(SELECT COUNT(*) FROM topic_quizzes WHERE topic_id = t.id) = 0
+				OR
+				-- Or quiz is completed
+				EXISTS (
+					SELECT 1 
+					FROM user_progress up2
+					WHERE up2.user_id = up1.user_id
+						AND up2.topic_id = up1.topic_id
+						AND up2.journey_id = up1.journey_id
+						AND up2.activity_type = 'quiz'
+						AND up2.completed = true
+				)
+			)
+	`, userID, journeyID).Pluck("topic_id", &completedTopicIDs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +134,8 @@ func (r *userProgressRepository) GetJourneyProgress(userID, journeyID uint) (*Jo
 
 	if stats.TotalTopics > 0 {
 		stats.ProgressPercent = float64(stats.CompletedTopics) / float64(stats.TotalTopics) * 100
+		// Round to 1 decimal place
+		stats.ProgressPercent = float64(int(stats.ProgressPercent*10+0.5)) / 10
 	}
 
 	return stats, nil

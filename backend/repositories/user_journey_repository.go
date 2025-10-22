@@ -218,21 +218,46 @@ func (r *userJourneyRepository) GetStatistics(userID, journeyID uint) (map[strin
 		return nil, err
 	}
 
-	// Get completed topics (from user_progress)
+	// Get completed topics using the same logic as GetCompletedTopicIDs
+	// A topic is completed when flashcard is done AND (no quizzes OR quiz is done)
+	var completedTopicIDs []uint
+	err = r.db.Raw(`
+		SELECT DISTINCT up1.topic_id
+		FROM user_progress up1
+		INNER JOIN topics t ON t.id = up1.topic_id
+		INNER JOIN journey_topics jt ON jt.topic_id = t.id
+		WHERE up1.user_id = ?
+			AND jt.journey_id = ?
+			AND up1.activity_type = 'flashcard'
+			AND up1.completed = true
+			AND (
+				-- Either topic has no quizzes
+				(SELECT COUNT(*) FROM topic_quizzes WHERE topic_id = t.id) = 0
+				OR
+				-- Or quiz is completed
+				EXISTS (
+					SELECT 1 
+					FROM user_progress up2
+					WHERE up2.user_id = up1.user_id
+						AND up2.topic_id = up1.topic_id
+						AND up2.activity_type = 'quiz'
+						AND up2.completed = true
+				)
+			)
+	`, userID, journeyID).Pluck("topic_id", &completedTopicIDs).Error
+
 	var completedTopics int64
-	err = r.db.Table("user_progress").
-		Joins("JOIN journey_topics ON journey_topics.topic_id = user_progress.topic_id").
-		Where("user_progress.user_id = ? AND journey_topics.journey_id = ? AND user_progress.status = ?",
-			userID, journeyID, "completed").
-		Count(&completedTopics).Error
 	if err != nil {
-		completedTopics = 0 // If table doesn't exist yet, default to 0
+		completedTopics = 0 // If error, default to 0
+	} else {
+		completedTopics = int64(len(completedTopicIDs))
 	}
 
-	// Calculate progress percentage
+	// Calculate progress percentage (rounded to 1 decimal place)
 	var progress float64
 	if totalTopics > 0 {
 		progress = float64(completedTopics) / float64(totalTopics) * 100
+		progress = float64(int(progress*10+0.5)) / 10 // Round to 1 decimal place
 	}
 
 	stats["status"] = userJourney.Status

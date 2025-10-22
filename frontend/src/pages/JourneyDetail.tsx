@@ -51,17 +51,17 @@ const JourneyDetail: React.FC = () => {
             // Extract completed topic IDs from the journey topics
             // We'll need to track this via nextTopic field
             const completed: number[] = [];
-            if (currentUserJourney.nextTopic && data.topics) {
-              // All topics before nextTopic in sequence are completed
+            if (currentUserJourney.status === 'completed') {
+              // Journey completed: All topics are completed
+              completed.push(...(data.topics?.map(t => t.id) || []));
+            } else if (currentUserJourney.nextTopic && data.topics) {
+              // Journey in progress: All topics before nextTopic in sequence are completed
               const nextTopicSeq = currentUserJourney.nextTopic.sequenceOrder;
               data.topics.forEach(topic => {
                 if (topic.sequenceOrder < nextTopicSeq) {
                   completed.push(topic.id);
                 }
               });
-            } else if (!currentUserJourney.nextTopic && currentUserJourney.status === 'completed') {
-              // All topics completed
-              completed.push(...(data.topics?.map(t => t.id) || []));
             }
             setCompletedTopicIds(completed);
           }
@@ -112,6 +112,8 @@ const JourneyDetail: React.FC = () => {
 
   // Helper function to check if this is the next topic to complete
   const isNextTopic = (topicId: number): boolean => {
+    // No next topic if journey is completed
+    if (userJourney?.status === 'completed') return false;
     return userJourney?.nextTopic?.id === topicId;
   };
 
@@ -311,12 +313,15 @@ const JourneyDetail: React.FC = () => {
               <div>
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900">Your Progress</h3>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                  {userJourney.completedTopics || 0} of {userJourney.totalTopics || journey.topicCount} topics completed
+                  {userJourney.status === 'completed' 
+                    ? `${userJourney.totalTopics || journey.topicCount} of ${userJourney.totalTopics || journey.topicCount} topics completed`
+                    : `${userJourney.completedTopics || 0} of ${userJourney.totalTopics || journey.topicCount} topics completed`
+                  }
                 </p>
               </div>
               <div className="text-left sm:text-right">
                 <div className="text-2xl sm:text-3xl font-bold text-green-600">
-                  {userJourney.progress || 0}%
+                  {userJourney.status === 'completed' ? 100 : Math.round((userJourney.progress || 0) * 10) / 10}%
                 </div>
                 <div className={`
                   mt-1 px-3 py-1 rounded-full text-xs font-medium inline-block
@@ -334,7 +339,7 @@ const JourneyDetail: React.FC = () => {
             <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3 overflow-hidden">
               <div 
                 className="bg-gradient-to-r from-blue-500 to-green-500 h-2 sm:h-3 rounded-full transition-all duration-500"
-                style={{ width: `${userJourney.progress || 0}%` }}
+                style={{ width: `${userJourney.status === 'completed' ? 100 : (userJourney.progress || 0)}%` }}
               />
             </div>
 
