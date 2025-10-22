@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quizService';
 import { uploadService } from '../services/wordService';
+import { topicService } from '../services/topicService';
 import Layout from '../components/Layout';
+import CustomAudioGenerationButton from '../components/CustomAudioGenerationButton';
+import TopicImagesSelectorButton from '../components/TopicImagesSelectorButton';
 import type { QuizQuestion, CreateQuizQuestionRequest } from '../types/quiz';
+import type { TopicWord } from '../types/topic';
 
 const QuizManagement: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -14,6 +18,9 @@ const QuizManagement: React.FC = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
+  
+  // Topic words state
+  const [topicWords, setTopicWords] = useState<TopicWord[]>([]);
   
   // Upload and recording state
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -40,6 +47,7 @@ const QuizManagement: React.FC = () => {
   useEffect(() => {
     if (topicId) {
       loadQuestions();
+      loadTopicWords();
     }
     
     // Load last used question type from localStorage
@@ -70,6 +78,19 @@ const QuizManagement: React.FC = () => {
       setError(error.response?.data?.message || 'Failed to load questions');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTopicWords = async () => {
+    try {
+      const topic = await topicService.getTopic(parseInt(topicId!), true);
+      if (topic.words) {
+        // Filter words that have images
+        const wordsWithImages = topic.words.filter(word => word.imageUrl);
+        setTopicWords(wordsWithImages);
+      }
+    } catch (err) {
+      console.error('Failed to load topic words:', err);
     }
   };
 
@@ -390,6 +411,10 @@ const QuizManagement: React.FC = () => {
                       </div>
                     ) : (
                       <>
+                        <CustomAudioGenerationButton 
+                          onAudioGenerated={(url) => setFormData({ ...formData, audioUrl: url })}
+                        />
+                        <span className="text-gray-400">or</span>
                         <button
                           type="button"
                           onClick={startRecording}
@@ -419,7 +444,7 @@ const QuizManagement: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Image (Required for Image Questions)
                   </label>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-4">
                     {formData.imageUrl && (
                       <img
                         src={uploadService.getFileUrl(formData.imageUrl)}
@@ -428,6 +453,11 @@ const QuizManagement: React.FC = () => {
                       />
                     )}
                     <div className="flex flex-col gap-2">
+                      <TopicImagesSelectorButton 
+                        topicWords={topicWords}
+                        onImageSelected={(url) => setFormData({ ...formData, imageUrl: url })}
+                      />
+                      <span className="text-xs text-gray-500 text-center">or</span>
                       <label className="cursor-pointer bg-white py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                         {uploadingImage ? 'Uploading...' : '📷 Upload Image'}
                         <input
@@ -591,6 +621,7 @@ const QuizManagement: React.FC = () => {
             </div>
           )}
         </div>
+
       </div>
     </Layout>
   );
