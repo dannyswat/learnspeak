@@ -113,8 +113,8 @@ func seedEssentialData() error {
 func runSQLMigrations() error {
 	dbPath := filepath.Join("database")
 
-	// Order matters: functions -> triggers -> views
-	directories := []string{"functions", "triggers", "views"}
+	// Order matters: functions -> triggers
+	directories := []string{"functions", "triggers"}
 
 	for _, dir := range directories {
 		dirPath := filepath.Join(dbPath, dir)

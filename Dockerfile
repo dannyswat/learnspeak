@@ -71,6 +71,10 @@ WORKDIR /app
 # Copy backend binary from builder
 COPY --from=backend-builder /app/backend/learnspeak-api .
 
+# Copy database SQL migration files
+COPY --from=backend-builder /app/backend/database/functions ./database/functions
+COPY --from=backend-builder /app/backend/database/triggers ./database/triggers
+
 # Copy Speech SDK runtime libraries (amd64)
 COPY --from=backend-builder /app/backend/lib/speechsdk/lib/x64/ ./lib/
 
