@@ -39,7 +39,20 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
   readOnlyBaseWord = false,
 }) => {
   return (
-    <div className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
+    <div className="relative border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
+      {/* Remove button in top right corner */}
+      {showRemoveButton && onRemove && (
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          disabled={disabled}
+          className="absolute top-2 right-2 w-8 h-8 text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-10"
+          title="Remove word"
+        >
+          ✕
+        </button>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-4">
         <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center font-medium text-green-700">
           {index + 1}
@@ -102,18 +115,6 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
             />
           </div>
         </div>
-
-        {showRemoveButton && onRemove && (
-          <button
-            type="button"
-            onClick={() => onRemove(index)}
-            disabled={disabled}
-            className="flex-shrink-0 w-8 h-8 text-red-500 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
-            title="Remove word"
-          >
-            ✕
-          </button>
-        )}
       </div>
 
       {/* Image and Audio Section - Stacked on mobile, side by side on desktop */}

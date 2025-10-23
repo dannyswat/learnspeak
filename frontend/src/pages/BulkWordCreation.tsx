@@ -145,6 +145,7 @@ const BulkWordCreation: React.FC = () => {
       
       let successCount = 0;
       const errors: string[] = [];
+      const updatedWords = [...words]; // Create a single copy to accumulate updates
 
       // Generate audio for each word
       for (const word of wordsNeedingAudio) {
@@ -155,14 +156,12 @@ const BulkWordCreation: React.FC = () => {
           });
 
           // Update the word with audio URL (with cache buster)
-          const wordIndex = words.findIndex(w => w === word);
+          const wordIndex = updatedWords.findIndex(w => w === word);
           if (wordIndex !== -1) {
-            const updatedWords = [...words];
             updatedWords[wordIndex] = { 
               ...updatedWords[wordIndex], 
               audioUrl: uploadService.addCacheBuster(response.audioUrl) 
             };
-            setWords(updatedWords);
           }
           
           successCount++;
@@ -171,6 +170,9 @@ const BulkWordCreation: React.FC = () => {
           errors.push(`"${word.translation}": ${error.response?.data?.error || 'Failed'}`);
         }
       }
+
+      // Set the updated words state once after all generations
+      setWords(updatedWords);
 
       if (errors.length > 0) {
         alert(`Generated audio for ${successCount}/${wordsNeedingAudio.length} words.\n\nFailed:\n${errors.join('\n')}`);
@@ -416,27 +418,50 @@ const BulkWordCreation: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col items-stretch gap-3 bg-white shadow rounded-lg p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center sm:justify-end">
-              <div className="text-xs sm:text-sm text-gray-600 self-center text-center sm:text-left">
+          <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+            {/* Desktop: Both buttons side by side */}
+            <div className="hidden sm:flex sm:items-center sm:justify-between">
+              <div className="text-xs sm:text-sm text-gray-600">
+                {words.filter(w => w.baseWord.trim() && w.translation.trim()).length} valid entries
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 sm:px-6 py-3 text-sm sm:text-base border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-4 sm:px-6 py-3 text-sm sm:text-base bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? 'Creating Words...' : `Create & Add Words`}
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile: Submit button first, then cancel button below */}
+            <div className="flex flex-col gap-3 sm:hidden">
+              <div className="text-xs text-gray-600 text-center">
                 {words.filter(w => w.baseWord.trim() && w.translation.trim()).length} valid entries
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Creating Words...' : `Create & Add Words`}
               </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+              >
+                Cancel
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="w-full sm:w-auto sm:self-center px-4 sm:px-6 py-3 text-sm sm:text-base bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium"
-            >
-              Cancel
-            </button>
           </div>
         </form>
       </div>

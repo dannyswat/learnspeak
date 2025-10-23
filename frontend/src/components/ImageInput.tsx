@@ -125,7 +125,7 @@ const ImageInput: React.FC<ImageInputProps> = ({
                   type="button"
                   onClick={() => handleGenerateImage(false)}
                   disabled={generatingImage || disabled}
-                  className="py-2 px-3 border border-purple-300 rounded-l-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="py-2 px-3 border border-purple-300 rounded-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {generatingImage ? '🎨 Generating...' : '🎨 Generate Image'}
                 </button>
@@ -134,7 +134,7 @@ const ImageInput: React.FC<ImageInputProps> = ({
                     type="button"
                     onClick={() => setShowCustomPrompt(!showCustomPrompt)}
                     disabled={generatingImage || disabled}
-                    className="py-2 px-2 border border-l-0 border-purple-300 rounded-r-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="py-2 px-2 border border-purple-300 rounded-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Generate with custom prompt"
                   >
                     ⋯
