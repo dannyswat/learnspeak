@@ -107,38 +107,40 @@ const ImageInput: React.FC<ImageInputProps> = ({
             className="h-20 w-20 object-cover rounded"
           />
         )}
-        <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-          {uploadingImage ? 'Uploading...' : 'Upload Image'}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            disabled={uploadingImage || disabled}
-            className="sr-only"
-          />
-        </label>
-        {showGenerateButton && onGenerateImage && (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => handleGenerateImage(false)}
-              disabled={generatingImage || disabled}
-              className="py-2 px-3 border border-purple-300 rounded-l-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {generatingImage ? '🎨 Generating...' : '🎨 Generate Image'}
-            </button>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowCustomPrompt(!showCustomPrompt)}
-                disabled={generatingImage || disabled}
-                className="py-2 px-2 border border-l-0 border-purple-300 rounded-r-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Generate with custom prompt"
-              >
-                ⋯
-              </button>
-              {showCustomPrompt && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-10">
+        {!value && (
+          <>
+            <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+              {uploadingImage ? 'Uploading...' : 'Upload Image'}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploadingImage || disabled}
+                className="sr-only"
+              />
+            </label>
+            {showGenerateButton && onGenerateImage && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleGenerateImage(false)}
+                  disabled={generatingImage || disabled}
+                  className="py-2 px-3 border border-purple-300 rounded-l-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {generatingImage ? '🎨 Generating...' : '🎨 Generate Image'}
+                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomPrompt(!showCustomPrompt)}
+                    disabled={generatingImage || disabled}
+                    className="py-2 px-2 border border-l-0 border-purple-300 rounded-r-md shadow-sm text-sm leading-4 font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Generate with custom prompt"
+                  >
+                    ⋯
+                  </button>
+                  {showCustomPrompt && (
+                    <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-10">
                   <div className="mb-3">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Custom Prompt
@@ -180,6 +182,8 @@ const ImageInput: React.FC<ImageInputProps> = ({
               )}
             </div>
           </div>
+        )}
+          </>
         )}
         {value && !disabled && (
           <button

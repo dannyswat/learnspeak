@@ -88,7 +88,7 @@ const StudentDetail: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <button
           onClick={() => navigate('/students')}
@@ -101,18 +101,18 @@ const StudentDetail: React.FC = () => {
         </button>
 
         {/* Student Profile Card */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-6">
-          <div className="flex items-start gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-8 mb-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {/* Avatar */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 mx-auto sm:mx-0">
               {student.profilePicUrl ? (
                 <img
                   src={student.profilePicUrl}
                   alt={student.name}
-                  className="w-24 h-24 rounded-full object-cover"
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white text-3xl font-semibold">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-semibold">
                   {student.name
                     .split(' ')
                     .map((n) => n[0])
@@ -124,11 +124,11 @@ const StudentDetail: React.FC = () => {
             </div>
 
             {/* Info */}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{student.name}</h1>
+            <div className="flex-1 text-center sm:text-left w-full sm:w-auto">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{student.name}</h1>
               <p className="text-gray-600 mb-1">@{student.username}</p>
               <p className="text-gray-600 mb-4">{student.email}</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center sm:justify-start">
                 {student.roles?.map((role) => (
                   <span
                     key={role}
@@ -141,10 +141,10 @@ const StudentDetail: React.FC = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2">
+            <div className="w-full sm:w-auto flex justify-center sm:justify-end">
               <button
                 onClick={() => navigate(`/journeys/assign?studentId=${student.id}`)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
               >
                 Assign Journey
               </button>

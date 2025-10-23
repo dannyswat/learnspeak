@@ -174,7 +174,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
         )}
 
         {/* Recording Controls */}
-        {!disabled && (
+        {!disabled && !value && (
           <div className="flex items-center space-x-2">
             {isRecording ? (
               <div className="flex items-center space-x-2 flex-1">

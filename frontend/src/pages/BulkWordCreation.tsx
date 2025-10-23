@@ -416,16 +416,8 @@ const BulkWordCreation: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white shadow rounded-lg p-4 sm:p-6">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium"
-            >
-              Cancel
-            </button>
-
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div className="flex flex-col items-stretch gap-3 bg-white shadow rounded-lg p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center sm:justify-end">
               <div className="text-xs sm:text-sm text-gray-600 self-center text-center sm:text-left">
                 {words.filter(w => w.baseWord.trim() && w.translation.trim()).length} valid entries
               </div>
@@ -437,6 +429,14 @@ const BulkWordCreation: React.FC = () => {
                 {saving ? 'Creating Words...' : `Create & Add Words`}
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="w-full sm:w-auto sm:self-center px-4 sm:px-6 py-3 text-sm sm:text-base bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </div>
