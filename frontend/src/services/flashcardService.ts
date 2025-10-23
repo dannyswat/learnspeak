@@ -35,6 +35,11 @@ export interface CompleteFlashcardRequest {
   timeSpentSeconds: number;
 }
 
+export interface CompleteFlashcardResponse {
+  message: string;
+  topicCompleted: boolean;
+}
+
 export interface BookmarkResponse {
   bookmarked: boolean;
   message: string;
@@ -68,8 +73,9 @@ class FlashcardService {
   async completeFlashcardActivity(
     topicId: number,
     data: CompleteFlashcardRequest
-  ): Promise<void> {
-    await api.post(`/topics/${topicId}/flashcards/complete`, data);
+  ): Promise<CompleteFlashcardResponse> {
+    const response = await api.post<CompleteFlashcardResponse>(`/topics/${topicId}/flashcards/complete`, data);
+    return response.data;
   }
 
   /**

@@ -99,15 +99,22 @@ const FlashcardPractice: React.FC = () => {
       setSaving(true);
       const timeSpent = Math.floor((Date.now() - startTime) / 1000);
       
-      await flashcardService.completeFlashcardActivity(parseInt(topicId), {
+      const result = await flashcardService.completeFlashcardActivity(parseInt(topicId), {
         journeyId: journeyId ? parseInt(journeyId) : undefined,
         timeSpentSeconds: timeSpent,
       });
 
-      // Navigate back to topic or journey
+      // Navigate based on whether the topic is completed and if we're in a journey
       if (journeyId) {
-        navigate(`/journeys/${journeyId}`);
+        if (result.topicCompleted) {
+          // Topic is completed, navigate back to journey page
+          navigate(`/my-journeys`);
+        } else {
+          // Topic not completed yet (quiz still pending), go to topic detail
+          navigate(`/topics/${topicId}?journeyId=${journeyId}`);
+        }
       } else {
+        // Not in a journey, just go back to topic detail
         navigate(`/topics/${topicId}`);
       }
     } catch (err) {

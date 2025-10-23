@@ -126,15 +126,55 @@ func (h *FlashcardHandler) CompleteFlashcardActivity(c echo.Context) error {
 		if err := h.db.Save(&existing).Error; err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to save progress"})
 		}
-		return c.JSON(http.StatusOK, existing)
+	} else {
+		// Create new
+		if err := h.db.Create(&progress).Error; err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to save progress"})
+		}
 	}
 
-	// Create new
-	if err := h.db.Create(&progress).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Failed to save progress"})
+	// Check if topic is now completed (flashcard done AND quiz done if quiz exists)
+	topicCompleted := false
+	if req.JourneyID != nil {
+		var completedTopicIDs []uint
+		err := h.db.Raw(`
+			SELECT DISTINCT up1.topic_id
+			FROM user_progress up1
+			INNER JOIN topics t ON t.id = up1.topic_id
+			WHERE up1.user_id = ?
+				AND up1.journey_id = ?
+				AND up1.topic_id = ?
+				AND up1.activity_type = 'flashcard'
+				AND up1.completed = true
+				AND (
+					-- Either topic has no quizzes
+					(SELECT COUNT(*) FROM topic_quizzes WHERE topic_id = t.id) = 0
+					OR
+					-- Or quiz is completed
+					EXISTS (
+						SELECT 1 
+						FROM user_progress up2
+						WHERE up2.user_id = up1.user_id
+							AND up2.topic_id = up1.topic_id
+							AND up2.journey_id = up1.journey_id
+							AND up2.activity_type = 'quiz'
+							AND up2.completed = true
+					)
+				)
+		`, userID, *req.JourneyID, topicID).Pluck("topic_id", &completedTopicIDs).Error
+
+		if err == nil && len(completedTopicIDs) > 0 {
+			topicCompleted = true
+		}
 	}
 
-	return c.JSON(http.StatusOK, progress)
+	// Return response with completion status
+	response := map[string]interface{}{
+		"message":        "Progress saved successfully",
+		"topicCompleted": topicCompleted,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }
 
 // ToggleBookmark adds or removes a word bookmark
