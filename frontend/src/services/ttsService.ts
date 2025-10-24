@@ -20,6 +20,15 @@ class TTSService {
     const response = await api.post<TTSResponse>('/tts/generate', request);
     return response.data;
   }
+
+  /**
+   * Delete cached audio file from server
+   */
+  async deleteCachedAudio(audioUrl: string): Promise<void> {
+    await api.delete('/tts/cache', {
+      params: { url: audioUrl }
+    });
+  }
 }
 
 export default new TTSService();

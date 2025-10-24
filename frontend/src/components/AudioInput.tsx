@@ -153,6 +153,25 @@ const AudioInput: React.FC<AudioInputProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleRemoveAudio = async () => {
+    if (!value) return;
+
+    // If the audio URL is from TTS cache, delete it from server
+    if (value.includes('/uploads/tts-cache/')) {
+      try {
+        // Remove cache buster params to get the clean URL
+        const cleanUrl = value.split('?')[0];
+        await ttsService.deleteCachedAudio(cleanUrl);
+      } catch (err) {
+        console.error('Failed to delete cached audio:', err);
+        // Continue with removal even if cache deletion fails
+      }
+    }
+
+    // Clear the audio URL
+    onChange('');
+  };
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700">{label}</label>
@@ -164,7 +183,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
             {!disabled && (
               <button
                 type="button"
-                onClick={() => onChange('')}
+                onClick={handleRemoveAudio}
                 className="text-sm text-red-600 hover:text-red-500 font-medium"
               >
                 Remove

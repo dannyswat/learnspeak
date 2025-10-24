@@ -185,6 +185,24 @@ func (s *TTSService) generateCacheKey(text, language, voice string) string {
 	return hex.EncodeToString(hash[:])
 }
 
+// DeleteCachedAudio deletes a specific cached audio file by URL
+func (s *TTSService) DeleteCachedAudio(audioURL string) error {
+	// Extract filename from URL (e.g., "/uploads/tts-cache/abc123.mp3" -> "abc123.mp3")
+	filename := filepath.Base(audioURL)
+
+	// Construct full path
+	audioPath := filepath.Join(s.cacheDir, filename)
+
+	// Check if file exists
+	if _, err := os.Stat(audioPath); os.IsNotExist(err) {
+		// File doesn't exist, no need to delete
+		return nil
+	}
+
+	// Delete the file
+	return os.Remove(audioPath)
+}
+
 // ClearCache removes all cached audio files
 func (s *TTSService) ClearCache() error {
 	return os.RemoveAll(s.cacheDir)

@@ -165,6 +165,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 
 			// TTS (Text-to-Speech)
 			teacher.POST("/tts/generate", ttsHandler.GenerateTTS)
+			teacher.DELETE("/tts/cache", ttsHandler.DeleteCachedAudio)
 
 			// Translation (AI-powered)
 			teacher.POST("/translate", translationHandler.Translate)
