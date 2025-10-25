@@ -295,6 +295,7 @@ const WordForm: React.FC = () => {
                           label="Audio"
                           value={trans.audioUrl || ''}
                           onChange={(url) => updateTranslation(index, 'audioUrl', url)}
+                          languageCode={languages.find(l => l.id === trans.languageId)?.code}
                           onGenerateTTS={async () => ({
                             text: trans.translation,
                             languageCode: languages.find(l => l.id === trans.languageId)?.code

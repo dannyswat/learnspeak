@@ -137,6 +137,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
           label="Audio Pronunciation (optional)"
           value={word.audioUrl}
           onChange={(url) => onChange(index, 'audioUrl', url)}
+          languageCode={languages.find(l => l.id === targetLanguage)?.code}
           onGenerateTTS={async () => ({
             text: word.translation,
             languageCode: languages.find(l => l.id === targetLanguage)?.code

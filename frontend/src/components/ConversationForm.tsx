@@ -50,6 +50,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
+  languageCode,
 }) => {
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
@@ -242,7 +243,34 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
               rows={2}
             />
           </div>
+          {/* Scenario Media */}
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AudioInput
+                value={scenarioAudioUrl}
+                onChange={setScenarioAudioUrl}
+                label="Audio"
+                languageCode={languageCode}
+                showRecordButton={false}
+                showTTSButton={true}
+                onGenerateTTS={async () => ({
+                  text: description || context || title,
+                  languageCode: languageCode,
+                })}
+              />
 
+              <ImageInput
+                value={scenarioImageUrl}
+                onChange={setScenarioImageUrl}
+                label="Image"
+                showGenerateButton={true}
+                onGenerateImage={async () => ({
+                  word: title,
+                  translation: description,
+                })}
+              />
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Difficulty Level <span className="text-red-500">*</span>
@@ -257,35 +285,6 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
               <option value="intermediate">Intermediate</option>
               <option value="advanced">Advanced</option>
             </select>
-          </div>
-
-          {/* Scenario Media */}
-          <div className="pt-4 border-t border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Scenario Media (Optional)</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AudioInput
-                value={scenarioAudioUrl}
-                onChange={setScenarioAudioUrl}
-                label="Scenario Audio"
-                showRecordButton={false}
-                showTTSButton={true}
-                onGenerateTTS={async () => ({
-                  text: description || context || title,
-                  languageCode: 'auto',
-                })}
-              />
-
-              <ImageInput
-                value={scenarioImageUrl}
-                onChange={setScenarioImageUrl}
-                label="Scenario Image"
-                showGenerateButton={true}
-                onGenerateImage={async () => ({
-                  word: title,
-                  translation: description,
-                })}
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -444,11 +443,12 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
                     value={line.audioUrl}
                     onChange={(url) => handleLineChange(line.tempId, 'audioUrl', url)}
                     label="Audio *"
+                    languageCode={languageCode}
                     showRecordButton={true}
                     showTTSButton={true}
                     onGenerateTTS={async () => ({
                       text: line.targetText || line.englishText,
-                      languageCode: 'auto',
+                      languageCode: languageCode,
                     })}
                   />
 
