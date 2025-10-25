@@ -22,6 +22,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	userJourneyRepo := repositories.NewUserJourneyRepository(database.DB)
 	userProgressRepo := repositories.NewUserProgressRepository(database.DB)
 	quizRepo := repositories.NewQuizRepository(database.DB)
+	conversationRepo := repositories.NewConversationRepository(database.DB)
 
 	// Initialize services
 	wordService := services.NewWordService(wordRepo)
@@ -30,6 +31,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	journeyService := services.NewJourneyService(journeyRepo, languageRepo, topicRepo, userJourneyRepo, userProgressRepo)
 	userService := services.NewUserService(userRepo)
 	quizService := services.NewQuizService(quizRepo, topicRepo, userProgressRepo)
+	conversationService := services.NewConversationService(conversationRepo, languageRepo)
 	ttsService := services.NewTTSService(cfg)
 	translationService := services.NewTranslationService(cfg)
 	imageGenerationService, err := services.NewImageGenerationService()
@@ -45,6 +47,7 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 	journeyHandler := handlers.NewJourneyHandler(journeyService)
 	userHandler := handlers.NewUserHandler(userService)
 	quizHandler := handlers.NewQuizHandler(quizService)
+	conversationHandler := handlers.NewConversationHandler(conversationService)
 	uploadHandler := handlers.NewFileUploadHandler(uploadDir, 10) // 10MB max
 	ttsHandler := handlers.NewTTSHandler(ttsService)
 	translationHandler := handlers.NewTranslationHandler(translationService)
@@ -95,6 +98,10 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		protected.GET("/bookmarks", flashcardHandler.GetBookmarkedWords)
 
 		protected.GET("/words/:id", wordHandler.GetWord)
+
+		// Conversation practice (learners)
+		protected.GET("/topics/:topicId/conversations", conversationHandler.GetConversationsByTopic)
+		protected.GET("/conversations/:id", conversationHandler.GetConversation)
 
 		protected.GET("/topics/:id/quiz", quizHandler.GetTopicQuestions)                // Get topic questions (teacher view with answers)
 		protected.GET("/topics/:id/quiz/practice", quizHandler.GetTopicQuizForPractice) // Get questions for practice (no answers)
@@ -157,7 +164,17 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 			teacher.POST("/quiz", quizHandler.CreateQuestion)       // Create a new question
 			teacher.GET("/quiz/:id", quizHandler.GetQuestion)       // Get question by ID
 			teacher.PUT("/quiz/:id", quizHandler.UpdateQuestion)    // Update question
-			teacher.DELETE("/quiz/:id", quizHandler.DeleteQuestion) // Delete question           // Submit quiz answers
+			teacher.DELETE("/quiz/:id", quizHandler.DeleteQuestion) // Delete question
+
+			// Conversation management
+			teacher.GET("/conversations", conversationHandler.ListConversations)
+			teacher.POST("/conversations", conversationHandler.CreateConversation)
+			teacher.PUT("/conversations/:id", conversationHandler.UpdateConversation)
+			teacher.DELETE("/conversations/:id", conversationHandler.DeleteConversation)
+			teacher.POST("/conversations/:id/lines", conversationHandler.AddLineToConversation)
+			teacher.PUT("/conversations/:id/lines/:lineId", conversationHandler.UpdateLine)
+			teacher.DELETE("/conversations/:id/lines/:lineId", conversationHandler.DeleteLine)
+			teacher.PUT("/conversations/:id/lines/reorder", conversationHandler.ReorderLines)
 
 			// File uploads
 			teacher.POST("/upload/audio", uploadHandler.UploadAudio)

@@ -256,6 +256,27 @@ const TopicDetail: React.FC = () => {
           </div>
         )}
 
+        {/* Conversation Management */}
+        {isTeacher && (
+          <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Conversations</h3>
+                <p className="text-sm text-gray-600">Manage conversation dialogues for this topic</p>
+              </div>
+              <button
+                onClick={() => navigate(`/topics/${id}/conversations/manage`)}
+                className="w-full sm:w-auto px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm sm:text-base"
+              >
+                💬 Manage Conversations
+              </button>
+            </div>
+            <div className="text-sm text-gray-600">
+              Create interactive dialogue scenarios for learners
+            </div>
+          </div>
+        )}
+
         {/* Words */}
         <div className="bg-white shadow rounded-lg p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">

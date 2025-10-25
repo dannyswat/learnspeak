@@ -710,22 +710,28 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 4.2: Conversation Simulations
 **Duration**: 2-3 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Backend: Conversation data model
-- [ ] Backend: Create conversation dialogues (teacher feature)
-- [ ] Backend: Get conversations for topic
-- [ ] Frontend (Teacher): Conversation creation form
-- [ ] Frontend (Learner): Conversation player
-- [ ] Frontend (Learner): Dialogue display
-- [ ] Frontend (Learner): Audio playback for each line
-- [ ] Frontend (Learner): Completion tracking
+- [x] Backend: Conversation data model
+- [x] Backend: Create conversation dialogues (teacher feature)
+- [x] Backend: Get conversations for topic
+- [x] Frontend (Teacher): Conversation creation form
+- [x] Frontend (Learner): Conversation player
+- [x] Frontend (Learner): Dialogue display
+- [x] Frontend (Learner): Audio playback for each line
+- [x] Frontend (Learner): Optional images for each line
+- [x] Frontend (Learner): Completion tracking
 
 **Deliverables**:
 - ✅ Conversation simulation activity
 - ✅ Dialogue creation (teacher)
 - ✅ Dialogue practice (learner)
+- ✅ Audio playback for each conversation line
+- ✅ Optional images for each conversation line
+- ✅ Interactive conversation player with progress tracking
+
+**Completed**: October 25, 2025
 
 **User Stories**: 3.6  
 **Dependencies**: Sprint 4.1

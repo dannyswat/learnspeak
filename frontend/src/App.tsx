@@ -23,6 +23,10 @@ import QuizPractice from './pages/QuizPractice';
 import QuizManagement from './pages/QuizManagement';
 import BulkWordCreation from './pages/BulkWordCreation';
 import BatchWordUpdate from './pages/BatchWordUpdate';
+import TopicConversations from './pages/TopicConversations';
+import ConversationManagement from './pages/ConversationManagement';
+import ConversationCreate from './pages/ConversationCreate';
+import ConversationEdit from './pages/ConversationEdit';
 import ChangePassword from './pages/ChangePassword';
 import AdminUsers from './pages/AdminUsers';
 import CreateUser from './pages/CreateUser';
@@ -113,6 +117,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <FlashcardPractice />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:id/conversations"
+            element={
+              <ProtectedRoute>
+                <TopicConversations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:id/conversations/manage"
+            element={
+              <ProtectedRoute>
+                <ConversationManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:id/conversations/create"
+            element={
+              <ProtectedRoute>
+                <ConversationCreate />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/topics/:id/conversations/:conversationId/edit"
+            element={
+              <ProtectedRoute>
+                <ConversationEdit />
               </ProtectedRoute>
             }
           />

@@ -33,6 +33,11 @@ func Migrate() error {
 		&models.JourneyInvitation{},
 		&models.QuizQuestion{},
 
+		// Conversation models
+		&models.Conversation{},
+		&models.ConversationLine{},
+		&models.TopicConversation{},
+
 		// User progress models
 		&models.UserJourney{},
 		&models.UserProgress{},
