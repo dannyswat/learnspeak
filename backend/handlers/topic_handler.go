@@ -222,3 +222,24 @@ func (h *TopicHandler) AddWordsToTopic(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "Words added successfully"})
 }
+
+// ListPublicTopics handles GET /api/topics/public - lists all public topics for learners
+func (h *TopicHandler) ListPublicTopics(c echo.Context) error {
+	// Parse query parameters
+	var params dto.TopicFilterParams
+	if err := c.Bind(&params); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid query parameters")
+	}
+
+	// Force isPublic to true
+	isPublic := true
+	params.IsPublic = &isPublic
+
+	// Get public topics
+	response, err := h.topicService.ListTopics(&params)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, response)
+}

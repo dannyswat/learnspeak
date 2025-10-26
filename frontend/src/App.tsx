@@ -30,6 +30,7 @@ import ConversationEdit from './pages/ConversationEdit';
 import ChangePassword from './pages/ChangePassword';
 import AdminUsers from './pages/AdminUsers';
 import CreateUser from './pages/CreateUser';
+import ExploreTopics from './pages/ExploreTopics';
 import './App.css';
 
 function App() {
@@ -109,6 +110,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TopicForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              <ProtectedRoute>
+                <ExploreTopics />
               </ProtectedRoute>
             }
           />

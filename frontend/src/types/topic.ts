@@ -28,6 +28,7 @@ export interface Topic {
   name: string;
   description: string;
   level: 'beginner' | 'intermediate' | 'advanced';
+  isPublic: boolean;
   language?: Language;
   createdBy?: Creator;
   wordCount: number;
@@ -44,6 +45,7 @@ export interface CreateTopicRequest {
   level: 'beginner' | 'intermediate' | 'advanced';
   languageCode: string;
   wordIds?: number[];
+  isPublic?: boolean;
 }
 
 export interface UpdateTopicRequest {
@@ -52,6 +54,7 @@ export interface UpdateTopicRequest {
   level?: 'beginner' | 'intermediate' | 'advanced';
   languageCode?: string;
   wordIds?: number[];
+  isPublic?: boolean;
 }
 
 export interface TopicListResponse {
@@ -67,6 +70,7 @@ export interface TopicFilterParams {
   level?: string;
   languageCode?: string;
   createdBy?: number;
+  isPublic?: boolean;
   page?: number;
   pageSize?: number;
   includeWords?: boolean;

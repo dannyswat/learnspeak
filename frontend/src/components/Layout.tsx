@@ -105,13 +105,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* My Journeys Link - Only for learners */}
             {isLearner && (
-              <button
-                onClick={() => navigate('/my-journeys')}
-                className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 px-3 xl:px-4 py-2 rounded-lg transition-colors text-sm xl:text-base"
-              >
-                <span>🎯</span>
-                <span>My Journeys</span>
-              </button>
+              <>
+                <button
+                  onClick={() => navigate('/my-journeys')}
+                  className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 px-3 xl:px-4 py-2 rounded-lg transition-colors text-sm xl:text-base"
+                >
+                  <span>🎯</span>
+                  <span>My Journeys</span>
+                </button>
+
+                <button
+                  onClick={() => navigate('/explore')}
+                  className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 px-3 xl:px-4 py-2 rounded-lg transition-colors text-sm xl:text-base"
+                >
+                  <span>🌍</span>
+                  <span>Explore Topics</span>
+                </button>
+              </>
             )}
 
             {/* Admin Users Link - Only for admins */}
@@ -288,13 +298,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               )}
 
               {isLearner && (
-                <button
-                  onClick={() => handleNavigation('/my-journeys')}
-                  className="flex items-center gap-3 text-gray-700 hover:bg-gray-100 px-4 py-3 rounded-lg transition-colors text-left"
-                >
-                  <span className="text-xl">🎯</span>
-                  <span className="font-medium">My Journeys</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => handleNavigation('/my-journeys')}
+                    className="flex items-center gap-3 text-gray-700 hover:bg-gray-100 px-4 py-3 rounded-lg transition-colors text-left"
+                  >
+                    <span className="text-xl">🎯</span>
+                    <span className="font-medium">My Journeys</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleNavigation('/explore')}
+                    className="flex items-center gap-3 text-gray-700 hover:bg-gray-100 px-4 py-3 rounded-lg transition-colors text-left"
+                  >
+                    <span className="text-xl">🌍</span>
+                    <span className="font-medium">Explore Topics</span>
+                  </button>
+                </>
               )}
 
               {isAdmin && (

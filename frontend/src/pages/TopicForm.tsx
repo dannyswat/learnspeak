@@ -22,6 +22,7 @@ const TopicForm: React.FC = () => {
   const [description, setDescription] = useState('');
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   const [languageCode, setLanguageCode] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
 
   // Word selection
   const [wordSearch, setWordSearch] = useState('');
@@ -76,6 +77,7 @@ const TopicForm: React.FC = () => {
       setDescription(topic.description);
       setLevel(topic.level);
       setLanguageCode(topic.language?.code || '');
+      setIsPublic(topic.isPublic || false);
 
       // Load selected words
       if (topic.words && topic.words.length > 0) {
@@ -121,6 +123,7 @@ const TopicForm: React.FC = () => {
           level,
           languageCode,
           wordIds,
+          isPublic,
         };
         await topicService.updateTopic(parseInt(id), request);
       } else {
@@ -130,6 +133,7 @@ const TopicForm: React.FC = () => {
           level,
           languageCode,
           wordIds,
+          isPublic,
         };
         await topicService.createTopic(request);
       }
@@ -272,6 +276,25 @@ const TopicForm: React.FC = () => {
                         ))}
                       </select>
                     </div>
+                  </div>
+
+                  {/* Public Topic Toggle */}
+                  <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <input
+                      type="checkbox"
+                      id="isPublic"
+                      checked={isPublic}
+                      onChange={(e) => setIsPublic(e.target.checked)}
+                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                    />
+                    <label htmlFor="isPublic" className="flex-1 cursor-pointer">
+                      <div className="text-sm font-medium text-gray-900">
+                        🌍 Make this topic public
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Public topics can be discovered and used by all learners in the explore section
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>

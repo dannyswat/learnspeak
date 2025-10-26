@@ -46,6 +46,7 @@ func (s *topicService) CreateTopic(req *dto.CreateTopicRequest, userID uint) (*d
 		Level:       req.Level,
 		LanguageID:  language.ID,
 		CreatedBy:   userID,
+		IsPublic:    req.IsPublic,
 	}
 
 	// Create topic
@@ -96,6 +97,9 @@ func (s *topicService) UpdateTopic(id uint, req *dto.UpdateTopicRequest, userID 
 	}
 	if req.Level != nil {
 		topic.Level = *req.Level
+	}
+	if req.IsPublic != nil {
+		topic.IsPublic = *req.IsPublic
 	}
 	if req.LanguageCode != nil {
 		language, err := s.languageRepo.GetByCode(*req.LanguageCode)
@@ -215,6 +219,7 @@ func (s *topicService) ListTopics(params *dto.TopicFilterParams) (*dto.TopicList
 		params.Level,
 		params.LanguageCode,
 		params.CreatedBy,
+		params.IsPublic,
 		params.Page,
 		params.PageSize,
 		params.IncludeWords,
@@ -279,6 +284,7 @@ func (s *topicService) toTopicResponse(topic *models.Topic, includeWords bool) (
 		Name:           topic.Name,
 		Description:    topic.Description,
 		Level:          topic.Level,
+		IsPublic:       topic.IsPublic,
 		WordCount:      int(wordCount),
 		QuizCount:      int(quizCount),
 		UsedInJourneys: int(usedInJourneys),

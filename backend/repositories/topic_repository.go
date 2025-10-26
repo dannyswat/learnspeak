@@ -14,7 +14,7 @@ type TopicRepository interface {
 	GetByID(id uint, includeWords bool) (*models.Topic, error)
 	Update(topic *models.Topic) error
 	Delete(id uint) error
-	List(search string, level, languageCode string, createdBy uint, page, pageSize int, includeWords bool) ([]models.Topic, int64, error)
+	List(search string, level, languageCode string, createdBy uint, isPublic *bool, page, pageSize int, includeWords bool) ([]models.Topic, int64, error)
 	AddWords(topicID uint, wordIDs []uint) error
 	RemoveWords(topicID uint, wordIDs []uint) error
 	ReorderWords(topicID uint, wordIDs []uint) error
@@ -85,7 +85,7 @@ func (r *topicRepository) Delete(id uint) error {
 }
 
 // List retrieves topics with filtering and pagination
-func (r *topicRepository) List(search string, level, languageCode string, createdBy uint, page, pageSize int, includeWords bool) ([]models.Topic, int64, error) {
+func (r *topicRepository) List(search string, level, languageCode string, createdBy uint, isPublic *bool, page, pageSize int, includeWords bool) ([]models.Topic, int64, error) {
 	var topics []models.Topic
 	var total int64
 
@@ -109,6 +109,10 @@ func (r *topicRepository) List(search string, level, languageCode string, create
 
 	if createdBy > 0 {
 		query = query.Where("created_by = ?", createdBy)
+	}
+
+	if isPublic != nil {
+		query = query.Where("is_public = ?", *isPublic)
 	}
 
 	// Count total

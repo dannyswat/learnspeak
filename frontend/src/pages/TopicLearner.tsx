@@ -291,18 +291,13 @@ const TopicLearner: React.FC = () => {
             </div>
 
             {/* Conversation Activity */}
-            <div className={`bg-white shadow rounded-lg p-6 border ${conversations.length > 0 ? 'border-orange-200 hover:shadow-lg transition-shadow' : 'border-gray-200 opacity-60'}`}>
+            <div className={`bg-white shadow rounded-lg p-6 border border-orange-200 hover:shadow-lg transition-shadow`}>
               <div className="flex items-start justify-between mb-4">
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                {conversations.length === 0 && (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                    Coming Soon
-                  </span>
-                )}
               </div>
               
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Conversation Practice</h4>
@@ -312,7 +307,7 @@ const TopicLearner: React.FC = () => {
               
               <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                 <span>{conversations.length > 0 ? `${conversations.length} dialogue${conversations.length > 1 ? 's' : ''}` : 'Interactive'}</span>
-                <span>~{conversations.length > 0 ? conversations.length * 5 : 10} min</span>
+                <span>~{conversations.length > 0 ? conversations.length * 5 : 0} min</span>
               </div>
 
               <button
@@ -333,7 +328,7 @@ const TopicLearner: React.FC = () => {
                   }
                 `}
               >
-                {conversations.length === 0 ? 'Coming Soon' : 'Start Conversation'}
+                {conversations.length === 0 ? 'No Conversations yet' : 'Start Conversation'}
               </button>
             </div>
           </div>

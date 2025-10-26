@@ -10,6 +10,7 @@ type Topic struct {
 	Level       string    `json:"level" gorm:"size:20;not null"` // beginner, intermediate, advanced
 	LanguageID  uint      `json:"languageId" gorm:"not null"`
 	CreatedBy   uint      `json:"createdBy" gorm:"not null"`
+	IsPublic    bool      `json:"isPublic" gorm:"default:false;not null"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`
 

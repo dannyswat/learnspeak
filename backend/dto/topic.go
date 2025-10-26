@@ -7,6 +7,7 @@ type CreateTopicRequest struct {
 	Level        string `json:"level" validate:"required,oneof=beginner intermediate advanced"`
 	LanguageCode string `json:"languageCode" validate:"required"`
 	WordIDs      []uint `json:"wordIds" validate:"omitempty"`
+	IsPublic     bool   `json:"isPublic"`
 }
 
 // UpdateTopicRequest represents the request to update a topic
@@ -16,6 +17,7 @@ type UpdateTopicRequest struct {
 	Level        *string `json:"level" validate:"omitempty,oneof=beginner intermediate advanced"`
 	LanguageCode *string `json:"languageCode" validate:"omitempty"`
 	WordIDs      *[]uint `json:"wordIds" validate:"omitempty"`
+	IsPublic     *bool   `json:"isPublic"`
 }
 
 // ReorderTopicWordsRequest represents the request to reorder words in a topic
@@ -29,6 +31,7 @@ type TopicResponse struct {
 	Name           string          `json:"name"`
 	Description    string          `json:"description"`
 	Level          string          `json:"level"`
+	IsPublic       bool            `json:"isPublic"`
 	Language       *LanguageInfo   `json:"language,omitempty"`
 	CreatedBy      *CreatorInfo    `json:"createdBy,omitempty"`
 	WordCount      int             `json:"wordCount"`
@@ -65,6 +68,7 @@ type TopicFilterParams struct {
 	Level        string `query:"level"`
 	LanguageCode string `query:"languageCode"`
 	CreatedBy    uint   `query:"createdBy"`
+	IsPublic     *bool  `query:"isPublic"`
 	Page         int    `query:"page"`
 	PageSize     int    `query:"pageSize"`
 	IncludeWords bool   `query:"includeWords"`

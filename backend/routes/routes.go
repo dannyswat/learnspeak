@@ -107,6 +107,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		protected.GET("/topics/:id/quiz/practice", quizHandler.GetTopicQuizForPractice) // Get questions for practice (no answers)
 		protected.POST("/topics/:id/quiz/submit", quizHandler.SubmitQuiz)
 
+		// Public topics for learners to explore
+		protected.GET("/topics/public", topicHandler.ListPublicTopics)
+
 		protected.GET("/journeys/:id", journeyHandler.GetJourney)
 		protected.GET("/topics/:id", topicHandler.GetTopic)
 		protected.POST("/journeys/:id/start", journeyHandler.StartJourney)

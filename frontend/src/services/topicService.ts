@@ -13,6 +13,11 @@ class TopicService {
     return response.data;
   }
 
+  async getPublicTopics(params?: TopicFilterParams): Promise<TopicListResponse> {
+    const response = await api.get<TopicListResponse>('/topics/public', { params });
+    return response.data;
+  }
+
   async getTopic(id: number, includeWords: boolean = false): Promise<Topic> {
     const response = await api.get<Topic>(`/topics/${id}`, {
       params: { includeWords },
