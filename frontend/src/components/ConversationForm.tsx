@@ -107,7 +107,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
     setLines(lines.filter((line) => line.tempId !== tempId));
   };
 
-  const handleLineChange = (tempId: string, field: keyof LineFormData, value: string) => {
+  const handleLineChange = (tempId: string, field: keyof LineFormData, value: string | boolean) => {
     setLines(
       lines.map((line) =>
         line.tempId === tempId ? { ...line, [field]: value } : line
@@ -179,7 +179,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
           englishText: line.englishText.trim(),
           targetText: line.targetText.trim(),
           romanization: line.romanization.trim(),
-          audioUrl: line.audioUrl,
+          audioUrl: line.audioUrl || '',
           imageUrl: line.imageUrl || '',
           isLearnerLine: line.isLearnerLine,
         })),
@@ -363,7 +363,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
                       <input
                         type="checkbox"
                         checked={line.isLearnerLine}
-                        onChange={(e) => handleLineChange(line.tempId, 'isLearnerLine', e.target.checked ? 'true' : 'false')}
+                        onChange={(e) => handleLineChange(line.tempId, 'isLearnerLine', e.target.checked)}
                         className="mr-2"
                       />
                       Is Learner Line
@@ -406,8 +406,8 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
                   <div>
                     <button
                       type="button"
-                      onClick={() => handleLineChange(line.tempId, 'showRomanization', 'true')}
-                      className="text-sm text-orange-600 hover:text-orange-700"
+                      onClick={() => handleLineChange(line.tempId, 'showRomanization', true)}
+                      className="text-sm text-blue-600 hover:text-blue-500 font-medium"
                     >
                       + Add Romanization
                     </button>
@@ -420,7 +420,7 @@ const ConversationForm: React.FC<ConversationFormProps> = ({
                         type="button"
                         onClick={() => {
                           handleLineChange(line.tempId, 'romanization', '');
-                          handleLineChange(line.tempId, 'showRomanization', 'false');
+                          handleLineChange(line.tempId, 'showRomanization', false);
                         }}
                         className="ml-2 text-xs text-red-600 hover:text-red-700"
                       >

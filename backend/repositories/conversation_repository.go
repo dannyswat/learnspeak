@@ -20,6 +20,7 @@ type ConversationRepository interface {
 	UpdateLine(line *models.ConversationLine) error
 	DeleteLine(lineID uint) error
 	ReorderLines(conversationID uint, lineIDs []uint) error
+	LinkToTopic(conversationID uint, topicID uint) error
 }
 
 type conversationRepository struct {
@@ -190,4 +191,26 @@ func (r *conversationRepository) ReorderLines(conversationID uint, lineIDs []uin
 		}
 		return nil
 	})
+}
+
+// LinkToTopic creates a link between a conversation and a topic
+func (r *conversationRepository) LinkToTopic(conversationID uint, topicID uint) error {
+	// Get the max sequence order for this topic
+	var maxOrder int
+	err := r.db.Model(&models.TopicConversation{}).
+		Where("topic_id = ?", topicID).
+		Select("COALESCE(MAX(sequence_order), 0)").
+		Scan(&maxOrder).Error
+	if err != nil {
+		return err
+	}
+
+	// Create the link
+	topicConversation := &models.TopicConversation{
+		TopicID:        topicID,
+		ConversationID: conversationID,
+		SequenceOrder:  maxOrder + 1,
+	}
+
+	return r.db.Create(topicConversation).Error
 }

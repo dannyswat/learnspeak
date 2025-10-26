@@ -76,6 +76,15 @@ func (s *conversationService) CreateConversation(req *dto.CreateConversationRequ
 		return nil, fmt.Errorf("failed to create conversation: %w", err)
 	}
 
+	// Link to topic if provided
+	if req.TopicID != nil && *req.TopicID > 0 {
+		if err := s.conversationRepo.LinkToTopic(conversation.ID, *req.TopicID); err != nil {
+			// If linking fails, we should still return the conversation
+			// but log the error or handle it appropriately
+			return nil, fmt.Errorf("conversation created but failed to link to topic: %w", err)
+		}
+	}
+
 	// Fetch the created conversation with relations
 	createdConversation, err := s.conversationRepo.GetByID(conversation.ID)
 	if err != nil {

@@ -9,8 +9,9 @@ type CreateConversationRequest struct {
 	Context          string                          `json:"context" validate:"omitempty,max=2000"`
 	LanguageCode     string                          `json:"languageCode" validate:"required"`
 	DifficultyLevel  string                          `json:"difficultyLevel" validate:"required,oneof=beginner intermediate advanced"`
-	ScenarioAudioURL string                          `json:"scenarioAudioUrl" validate:"omitempty,url"`
-	ScenarioImageURL string                          `json:"scenarioImageUrl" validate:"omitempty,url"`
+	ScenarioAudioURL string                          `json:"scenarioAudioUrl" validate:"omitempty,max=500"`
+	ScenarioImageURL string                          `json:"scenarioImageUrl" validate:"omitempty,max=500"`
+	TopicID          *uint                           `json:"topicId" validate:"omitempty"`
 	Lines            []CreateConversationLineRequest `json:"lines" validate:"required,min=1,dive"`
 }
 
@@ -21,8 +22,8 @@ type UpdateConversationRequest struct {
 	Context          string `json:"context" validate:"omitempty,max=2000"`
 	LanguageCode     string `json:"languageCode" validate:"omitempty"`
 	DifficultyLevel  string `json:"difficultyLevel" validate:"omitempty,oneof=beginner intermediate advanced"`
-	ScenarioAudioURL string `json:"scenarioAudioUrl" validate:"omitempty,url"`
-	ScenarioImageURL string `json:"scenarioImageUrl" validate:"omitempty,url"`
+	ScenarioAudioURL string `json:"scenarioAudioUrl" validate:"omitempty,max=500"`
+	ScenarioImageURL string `json:"scenarioImageUrl" validate:"omitempty,max=500"`
 }
 
 // CreateConversationLineRequest represents a line in a conversation
@@ -32,8 +33,8 @@ type CreateConversationLineRequest struct {
 	EnglishText   string `json:"englishText" validate:"required,min=1"`
 	TargetText    string `json:"targetText" validate:"required,min=1"`
 	Romanization  string `json:"romanization" validate:"omitempty"`
-	AudioURL      string `json:"audioUrl" validate:"omitempty,url"`
-	ImageURL      string `json:"imageUrl" validate:"omitempty,url"`
+	AudioURL      string `json:"audioUrl" validate:"omitempty,max=500"`
+	ImageURL      string `json:"imageUrl" validate:"omitempty,max=500"`
 	WordID        *uint  `json:"wordId" validate:"omitempty"`
 	IsLearnerLine bool   `json:"isLearnerLine"`
 }
@@ -44,8 +45,8 @@ type UpdateConversationLineRequest struct {
 	EnglishText   string `json:"englishText" validate:"omitempty,min=1"`
 	TargetText    string `json:"targetText" validate:"omitempty,min=1"`
 	Romanization  string `json:"romanization" validate:"omitempty"`
-	AudioURL      string `json:"audioUrl" validate:"omitempty,url"`
-	ImageURL      string `json:"imageUrl" validate:"omitempty,url"`
+	AudioURL      string `json:"audioUrl" validate:"omitempty,max=500"`
+	ImageURL      string `json:"imageUrl" validate:"omitempty,max=500"`
 	WordID        *uint  `json:"wordId" validate:"omitempty"`
 	IsLearnerLine *bool  `json:"isLearnerLine" validate:"omitempty"`
 }

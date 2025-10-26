@@ -49,6 +49,7 @@ export interface CreateConversationRequest {
   difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
   scenarioAudioUrl?: string;
   scenarioImageUrl?: string;
+  topicId?: number;
   lines: CreateConversationLineRequest[];
 }
 

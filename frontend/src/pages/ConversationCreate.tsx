@@ -37,6 +37,8 @@ const ConversationCreate: React.FC = () => {
     description: string;
     context: string;
     difficultyLevel: string;
+    scenarioAudioUrl?: string;
+    scenarioImageUrl?: string;
     lines: {
       speakerRole: string;
       englishText: string;
@@ -50,25 +52,27 @@ const ConversationCreate: React.FC = () => {
     if (!topic || !topic.language) return;
 
     try {
-      // Create the conversation
-      const conversation = await conversationService.createConversation({
-        ...data,
+      // Create the conversation with topic link
+      await conversationService.createConversation({
+        title: data.title,
+        description: data.description,
+        context: data.context,
         languageCode: topic.language.code,
         difficultyLevel: data.difficultyLevel as 'beginner' | 'intermediate' | 'advanced',
+        scenarioAudioUrl: data.scenarioAudioUrl || '',
+        scenarioImageUrl: data.scenarioImageUrl || '',
+        topicId: parseInt(id!),
         lines: data.lines.map((line, index) => ({
           sequenceOrder: index + 1,
           speakerRole: line.speakerRole,
           englishText: line.englishText,
           targetText: line.targetText,
-          romanization: line.romanization,
-          audioUrl: line.audioUrl,
-          imageUrl: line.imageUrl,
+          romanization: line.romanization || '',
+          audioUrl: line.audioUrl || '',
+          imageUrl: line.imageUrl || '',
           isLearnerLine: line.isLearnerLine,
         })),
       });
-
-      // Link conversation to topic
-      await conversationService.linkConversationToTopic(conversation.id, parseInt(id!));
 
       alert('Conversation created successfully!');
       navigate(`/topics/${id}/conversations/manage`);
