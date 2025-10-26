@@ -219,7 +219,9 @@ const ConversationManagement: React.FC = () => {
 
                     <div className="flex flex-col gap-2">
                       <button
-                        onClick={() => navigate(`/conversations/${conversation.id}`)}
+                        onClick={() => navigate(`/conversations/${conversation.id}/preview`, {
+                          state: { from: `/topics/${id}/conversations/manage` }
+                        })}
                         className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                         title="Preview conversation"
                       >

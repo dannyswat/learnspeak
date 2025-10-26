@@ -27,6 +27,7 @@ import TopicConversations from './pages/TopicConversations';
 import ConversationManagement from './pages/ConversationManagement';
 import ConversationCreate from './pages/ConversationCreate';
 import ConversationEdit from './pages/ConversationEdit';
+import ConversationPreview from './pages/ConversationPreview';
 import ChangePassword from './pages/ChangePassword';
 import AdminUsers from './pages/AdminUsers';
 import CreateUser from './pages/CreateUser';
@@ -158,6 +159,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ConversationEdit />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/conversations/:id/preview"
+            element={
+              <ProtectedRoute>
+                <ConversationPreview />
               </ProtectedRoute>
             }
           />
