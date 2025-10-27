@@ -49,6 +49,7 @@ This means migrations can be safely run multiple times without errors.
 | `005_journeys_updated_at.sql` | Apply timestamp trigger to journeys table |
 | `006_topic_quizzes_updated_at.sql` | Apply timestamp trigger to topic_quizzes table |
 | `007_journey_status_tracking.sql` | Track journey status based on user progress |
+| `008_journey_topic_reset_completion.sql` | Reset completed journeys to in_progress when new topic added |
 
 ### Views
 
