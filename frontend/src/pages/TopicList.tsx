@@ -205,6 +205,10 @@ const TopicList: React.FC = () => {
                         <span>{topic.wordCount} words</span>
                       </div>
                       <div className="flex items-center gap-1">
+                        <span>💬</span>
+                        <span>{topic.conversationCount} conversations</span>
+                      </div>
+                      <div className="flex items-center gap-1">
                         <span>❓</span>
                         <span>{topic.quizCount} quizzes</span>
                       </div>

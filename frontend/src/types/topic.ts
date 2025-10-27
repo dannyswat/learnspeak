@@ -34,6 +34,7 @@ export interface Topic {
   wordCount: number;
   words?: TopicWord[];
   quizCount: number;
+  conversationCount: number;
   usedInJourneys: number;
   createdAt: string;
   updatedAt: string;

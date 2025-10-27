@@ -27,19 +27,20 @@ type ReorderTopicWordsRequest struct {
 
 // TopicResponse represents a topic in response
 type TopicResponse struct {
-	ID             uint            `json:"id"`
-	Name           string          `json:"name"`
-	Description    string          `json:"description"`
-	Level          string          `json:"level"`
-	IsPublic       bool            `json:"isPublic"`
-	Language       *LanguageInfo   `json:"language,omitempty"`
-	CreatedBy      *CreatorInfo    `json:"createdBy,omitempty"`
-	WordCount      int             `json:"wordCount"`
-	Words          []TopicWordInfo `json:"words,omitempty"`
-	QuizCount      int             `json:"quizCount"`
-	UsedInJourneys int             `json:"usedInJourneys"`
-	CreatedAt      string          `json:"createdAt"`
-	UpdatedAt      string          `json:"updatedAt"`
+	ID                uint            `json:"id"`
+	Name              string          `json:"name"`
+	Description       string          `json:"description"`
+	Level             string          `json:"level"`
+	IsPublic          bool            `json:"isPublic"`
+	Language          *LanguageInfo   `json:"language,omitempty"`
+	CreatedBy         *CreatorInfo    `json:"createdBy,omitempty"`
+	WordCount         int             `json:"wordCount"`
+	Words             []TopicWordInfo `json:"words,omitempty"`
+	QuizCount         int             `json:"quizCount"`
+	ConversationCount int             `json:"conversationCount"`
+	UsedInJourneys    int             `json:"usedInJourneys"`
+	CreatedAt         string          `json:"createdAt"`
+	UpdatedAt         string          `json:"updatedAt"`
 }
 
 // TopicWordInfo represents a word within a topic

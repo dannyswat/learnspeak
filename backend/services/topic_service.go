@@ -277,19 +277,21 @@ func (s *topicService) toTopicResponse(topic *models.Topic, includeWords bool) (
 	// Get counts
 	wordCount, _ := s.topicRepo.GetWordCount(topic.ID)
 	quizCount, _ := s.topicRepo.GetQuizCount(topic.ID)
+	conversationCount, _ := s.topicRepo.GetConversationCount(topic.ID)
 	usedInJourneys, _ := s.topicRepo.GetJourneyUsageCount(topic.ID)
 
 	response := &dto.TopicResponse{
-		ID:             topic.ID,
-		Name:           topic.Name,
-		Description:    topic.Description,
-		Level:          topic.Level,
-		IsPublic:       topic.IsPublic,
-		WordCount:      int(wordCount),
-		QuizCount:      int(quizCount),
-		UsedInJourneys: int(usedInJourneys),
-		CreatedAt:      topic.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-		UpdatedAt:      topic.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		ID:                topic.ID,
+		Name:              topic.Name,
+		Description:       topic.Description,
+		Level:             topic.Level,
+		IsPublic:          topic.IsPublic,
+		WordCount:         int(wordCount),
+		QuizCount:         int(quizCount),
+		ConversationCount: int(conversationCount),
+		UsedInJourneys:    int(usedInJourneys),
+		CreatedAt:         topic.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt:         topic.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}
 
 	// Add language info

@@ -21,6 +21,7 @@ type TopicRepository interface {
 	GetTopicWords(topicID uint) ([]models.TopicWord, error)
 	GetWordCount(topicID uint) (int64, error)
 	GetQuizCount(topicID uint) (int64, error)
+	GetConversationCount(topicID uint) (int64, error)
 	GetJourneyUsageCount(topicID uint) (int64, error)
 }
 
@@ -217,6 +218,13 @@ func (r *topicRepository) GetQuizCount(topicID uint) (int64, error) {
 	var count int64
 	// Assuming there's a topic_quizzes table
 	err := r.db.Table("topic_quizzes").Where("topic_id = ?", topicID).Count(&count).Error
+	return count, err
+}
+
+// GetConversationCount returns the number of conversations for a topic
+func (r *topicRepository) GetConversationCount(topicID uint) (int64, error) {
+	var count int64
+	err := r.db.Table("topic_conversations").Where("topic_id = ?", topicID).Count(&count).Error
 	return count, err
 }
 

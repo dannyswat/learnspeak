@@ -11,7 +11,7 @@ const ConversationPlayer: React.FC<ConversationPlayerProps> = ({ conversation, o
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showEnglish, setShowEnglish] = useState(true);
-  const [autoplay, setAutoplay] = useState(false);
+  const [autoplay, setAutoplay] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentLine = conversation.lines[currentLineIndex];
