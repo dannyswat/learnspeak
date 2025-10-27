@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { uploadService } from '../services/wordService';
 import type { Conversation, ConversationLine } from '../types/conversation';
 
@@ -11,10 +11,23 @@ const ConversationPlayer: React.FC<ConversationPlayerProps> = ({ conversation, o
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showEnglish, setShowEnglish] = useState(true);
+  const [autoplay, setAutoplay] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentLine = conversation.lines[currentLineIndex];
   const isLastLine = currentLineIndex === conversation.lines.length - 1;
+
+  // Autoplay effect - plays audio when line changes if autoplay is enabled
+  useEffect(() => {
+    if (autoplay && currentLine.audioUrl && audioRef.current) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        audioRef.current?.play();
+        setIsPlaying(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [currentLineIndex, autoplay, currentLine.audioUrl]);
 
   const handlePlayAudio = () => {
     if (currentLine.audioUrl && audioRef.current) {
@@ -25,10 +38,30 @@ const ConversationPlayer: React.FC<ConversationPlayerProps> = ({ conversation, o
 
   const handleAudioEnded = () => {
     setIsPlaying(false);
+    
+    // Auto-advance to next line if autoplay is enabled
+    if (autoplay) {
+      if (!isLastLine) {
+        // Delay before advancing to next line
+        setTimeout(() => {
+          setCurrentLineIndex(currentLineIndex + 1);
+        }, 800);
+      } else if (onComplete) {
+        // If it's the last line, complete the conversation
+        setTimeout(() => {
+          onComplete();
+        }, 800);
+      }
+    }
   };
 
   const handleNext = () => {
     if (!isLastLine) {
+      // Stop current audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       setCurrentLineIndex(currentLineIndex + 1);
       setIsPlaying(false);
     } else if (onComplete) {
@@ -38,12 +71,22 @@ const ConversationPlayer: React.FC<ConversationPlayerProps> = ({ conversation, o
 
   const handlePrevious = () => {
     if (currentLineIndex > 0) {
+      // Stop current audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
       setCurrentLineIndex(currentLineIndex - 1);
       setIsPlaying(false);
     }
   };
 
   const goToLine = (index: number) => {
+    // Stop current audio if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setCurrentLineIndex(index);
     setIsPlaying(false);
   };
@@ -83,6 +126,21 @@ const ConversationPlayer: React.FC<ConversationPlayerProps> = ({ conversation, o
 
       {/* Main Content */}
       <div className="p-4 sm:p-6">
+        {/* Autoplay Control */}
+        <div className="mb-4 flex items-center justify-end">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoplay}
+              onChange={(e) => setAutoplay(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              🎬 Autoplay
+            </span>
+          </label>
+        </div>
+
         {/* Progress Bar */}
         <div className="mb-6">
           <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
