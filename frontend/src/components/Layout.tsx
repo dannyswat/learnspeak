@@ -44,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Left side - Logo */}
           <div className="flex items-center gap-3 sm:gap-5">
             <div className="flex items-center gap-2">
-              <NavLink to="/"><img src="/learnspeak.png" alt="LearnSpeak" className="h-10 sm:h-12" /></NavLink>
+              <NavLink to="/"><img src="/learnspeak2.png" alt="LearnSpeak" className="h-10 sm:h-12" /></NavLink>
             </div>
           </div>
 

@@ -63,7 +63,7 @@ export const Login: React.FC = () => {
         {/* Logo Section */}
         <div className="logo-section">
           <div className="logo">
-            <img src="/learnspeak.png" alt="LearnSpeak" className="h-[120px]" />
+            <img src="/learnspeak2.png" alt="LearnSpeak" className="h-[120px]" />
           </div>
           <p className="tagline">Learn Languages Playfully!</p>
         </div>
