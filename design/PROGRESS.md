@@ -797,23 +797,40 @@ Phase 5: Deployment (Weeks 9-10)    ░░░░░░░░░░░░░░�
 
 #### Sprint 4.5: User Profile & Settings
 **Duration**: 2 days  
-**Status**: 🔴 Not Started
+**Status**: ✅ Complete
 
 **Tasks**:
-- [ ] Backend: Profile update endpoints
-- [ ] Backend: Profile picture upload
-- [ ] Backend: Password change endpoint
-- [ ] Frontend: Profile page
-- [ ] Frontend: Profile picture upload
-- [ ] Frontend: Edit profile form
-- [ ] Frontend: Change password form
-- [ ] Frontend: Learning stats display
-- [ ] Frontend: Settings page
+- [x] Backend: Profile update endpoints (already implemented)
+- [x] Backend: Profile picture upload (already implemented)
+- [x] Backend: Password change endpoint (already implemented)
+- [x] Frontend: Profile page
+- [x] Frontend: Profile picture upload
+- [x] Frontend: Edit profile form
+- [x] Frontend: Change password form (already implemented)
+- [x] Frontend: Learning stats display
+- [x] Frontend: Settings page
 
 **Deliverables**:
 - ✅ Complete profile management
 - ✅ Profile picture upload
 - ✅ Password change
+
+**Completed**: October 29, 2025
+
+**Completed Files**:
+- Backend:
+  - `dto/user.go` - UpdateUserRequest DTO (already existed)
+  - `dto/auth.go` - ChangePasswordRequest DTO (already existed)
+  - `handlers/user_handler.go` - UpdateUser handler (already existed)
+  - `handlers/auth.go` - ChangePassword handler (already existed)
+  - `services/user_service.go` - UpdateUser service (already existed)
+  - `routes/routes.go` - Profile and password routes (already existed)
+- Frontend:
+  - `pages/Profile.tsx` - Profile management page with image upload
+  - `pages/ChangePassword.tsx` - Password change page (already existed)
+  - `contexts/AuthContext.tsx` - Added updateUserProfile function
+  - `App.tsx` - Added profile routes (/profile, /profile/change-password)
+  - `components/Layout.tsx` - Profile link in user menu (already existed)
 
 **User Stories**: 1.3  
 **Dependencies**: Sprint 1.3

@@ -32,7 +32,7 @@ type UserFilterParams struct {
 type UpdateUserRequest struct {
 	Name          *string `json:"name" validate:"omitempty,min=1,max=100"`
 	Email         *string `json:"email" validate:"omitempty,email"`
-	ProfilePicURL *string `json:"profilePicUrl" validate:"omitempty,url,max=500"`
+	ProfilePicURL *string `json:"profilePicUrl" validate:"omitempty,max=500"`
 }
 
 // CreateUserRequest represents the request to create a new user (admin only)

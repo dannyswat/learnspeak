@@ -166,9 +166,10 @@ func (r *userJourneyRepository) UpdateStatus(id uint, status string) error {
 		"status": status,
 	}
 
-	if status == "in_progress" {
+	switch status {
+	case "in_progress":
 		updates["started_at"] = time.Now()
-	} else if status == "completed" {
+	case "completed":
 		updates["completed_at"] = time.Now()
 	}
 

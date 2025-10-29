@@ -61,6 +61,20 @@ func (h *FileUploadHandler) UploadImage(c echo.Context) error {
 	return h.uploadFile(c, "image", []string{".jpg", ".jpeg", ".png", ".gif", ".webp"})
 }
 
+// UploadProfilePhoto handles POST /api/upload/profile
+// @Summary Upload profile photo
+// @Description Upload a profile photo for the authenticated user
+// @Tags upload
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "Profile photo file"
+// @Success 200 {object} dto.UploadResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/upload/profile [post]
+func (h *FileUploadHandler) UploadProfilePhoto(c echo.Context) error {
+	return h.uploadFile(c, "profile", []string{".jpg", ".jpeg", ".png", ".gif", ".webp"})
+}
+
 // uploadFile is a generic file upload handler
 func (h *FileUploadHandler) uploadFile(c echo.Context, fileType string, allowedExtensions []string) error {
 	// Get file from request

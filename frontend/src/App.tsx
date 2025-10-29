@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import AuthProvider from './contexts/AuthProvider';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -29,6 +29,7 @@ import ConversationCreate from './pages/ConversationCreate';
 import ConversationEdit from './pages/ConversationEdit';
 import ConversationPreview from './pages/ConversationPreview';
 import ChangePassword from './pages/ChangePassword';
+import Profile from './pages/Profile';
 import AdminUsers from './pages/AdminUsers';
 import CreateUser from './pages/CreateUser';
 import ExploreTopics from './pages/ExploreTopics';
@@ -263,6 +264,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyJourneys />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
               </ProtectedRoute>
             }
           />

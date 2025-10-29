@@ -79,6 +79,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		protected.GET("/profile", handlers.GetProfile)
 		protected.POST("/auth/change-password", handlers.ChangePassword)
 
+		// Profile photo upload (all authenticated users)
+		protected.POST("/upload/profile", uploadHandler.UploadProfilePhoto)
+
 		// Languages
 		protected.GET("/languages", languageHandler.GetLanguages)
 

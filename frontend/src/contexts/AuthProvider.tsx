@@ -1,21 +1,11 @@
-import React, { createContext, useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types/auth';
 import { authService } from '../services/authService';
+import { AuthContext } from './AuthContext';
 
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export { AuthContext };
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,6 +30,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     authService.clearAuth();
   };
 
+  const updateUserProfile = (updatedUser: User) => {
+    setUser(updatedUser);
+    // Update stored user in localStorage
+    const token = authService.getToken();
+    if (token) {
+      authService.saveAuth({ user: updatedUser, token });
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -48,9 +47,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         login,
         logout,
+        updateUserProfile,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;
