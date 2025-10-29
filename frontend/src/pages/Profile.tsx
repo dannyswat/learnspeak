@@ -44,7 +44,7 @@ const Profile: React.FC = () => {
       setUploading(true);
       setError('');
       const response = await uploadService.uploadProfilePhoto(file);
-      setProfilePicUrl(response.url);
+      setProfilePicUrl(uploadService.addCacheBuster(response.url));
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(error.response?.data?.message || 'Failed to upload image');
