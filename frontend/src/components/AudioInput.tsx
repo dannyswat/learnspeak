@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { uploadService } from '../services/wordService';
 import ttsService from '../services/ttsService';
+import { convertBlobToMp3 } from '../utils/audioConverter';
 
 interface AudioInputProps {
   value: string;
@@ -27,6 +28,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
   const [generatingTTS, setGeneratingTTS] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [convertingAudio, setConvertingAudio] = useState(false);
   const [showVoiceSelector, setShowVoiceSelector] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<string>('');
 
@@ -145,11 +147,26 @@ const AudioInput: React.FC<AudioInputProps> = ({
       mediaRecorder.onstop = async () => {
         // Create audio file from recorded chunks
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioFile = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
-
-        // Upload the recorded audio
+        
         try {
+          setConvertingAudio(true);
+          
+          // Convert webm to MP3 on client side
+          let mp3Blob: Blob;
+          try {
+            mp3Blob = await convertBlobToMp3(audioBlob, 128);
+          } catch (convertError) {
+            console.error('MP3 conversion failed, uploading original format:', convertError);
+            // Fallback: upload as-is if conversion fails
+            mp3Blob = audioBlob;
+          }
+          
+          setConvertingAudio(false);
           setUploadingAudio(true);
+          
+          const audioFile = new File([mp3Blob], 'recording.mp3', { type: 'audio/mpeg' });
+
+          // Upload the recorded audio
           const response = await uploadService.uploadAudio(audioFile);
           // Add cache buster to force browser to reload the newly recorded audio
           onChange(uploadService.addCacheBuster(response.url));
@@ -158,6 +175,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
           alert(error.response?.data?.message || 'Failed to upload audio');
         } finally {
           setUploadingAudio(false);
+          setConvertingAudio(false);
         }
 
         // Stop all tracks
@@ -323,6 +341,30 @@ const AudioInput: React.FC<AudioInputProps> = ({
                   ></path>
                 </svg>
                 <span className="text-sm font-medium text-blue-700">Uploading...</span>
+              </div>
+            ) : convertingAudio ? (
+              <div className="flex items-center space-x-2 bg-cyan-50 border border-cyan-200 px-4 py-2 rounded-lg">
+                <svg
+                  className="animate-spin h-5 w-5 text-cyan-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span className="text-sm font-medium text-cyan-700">Converting to MP3...</span>
               </div>
             ) : generatingTTS ? (
               <div className="flex items-center space-x-2 bg-purple-50 border border-purple-200 px-4 py-2 rounded-lg">
