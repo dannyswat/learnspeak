@@ -474,6 +474,7 @@ const BulkWordCreation: React.FC = () => {
                     disabled={saving}
                     showRemoveButton={true}
                     readOnlyBaseWord={false}
+                    totalWords={words.length}
                   />
                 </div>
               ))}

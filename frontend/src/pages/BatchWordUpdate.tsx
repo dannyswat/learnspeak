@@ -390,6 +390,7 @@ const BatchWordUpdate: React.FC = () => {
                     disabled={saving}
                     showRemoveButton={false}
                     readOnlyBaseWord={false}
+                    totalWords={words.length}
                   />
                 </div>
               ))}

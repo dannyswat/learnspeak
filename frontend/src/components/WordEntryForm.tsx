@@ -22,6 +22,7 @@ interface WordEntryFormProps {
   disabled?: boolean;
   showRemoveButton?: boolean;
   readOnlyBaseWord?: boolean;
+  totalWords?: number; // Total number of words for tabindex calculation
 }
 
 /**
@@ -37,7 +38,23 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
   disabled = false,
   showRemoveButton = true,
   readOnlyBaseWord = false,
+  totalWords = 0,
 }) => {
+  // Calculate tabindex for vertical tab order
+  // Pattern: all baseWords first, then all translations, then all romanizations, then all notes
+  const getTabIndex = (field: 'baseWord' | 'translation' | 'romanization' | 'notes') => {
+    if (!totalWords) return undefined;
+    
+    const fieldOrder = {
+      baseWord: 0,
+      translation: 1,
+      romanization: 2,
+      notes: 3,
+    };
+    
+    return fieldOrder[field] * totalWords + index + 1;
+  };
+
   return (
     <div className="relative border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
       {/* Remove button in top right corner */}
@@ -69,6 +86,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'baseWord', e.target.value)}
               placeholder="e.g., Hello"
               disabled={disabled || readOnlyBaseWord}
+              tabIndex={getTabIndex('baseWord')}
               className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
@@ -83,6 +101,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'translation', e.target.value)}
               placeholder="e.g., 你好"
               disabled={disabled}
+              tabIndex={getTabIndex('translation')}
               className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
@@ -97,6 +116,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'romanization', e.target.value)}
               placeholder="e.g., nei5 hou2"
               disabled={disabled}
+              tabIndex={getTabIndex('romanization')}
               className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
@@ -111,6 +131,7 @@ const WordEntryForm: React.FC<WordEntryFormProps> = ({
               onChange={(e) => onChange(index, 'notes', e.target.value)}
               placeholder="e.g., Informal greeting"
               disabled={disabled}
+              tabIndex={getTabIndex('notes')}
               className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
