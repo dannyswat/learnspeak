@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AuthProvider from './contexts/AuthProvider';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
@@ -35,10 +36,22 @@ import CreateUser from './pages/CreateUser';
 import ExploreTopics from './pages/ExploreTopics';
 import './App.css';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes (previously cacheTime)
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -312,6 +325,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

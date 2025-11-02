@@ -1,29 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { quizService } from '../services/quizService';
 import { uploadService } from '../services/wordService';
-import { topicService } from '../services/topicService';
+import { useTopicQuestions, useCreateQuestion, useUpdateQuestion, useDeleteQuestion } from '../hooks/useQuiz';
+import { useTopic } from '../hooks/useTopic';
 import Layout from '../components/Layout';
 import CustomAudioGenerationButton from '../components/CustomAudioGenerationButton';
 import TopicImagesSelectorButton from '../components/TopicImagesSelectorButton';
 import DynamicInput from '../components/DynamicInput';
 import DynamicViewer from '../components/DynamicViewer';
-import type { QuizQuestion, CreateQuizQuestionRequest } from '../types/quiz';
-import type { TopicWord } from '../types/topic';
+import type { CreateQuizQuestionRequest } from '../types/quiz';
 
 const QuizManagement: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
+  const topicIdNum = parseInt(topicId!);
 
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
-  const [topicName, setTopicName] = useState<string>('');
+  // TanStack Query hooks for data fetching
+  const { data: questions = [], isLoading: questionsLoading } = useTopicQuestions(topicIdNum);
+  const { data: topic, isLoading: topicLoading } = useTopic(topicIdNum, true);
   
-  // Topic words state
-  const [topicWords, setTopicWords] = useState<TopicWord[]>([]);
+  // Mutations
+  const createMutation = useCreateQuestion();
+  const updateMutation = useUpdateQuestion();
+  const deleteMutation = useDeleteQuestion();
+
+  // UI State
+  const [showForm, setShowForm] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<typeof questions[0] | null>(null);
   
   // Upload and recording state
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -37,7 +40,7 @@ const QuizManagement: React.FC = () => {
   const recordingTimerRef = useRef<number | null>(null);
   
   const [formData, setFormData] = useState<CreateQuizQuestionRequest>({
-    topicId: parseInt(topicId!),
+    topicId: topicIdNum,
     questionType: 'translation',
     questionText: '',
     correctAnswer: 'a',
@@ -48,11 +51,6 @@ const QuizManagement: React.FC = () => {
   });
 
   useEffect(() => {
-    if (topicId) {
-      loadQuestions();
-      loadTopicWords();
-    }
-    
     // Load last used question type from localStorage
     const lastQuestionType = localStorage.getItem('lastQuizQuestionType');
     if (lastQuestionType && (lastQuestionType === 'translation' || lastQuestionType === 'listening' || lastQuestionType === 'image')) {
@@ -68,35 +66,7 @@ const QuizManagement: React.FC = () => {
         mediaRecorderRef.current.stop();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topicId]);
-
-  const loadQuestions = async () => {
-    try {
-      setLoading(true);
-      const data = await quizService.getTopicQuestions(parseInt(topicId!));
-      setQuestions(data);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load questions');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTopicWords = async () => {
-    try {
-      const topic = await topicService.getTopic(parseInt(topicId!), true);
-      setTopicName(topic.name);
-      if (topic.words) {
-        // Filter words that have images
-        const wordsWithImages = topic.words.filter(word => word.imageUrl);
-        setTopicWords(wordsWithImages);
-      }
-    } catch (err) {
-      console.error('Failed to load topic words:', err);
-    }
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,20 +75,19 @@ const QuizManagement: React.FC = () => {
       localStorage.setItem('lastQuizQuestionType', formData.questionType);
       
       if (editingQuestion) {
-        await quizService.updateQuestion(editingQuestion.id, formData);
+        await updateMutation.mutateAsync({ id: editingQuestion.id, data: formData });
       } else {
-        await quizService.createQuestion(formData);
+        await createMutation.mutateAsync(formData);
       }
       
       resetForm();
-      loadQuestions();
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to save question');
     }
   };
 
-  const handleEdit = (question: QuizQuestion) => {
+  const handleEdit = (question: (typeof questions)[0]) => {
     setEditingQuestion(question);
     setFormData({
       topicId: question.topicId,
@@ -141,8 +110,7 @@ const QuizManagement: React.FC = () => {
     }
 
     try {
-      await quizService.deleteQuestion(id);
-      loadQuestions();
+      await deleteMutation.mutateAsync(id);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to delete question');
@@ -263,7 +231,7 @@ const QuizManagement: React.FC = () => {
     setShowForm(false);
   };
 
-  if (loading) {
+  if (questionsLoading || topicLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
@@ -272,6 +240,9 @@ const QuizManagement: React.FC = () => {
       </Layout>
     );
   }
+
+  const topicWords = topic?.words?.filter(word => word.imageUrl) || [];
+  const topicName = topic?.name || '';
 
   return (
     <Layout>
@@ -304,12 +275,6 @@ const QuizManagement: React.FC = () => {
             </button>}
           </div>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
 
         {/* Question Form */}
         {showForm && (

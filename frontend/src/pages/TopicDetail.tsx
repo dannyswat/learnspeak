@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { topicService } from '../services/topicService';
-import type { Topic } from '../types/topic';
 import Layout from '../components/Layout';
 import WordsSlideShow from '../components/WordsSlideShow';
 import { useAuth } from '../hooks/useAuth';
+import { useTopic, useDeleteTopic } from '../hooks/useTopic';
 
 const TopicDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [topic, setTopic] = useState<Topic | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const topicId = id ? parseInt(id) : 0;
+
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+
+  // Fetch topic data
+  const { data: topic, isLoading } = useTopic(topicId, true);
+  const { mutate: deleteTopic } = useDeleteTopic();
 
   const isTeacher = user?.roles?.some(role => role === 'teacher' || role === 'admin');
 
@@ -44,40 +46,46 @@ const TopicDetail: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (id) {
-      loadTopic(parseInt(id));
-    }
-  }, [id]);
-
-  const loadTopic = async (topicId: number) => {
-    try {
-      setLoading(true);
-      const data = await topicService.getTopic(topicId, true);
-      setTopic(data);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load topic');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this topic?')) {
       return;
     }
 
-    try {
-      if (id) {
-        await topicService.deleteTopic(parseInt(id));
+    deleteTopic(topicId, {
+      onSuccess: () => {
         navigate('/topics');
-      }
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete topic');
-    }
+      },
+      onError: () => {
+        alert('Failed to delete topic');
+      },
+    });
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-gray-600">Loading topic...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!topic) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="text-red-600 mb-4">Topic not found</div>
+          <button
+            onClick={() => navigate('/topics')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+          >
+            Back to Topics
+          </button>
+        </div>
+      </Layout>
+    );
+  }
 
   const getLevelBadgeColor = (level: string) => {
     switch (level) {
@@ -91,32 +99,6 @@ const TopicDetail: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Loading topic...</div>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error || !topic) {
-    return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="text-red-600 mb-4">{error || 'Topic not found'}</div>
-          <button
-            onClick={() => navigate('/topics')}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-          >
-            Back to Topics
-          </button>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>

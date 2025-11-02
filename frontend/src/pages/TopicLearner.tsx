@@ -1,54 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { topicService } from '../services/topicService';
-import { conversationService } from '../services/conversationService';
-import type { Topic } from '../types/topic';
-import type { Conversation } from '../types/conversation';
 import Layout from '../components/Layout';
+import { useTopic } from '../hooks/useTopic';
+import { useConversationsByTopic } from '../hooks/useConversation';
 
 const TopicLearner: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const [topic, setTopic] = useState<Topic | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [flashcardCompleted, _setFlashcardCompleted] = useState(false);
 
   const journeyId = searchParams.get('journeyId');
+  const topicId = id ? parseInt(id) : 0;
 
-  useEffect(() => {
-    if (id) {
-      loadTopic(parseInt(id));
-      loadConversations(parseInt(id));
-    }
-  }, [id]);
+  // Fetch topic and conversations data
+  const { data: topic, isLoading: topicLoading } = useTopic(topicId, true);
+  const { data: conversations = [] } = useConversationsByTopic(topicId);
 
-  const loadTopic = async (topicId: number) => {
-    try {
-      setLoading(true);
-      const data = await topicService.getTopic(topicId, true);
-      setTopic(data);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load topic');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadConversations = async (topicId: number) => {
-    try {
-      const data = await conversationService.getConversationsByTopic(topicId);
-      setConversations(data);
-    } catch (err) {
-      console.error('Failed to load conversations:', err);
-      // Don't set error state - conversations are optional
-    }
-  };
-
-  if (loading) {
+  if (topicLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
@@ -58,11 +27,11 @@ const TopicLearner: React.FC = () => {
     );
   }
 
-  if (error || !topic) {
+  if (!topic) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="text-red-600 mb-4">{error || 'Topic not found'}</div>
+          <div className="text-red-600 mb-4">Topic not found</div>
           <button
             onClick={() => navigate(-1)}
             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { quizService } from '../services/quizService';
 import { uploadService } from '../services/wordService';
 import Layout from '../components/Layout';
 import DynamicViewer from '../components/DynamicViewer';
-import type { QuizQuestionForPractice, QuizAnswer, QuizResult } from '../types/quiz';
+import { useTopicQuizForPractice, useSubmitQuiz } from '../hooks/useQuiz';
+import type { QuizAnswer, QuizResult } from '../types/quiz';
 
 const QuizPractice: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
@@ -12,23 +12,20 @@ const QuizPractice: React.FC = () => {
   const navigate = useNavigate();
   
   const journeyId = searchParams.get('journeyId');
+  const topicIdNum = topicId ? parseInt(topicId) : 0;
 
-  const [questions, setQuestions] = useState<QuizQuestionForPractice[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Map<number, 'a' | 'b' | 'c' | 'd'>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [startTime] = useState(Date.now());
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<QuizResult | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  useEffect(() => {
-    if (topicId) {
-      loadQuiz(parseInt(topicId));
-    }
-  }, [topicId]);
+  // Fetch quiz questions for practice
+  const { data, isLoading, error } = useTopicQuizForPractice(topicIdNum, true);
+  const { mutate: submitQuiz, isPending: submitting } = useSubmitQuiz();
+
+  const questions = useMemo(() => data?.questions ?? [], [data?.questions]);
 
   // Autoplay audio for listening questions when question changes
   useEffect(() => {
@@ -42,23 +39,6 @@ const QuizPractice: React.FC = () => {
       }
     }
   }, [currentIndex, questions]);
-
-  const loadQuiz = async (id: number) => {
-    try {
-      setLoading(true);
-      const data = await quizService.getTopicQuizForPractice(id, true);
-      setQuestions(data.questions);
-      
-      if (data.questions.length === 0) {
-        setError('No quiz questions available for this topic');
-      }
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load quiz');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAnswerSelect = (answer: 'a' | 'b' | 'c' | 'd') => {
     const newAnswers = new Map(answers);
@@ -85,30 +65,34 @@ const QuizPractice: React.FC = () => {
       }
     }
 
-    try {
-      setSubmitting(true);
-      const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-      
-      const quizAnswers: QuizAnswer[] = Array.from(answers.entries()).map(([questionId, answer]) => ({
-        questionId,
-        answer,
-      }));
+    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+    
+    const quizAnswers: QuizAnswer[] = Array.from(answers.entries()).map(([questionId, answer]) => ({
+      questionId,
+      answer,
+    }));
 
-      const result = await quizService.submitQuiz(parseInt(topicId!), {
-        topicId: parseInt(topicId!),
-        journeyId: journeyId ? parseInt(journeyId) : undefined,
-        answers: quizAnswers,
-        timeSpent,
-      });
-
-      setResults(result);
-      setShowResults(true);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to submit quiz');
-    } finally {
-      setSubmitting(false);
-    }
+    submitQuiz(
+      {
+        topicId: topicIdNum,
+        data: {
+          topicId: topicIdNum,
+          journeyId: journeyId ? parseInt(journeyId) : undefined,
+          answers: quizAnswers,
+          timeSpent,
+        },
+      },
+      {
+        onSuccess: (result) => {
+          setResults(result);
+          setShowResults(true);
+        },
+        onError: (err) => {
+          const error = err as { response?: { data?: { message?: string } } };
+          alert(error.response?.data?.message || 'Failed to submit quiz');
+        },
+      }
+    );
   };
 
   const handleRetry = () => {
@@ -116,7 +100,6 @@ const QuizPractice: React.FC = () => {
     setCurrentIndex(0);
     setShowResults(false);
     setResults(null);
-    loadQuiz(parseInt(topicId!));
   };
 
   const handleExit = () => {
@@ -137,7 +120,7 @@ const QuizPractice: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
@@ -147,11 +130,12 @@ const QuizPractice: React.FC = () => {
     );
   }
 
-  if (error || questions.length === 0) {
+  const errorMessage = error instanceof Error ? error.message : (typeof error === 'string' ? error : '');
+  if (errorMessage || questions.length === 0) {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto text-center py-12">
-          <div className="text-red-600 mb-4">{error || 'No quiz questions available'}</div>
+          <div className="text-red-600 mb-4">{errorMessage || 'No quiz questions available'}</div>
           <button
             onClick={handleExit}
             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
