@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { topicService } from '../services/topicService';
-import type { Topic, TopicFilterParams } from '../types/topic';
+import type { TopicFilterParams } from '../types/topic';
 import Layout from '../components/Layout';
 import LanguageSelect from '../components/LanguageSelect';
 import { useLanguages } from '../hooks/useLanguages';
+import { useTopics, useDeleteTopic } from '../hooks/useTopic';
 
 const TopicList: React.FC = () => {
   const navigate = useNavigate();
   const { languages } = useLanguages();
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [loading, setLoading] = useState(true);
   
   // Filter state
   const [search, setSearch] = useState('');
@@ -19,52 +17,41 @@ const TopicList: React.FC = () => {
   
   // Pagination
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const pageSize = 12;
 
-  useEffect(() => {
-    loadTopics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search, selectedLevel, selectedLanguage]);
-
-  const loadTopics = async () => {
-    try {
-      setLoading(true);
-      const params: TopicFilterParams = {
-        page,
-        pageSize: 12,
-      };
-
-      if (search) params.search = search;
-      if (selectedLevel) params.level = selectedLevel;
-      if (selectedLanguage) {
-        const lang = languages.find(l => l.id === selectedLanguage);
-        if (lang) params.languageCode = lang.code;
-      }
-
-      const response = await topicService.getTopics(params);
-      setTopics(response.topics);
-      setTotalPages(response.totalPages);
-      setTotal(response.total);
-    } catch (err) {
-      console.error('Error loading topics:', err);
-    } finally {
-      setLoading(false);
-    }
+  // Fetch topics data
+  const params: TopicFilterParams = {
+    page,
+    pageSize,
+    search: search || undefined,
+    level: selectedLevel || undefined,
   };
+
+  if (selectedLanguage) {
+    const lang = languages.find(l => l.id === selectedLanguage);
+    if (lang) params.languageCode = lang.code;
+  }
+
+  const { data, isLoading: topicLoading } = useTopics(params);
+  const { mutate: deleteTopic } = useDeleteTopic();
+
+  const topics = data?.topics ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const total = data?.total ?? 0;
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this topic?')) {
       return;
     }
 
-    try {
-      await topicService.deleteTopic(id);
-      loadTopics();
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete topic');
-    }
+    deleteTopic(id, {
+      onSuccess: () => {
+        // Topic deleted successfully, cache will be invalidated
+      },
+      onError: () => {
+        alert('Failed to delete topic');
+      },
+    });
   };
 
   const getLevelBadgeColor = (level: string) => {
@@ -153,7 +140,7 @@ const TopicList: React.FC = () => {
         </div>
 
         {/* Loading State */}
-        {loading ? (
+        {topicLoading ? (
           <div className="text-center py-12">
             <div className="text-gray-600">Loading topics...</div>
           </div>

@@ -1,70 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { wordService } from '../services/wordService';
-import type { Word, WordFilterParams } from '../types/word';
+import type { WordFilterParams } from '../types/word';
 import Layout from '../components/Layout';
+import { useWords, useDeleteWord } from '../hooks/useWord';
 
 const WordList: React.FC = () => {
   const navigate = useNavigate();
-  const [words, setWords] = useState<Word[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const pageSize = 10;
 
-  const loadWords = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const params: WordFilterParams = {
-        page,
-        pageSize,
-        search: search || undefined,
-      };
-
-      const response = await wordService.getWords(params);
-      setWords(response.words);
-      setTotal(response.total);
-      setTotalPages(response.totalPages);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load words');
-      console.error('Error loading words:', err);
-    } finally {
-      setLoading(false);
-    }
+  const params: WordFilterParams = {
+    page,
+    pageSize,
+    search: search || undefined,
   };
 
-  useEffect(() => {
-    loadWords();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, search]);
+  const { data, isLoading } = useWords(params);
+  const { mutate: deleteWord } = useDeleteWord();
+
+  const words = data?.words ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 1;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setPage(1); // Reset to first page on search
   };
 
-  const handleDeleteWord = async (id: number) => {
+  const handleDeleteWord = (id: number) => {
     if (!window.confirm('Are you sure you want to delete this word?')) {
       return;
     }
 
-    try {
-      await wordService.deleteWord(id);
-      loadWords(); // Reload list
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete word');
-      console.error('Error deleting word:', err);
-    }
+    deleteWord(id, {
+      onError: () => {
+        alert('Failed to delete word');
+      },
+    });
   };
 
-  if (loading && words.length === 0) {
+  if (isLoading && words.length === 0) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
@@ -113,13 +89,6 @@ const WordList: React.FC = () => {
               />
             </div>
           </div>
-
-          {/* Error message */}
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
 
           {/* Words list */}
           {words.length === 0 ? (

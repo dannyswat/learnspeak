@@ -1,50 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { wordService, uploadService } from '../services/wordService';
-import type { Word } from '../types/word';
+import { uploadService } from '../services/wordService';
+import { useWord, useDeleteWord } from '../hooks/useWord';
 
 const WordDetail: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const [word, setWord] = useState<Word | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const wordId = id ? parseInt(id) : 0;
 
-  useEffect(() => {
-    if (id) {
-      loadWord(parseInt(id));
-    }
-  }, [id]);
-
-  const loadWord = async (wordId: number) => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await wordService.getWord(wordId);
-      setWord(data);
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Failed to load word');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: word, isLoading: wordLoading, error } = useWord(wordId);
+  const { mutate: deleteWord } = useDeleteWord();
 
   const handleDelete = async () => {
     if (!word || !window.confirm('Are you sure you want to delete this word?')) {
       return;
     }
 
-    try {
-      await wordService.deleteWord(word.id);
-      navigate('/words');
-    } catch (err) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || 'Failed to delete word');
-    }
+    deleteWord(word.id, {
+      onSuccess: () => {
+        navigate('/words');
+      },
+      onError: () => {
+        alert('Failed to delete word');
+      },
+    });
   };
 
-  if (loading) {
+  if (wordLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-600">Loading word...</div>
@@ -52,11 +34,12 @@ const WordDetail: React.FC = () => {
     );
   }
 
-  if (error || !word) {
+  const errorMessage = error instanceof Error ? error.message : '';
+  if (errorMessage || !word) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Word not found'}</p>
+          <p className="text-red-600 mb-4">{errorMessage || 'Word not found'}</p>
           <button
             onClick={() => navigate('/words')}
             className="text-indigo-600 hover:text-indigo-500"
