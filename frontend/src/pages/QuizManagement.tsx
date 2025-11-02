@@ -20,6 +20,7 @@ const QuizManagement: React.FC = () => {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
+  const [topicName, setTopicName] = useState<string>('');
   
   // Topic words state
   const [topicWords, setTopicWords] = useState<TopicWord[]>([]);
@@ -86,6 +87,7 @@ const QuizManagement: React.FC = () => {
   const loadTopicWords = async () => {
     try {
       const topic = await topicService.getTopic(parseInt(topicId!), true);
+      setTopicName(topic.name);
       if (topic.words) {
         // Filter words that have images
         const wordsWithImages = topic.words.filter(word => word.imageUrl);
@@ -285,8 +287,13 @@ const QuizManagement: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-gray-900">Quiz Questions</h2>
-            <button
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">Quiz Questions</h2>
+              {topicName && (
+                <p className="text-sm text-gray-600 mt-1">Topic: <span className="font-semibold">{topicName}</span></p>
+              )}
+            </div>
+            {!showForm && <button
               onClick={() => {
                 resetForm();
                 setShowForm(true);
@@ -294,7 +301,7 @@ const QuizManagement: React.FC = () => {
               className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
             >
               + Add Question
-            </button>
+            </button>}
           </div>
         </div>
 
