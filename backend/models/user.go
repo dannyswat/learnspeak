@@ -35,8 +35,8 @@ type Role struct {
 // UserRole represents the many-to-many relationship
 type UserRole struct {
 	ID         uint      `json:"id" gorm:"primaryKey"`
-	UserID     uint      `json:"userId" gorm:"not null;index"`
-	RoleID     uint      `json:"roleId" gorm:"not null;index"`
+	UserID     uint      `json:"userId" gorm:"not null;index;uniqueIndex:idx_user_role"`
+	RoleID     uint      `json:"roleId" gorm:"not null;index;uniqueIndex:idx_user_role"`
 	AssignedAt time.Time `json:"assignedAt"`
 
 	User User `json:"-" gorm:"foreignKey:UserID"`
