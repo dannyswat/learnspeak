@@ -23,6 +23,8 @@ const BulkWordCreation: React.FC = () => {
   const [error, setError] = useState('');
   const [translating, setTranslating] = useState(false);
   const [generatingAudio, setGeneratingAudio] = useState(false);
+  const [autoPlaying, setAutoPlaying] = useState(false);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number>(-1);
 
   useEffect(() => {
     // Auto-select first language if available
@@ -185,6 +187,45 @@ const BulkWordCreation: React.FC = () => {
     } finally {
       setGeneratingAudio(false);
     }
+  };
+
+  const handleAutoPlay = async () => {
+    const wordsWithAudio = words.filter(w => w.audioUrl);
+    
+    if (wordsWithAudio.length === 0) {
+      alert('No audio files available to play. Generate audio first.');
+      return;
+    }
+
+    setAutoPlaying(true);
+    
+    for (let i = 0; i < words.length; i++) {
+      if (!words[i].audioUrl) continue;
+      
+      setCurrentPlayingIndex(i);
+      
+      try {
+        const audio = new Audio(words[i].audioUrl);
+        await new Promise<void>((resolve, reject) => {
+          audio.onended = () => resolve();
+          audio.onerror = () => reject(new Error('Audio playback failed'));
+          audio.play().catch(reject);
+        });
+        
+        // Wait 500ms between each audio
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (err) {
+        console.error('Error playing audio:', err);
+      }
+    }
+    
+    setAutoPlaying(false);
+    setCurrentPlayingIndex(-1);
+  };
+
+  const handleStopAutoPlay = () => {
+    setAutoPlaying(false);
+    setCurrentPlayingIndex(-1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -384,6 +425,24 @@ const BulkWordCreation: React.FC = () => {
                     </>
                   )}
                 </button>
+                {autoPlaying ? (
+                  <button
+                    type="button"
+                    onClick={handleStopAutoPlay}
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center gap-2"
+                  >
+                    ⏹️ Stop
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAutoPlay}
+                    disabled={words.filter(w => w.audioUrl).length === 0}
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    ▶️ <span className="hidden sm:inline">Autoplay</span><span className="sm:hidden">Play</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={addMoreWords}
@@ -397,18 +456,26 @@ const BulkWordCreation: React.FC = () => {
 
             <div className="space-y-6">
               {words.map((word, index) => (
-                <WordEntryForm
+                <div
                   key={index}
-                  word={word}
-                  index={index}
-                  onChange={handleWordChange}
-                  onRemove={removeWord}
-                  languages={languages}
-                  targetLanguage={targetLanguage}
-                  disabled={saving}
-                  showRemoveButton={true}
-                  readOnlyBaseWord={false}
-                />
+                  className={`transition-all ${
+                    currentPlayingIndex === index
+                      ? 'ring-4 ring-teal-400 ring-opacity-50 shadow-lg'
+                      : ''
+                  }`}
+                >
+                  <WordEntryForm
+                    word={word}
+                    index={index}
+                    onChange={handleWordChange}
+                    onRemove={removeWord}
+                    languages={languages}
+                    targetLanguage={targetLanguage}
+                    disabled={saving}
+                    showRemoveButton={true}
+                    readOnlyBaseWord={false}
+                  />
+                </div>
               ))}
             </div>
 

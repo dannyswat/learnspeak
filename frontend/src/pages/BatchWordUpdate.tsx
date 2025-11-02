@@ -20,6 +20,8 @@ const BatchWordUpdate: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [generatingAudio, setGeneratingAudio] = useState(false);
+  const [autoPlaying, setAutoPlaying] = useState(false);
+  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number>(-1);
   const [topicName, setTopicName] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
   const [words, setWords] = useState<WordWithId[]>([]);
@@ -213,6 +215,45 @@ const BatchWordUpdate: React.FC = () => {
     }
   };
 
+  const handleAutoPlay = async () => {
+    const wordsWithAudio = words.filter(w => w.audioUrl);
+    
+    if (wordsWithAudio.length === 0) {
+      alert('No audio files available to play. Generate audio first.');
+      return;
+    }
+
+    setAutoPlaying(true);
+    
+    for (let i = 0; i < words.length; i++) {
+      if (!words[i].audioUrl) continue;
+      
+      setCurrentPlayingIndex(i);
+      
+      try {
+        const audio = new Audio(words[i].audioUrl);
+        await new Promise<void>((resolve, reject) => {
+          audio.onended = () => resolve();
+          audio.onerror = () => reject(new Error('Audio playback failed'));
+          audio.play().catch(reject);
+        });
+        
+        // Wait 500ms between each audio
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (err) {
+        console.error('Error playing audio:', err);
+      }
+    }
+    
+    setAutoPlaying(false);
+    setCurrentPlayingIndex(-1);
+  };
+
+  const handleStopAutoPlay = () => {
+    setAutoPlaying(false);
+    setCurrentPlayingIndex(-1);
+  };
+
   const hasChanges = () => {
     return words.some((word, index) => {
       const original = originalWords[index];
@@ -299,6 +340,24 @@ const BatchWordUpdate: React.FC = () => {
                     </>
                   )}
                 </button>
+                {autoPlaying ? (
+                  <button
+                    type="button"
+                    onClick={handleStopAutoPlay}
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center gap-2"
+                  >
+                    ⏹️ Stop
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAutoPlay}
+                    disabled={words.filter(w => w.audioUrl).length === 0 || saving}
+                    className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    ▶️ <span className="hidden sm:inline">Autoplay</span><span className="sm:hidden">Play</span>
+                  </button>
+                )}
                 {hasChanges() && (
                   <button
                     type="button"
@@ -314,17 +373,25 @@ const BatchWordUpdate: React.FC = () => {
 
             <div className="space-y-4 sm:space-y-6">
               {words.map((word, index) => (
-                <WordEntryForm
+                <div
                   key={word.id}
-                  word={word}
-                  index={index}
-                  onChange={handleWordChange}
-                  languages={languages}
-                  targetLanguage={targetLanguage}
-                  disabled={saving}
-                  showRemoveButton={false}
-                  readOnlyBaseWord={false}
-                />
+                  className={`transition-all ${
+                    currentPlayingIndex === index
+                      ? 'ring-4 ring-teal-400 ring-opacity-50 shadow-lg'
+                      : ''
+                  }`}
+                >
+                  <WordEntryForm
+                    word={word}
+                    index={index}
+                    onChange={handleWordChange}
+                    languages={languages}
+                    targetLanguage={targetLanguage}
+                    disabled={saving}
+                    showRemoveButton={false}
+                    readOnlyBaseWord={false}
+                  />
+                </div>
               ))}
             </div>
 

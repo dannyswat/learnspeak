@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { topicService } from '../services/topicService';
 import type { Topic } from '../types/topic';
 import Layout from '../components/Layout';
+import WordsSlideShow from '../components/WordsSlideShow';
 import { useAuth } from '../hooks/useAuth';
 
 const TopicDetail: React.FC = () => {
@@ -48,28 +49,6 @@ const TopicDetail: React.FC = () => {
       loadTopic(parseInt(id));
     }
   }, [id]);
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (selectedImageIndex === null) return;
-
-      if (e.key === 'ArrowLeft') {
-        handlePreviousImage();
-      } else if (e.key === 'ArrowRight') {
-        handleNextImage();
-      } else if (e.key === 'Escape') {
-        handleCloseModal();
-      }
-    };
-
-    if (selectedImageIndex !== null) {
-      window.addEventListener('keydown', handleKeyPress);
-    }
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, [selectedImageIndex, wordsWithImages.length, handlePreviousImage, handleNextImage, handleCloseModal]);
 
   const loadTopic = async (topicId: number) => {
     try {
@@ -348,96 +327,13 @@ const TopicDetail: React.FC = () => {
         </div>
 
         {/* Image Modal */}
-        {selectedImageIndex !== null && wordsWithImages[selectedImageIndex] && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-2 sm:p-4"
-            onClick={handleCloseModal}
-          >
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white text-3xl sm:text-4xl hover:text-gray-300 transition-colors z-10"
-              title="Close (Esc)"
-            >
-              ×
-            </button>
-
-            {/* Previous Button */}
-            {selectedImageIndex > 0 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePreviousImage();
-                }}
-                className="absolute left-2 sm:left-4 text-white text-4xl sm:text-5xl hover:text-gray-300 transition-colors z-10"
-                title="Previous (←)"
-              >
-                ‹
-              </button>
-            )}
-
-            {/* Next Button */}
-            {selectedImageIndex < wordsWithImages.length - 1 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNextImage();
-                }}
-                className="absolute right-2 sm:right-4 text-white text-4xl sm:text-5xl hover:text-gray-300 transition-colors z-10"
-                title="Next (→)"
-              >
-                ›
-              </button>
-            )}
-
-            {/* Image Container */}
-            <div
-              className="max-w-5xl max-h-[90vh] flex flex-col items-center w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={wordsWithImages[selectedImageIndex].imageUrl}
-                alt={wordsWithImages[selectedImageIndex].baseWord}
-                className="max-w-full max-h-[60vh] sm:max-h-[70vh] object-contain rounded-lg shadow-2xl"
-              />
-
-              {/* Word Info */}
-              <div className="mt-4 sm:mt-6 bg-white rounded-lg p-3 sm:p-4 shadow-xl max-w-md w-full mx-2">
-                <div className="text-center">
-                  <div className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                    {wordsWithImages[selectedImageIndex].baseWord}
-                  </div>
-                  <div className="text-lg sm:text-xl text-gray-700 mb-1">
-                    {wordsWithImages[selectedImageIndex].translation}
-                  </div>
-                  {wordsWithImages[selectedImageIndex].romanization && (
-                    <div className="text-sm text-gray-500">
-                      {wordsWithImages[selectedImageIndex].romanization}
-                    </div>
-                  )}
-                  <div className="text-sm text-gray-400 mt-2">
-                    {selectedImageIndex + 1} / {wordsWithImages.length}
-                  </div>
-                </div>
-
-                {/* Audio Player */}
-                {wordsWithImages[selectedImageIndex].audioUrl && (
-                  <div className="mt-3">
-                    <audio controls className="w-full">
-                      <source src={wordsWithImages[selectedImageIndex].audioUrl} />
-                      Your browser does not support the audio element.
-                    </audio>
-                  </div>
-                )}
-              </div>
-
-              {/* Navigation Hint */}
-              <div className="mt-2 sm:mt-4 text-white text-xs sm:text-sm text-center opacity-75 px-2">
-                <span className="hidden sm:inline">Use arrow keys (← →) or click arrows to navigate • Press Esc to close</span>
-                <span className="sm:hidden">Tap arrows to navigate • Tap × to close</span>
-              </div>
-            </div>
-          </div>
-        )}
+        <WordsSlideShow
+          words={wordsWithImages}
+          selectedImageIndex={selectedImageIndex}
+          onClose={handleCloseModal}
+          onPrevious={handlePreviousImage}
+          onNext={handleNextImage}
+        />
       </div>
     </Layout>
   );
