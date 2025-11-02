@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { quizService } from '../services/quizService';
 import { uploadService } from '../services/wordService';
 import Layout from '../components/Layout';
+import DynamicViewer from '../components/DynamicViewer';
 import type { QuizQuestionForPractice, QuizAnswer, QuizResult } from '../types/quiz';
 
 const QuizPractice: React.FC = () => {
@@ -283,7 +284,7 @@ const QuizPractice: React.FC = () => {
                               : 'bg-gray-50'
                           }`}
                         >
-                          <span className="font-medium">{getOptionLabel(option)}.</span> {optionText}
+                          <span className="font-medium">{getOptionLabel(option)}.</span> <DynamicViewer value={optionText as string} className="inline" />
                           {isCorrectAnswer && <span className="ml-2 text-green-600">✓</span>}
                           {isUserAnswer && !isCorrectAnswer && <span className="ml-2 text-red-600">✗</span>}
                         </div>
@@ -378,9 +379,9 @@ const QuizPractice: React.FC = () => {
                       : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-3 font-medium ${
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-1 font-medium flex-shrink-0 ${
                         isSelected
                           ? 'border-green-500 bg-green-500 text-white'
                           : 'border-gray-300 text-gray-600'
@@ -388,7 +389,12 @@ const QuizPractice: React.FC = () => {
                     >
                       {getOptionLabel(option)}
                     </div>
-                    <span className="text-gray-900">{optionText}</span>
+                    <div className="flex-1 min-w-0">
+                      <DynamicViewer
+                        value={optionText as string}
+                        className="text-left"
+                      />
+                    </div>
                   </div>
                 </button>
               );

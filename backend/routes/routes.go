@@ -82,6 +82,9 @@ func SetupRoutes(e *echo.Echo, cfg *config.Config, uploadDir string) {
 		// Profile photo upload (all authenticated users)
 		protected.POST("/upload/profile", uploadHandler.UploadProfilePhoto)
 
+		// Image browser (list all uploaded images with pagination)
+		protected.GET("/upload/images", uploadHandler.ListImages)
+
 		// Languages
 		protected.GET("/languages", languageHandler.GetLanguages)
 

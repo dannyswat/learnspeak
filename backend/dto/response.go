@@ -13,3 +13,19 @@ type SuccessResponse struct {
 	Message string      `json:"message,omitempty"`
 	Data    interface{} `json:"data,omitempty"`
 }
+
+// ImageItem represents a single uploaded image
+type ImageItem struct {
+	Filename string `json:"filename"`
+	URL      string `json:"url"`
+	Size     int64  `json:"size"`
+	ModTime  int64  `json:"modTime"`
+}
+
+// ImageListResponse represents a paginated list of images
+type ImageListResponse struct {
+	Images []ImageItem `json:"images"`
+	Total  int         `json:"total"`
+	Page   int         `json:"page"`
+	Pages  int         `json:"pages"`
+}

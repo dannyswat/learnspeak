@@ -6,6 +6,8 @@ import { topicService } from '../services/topicService';
 import Layout from '../components/Layout';
 import CustomAudioGenerationButton from '../components/CustomAudioGenerationButton';
 import TopicImagesSelectorButton from '../components/TopicImagesSelectorButton';
+import DynamicInput from '../components/DynamicInput';
+import DynamicViewer from '../components/DynamicViewer';
 import type { QuizQuestion, CreateQuizQuestionRequest } from '../types/quiz';
 import type { TopicWord } from '../types/topic';
 
@@ -487,52 +489,48 @@ const QuizManagement: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Option A
                   </label>
-                  <input
-                    type="text"
-                    value={formData.optionA}
-                    onChange={(e) => setFormData({ ...formData, optionA: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
+                  <div className="bg-white rounded-lg border border-gray-300 overflow-hidden">
+                    <DynamicInput
+                      value={formData.optionA}
+                      onChange={(value) => setFormData({ ...formData, optionA: value })}
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Option B
                   </label>
-                  <input
-                    type="text"
-                    value={formData.optionB}
-                    onChange={(e) => setFormData({ ...formData, optionB: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
+                  <div className="bg-white rounded-lg border border-gray-300 overflow-hidden">
+                    <DynamicInput
+                      value={formData.optionB}
+                      onChange={(value) => setFormData({ ...formData, optionB: value })}
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Option C
                   </label>
-                  <input
-                    type="text"
-                    value={formData.optionC}
-                    onChange={(e) => setFormData({ ...formData, optionC: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
+                  <div className="bg-white rounded-lg border border-gray-300 overflow-hidden">
+                    <DynamicInput
+                      value={formData.optionC}
+                      onChange={(value) => setFormData({ ...formData, optionC: value })}
+                    />
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Option D
                   </label>
-                  <input
-                    type="text"
-                    value={formData.optionD}
-                    onChange={(e) => setFormData({ ...formData, optionD: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  />
+                  <div className="bg-white rounded-lg border border-gray-300 overflow-hidden">
+                    <DynamicInput
+                      value={formData.optionD}
+                      onChange={(value) => setFormData({ ...formData, optionD: value })}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -556,7 +554,8 @@ const QuizManagement: React.FC = () => {
         )}
 
         {/* Questions List */}
-        <div className="bg-white shadow rounded-lg p-6">
+        {!showForm && (
+          <div className="bg-white shadow rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Questions ({questions.length})
           </h3>
@@ -610,7 +609,10 @@ const QuizManagement: React.FC = () => {
                             isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
                           }`}
                         >
-                          <span className="font-medium">{option.toUpperCase()}.</span> {optionText}
+                          <span className="font-medium">{option.toUpperCase()}.</span>
+                          <div className="mt-1">
+                            <DynamicViewer value={optionText as string} className="inline" />
+                          </div>
                           {isCorrect && <span className="ml-2 text-green-600">✓</span>}
                         </div>
                       );
@@ -621,6 +623,7 @@ const QuizManagement: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
       </div>
     </Layout>

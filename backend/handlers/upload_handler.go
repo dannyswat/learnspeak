@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -147,6 +149,127 @@ func (h *FileUploadHandler) uploadFile(c echo.Context, fileType string, allowedE
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+// ListImages handles GET /api/upload/images?page=1&pageSize=20
+// @Summary List uploaded images
+// @Description List all uploaded images with pagination
+// @Tags upload
+// @Produce json
+// @Param page query int false "Page number (default: 1)"
+// @Param pageSize query int false "Items per page (default: 20)"
+// @Success 200 {object} dto.ImageListResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/upload/images [get]
+func (h *FileUploadHandler) ListImages(c echo.Context) error {
+	page := 1
+	pageSize := 20
+
+	if p := c.QueryParam("page"); p != "" {
+		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
+			page = parsed
+		}
+	}
+	if ps := c.QueryParam("pageSize"); ps != "" {
+		if parsed, err := strconv.Atoi(ps); err == nil && parsed > 0 && parsed <= 100 {
+			pageSize = parsed
+		}
+	}
+
+	// Read images from both image and image-cache directories
+	type imageFileWithDir struct {
+		entry os.DirEntry
+		dir   string
+	}
+
+	var imageFilesWithDir []imageFileWithDir
+
+	// Read main image directory
+	imageDir := filepath.Join(h.uploadDir, "image")
+	entries, err := os.ReadDir(imageDir)
+	if err != nil && !os.IsNotExist(err) {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read images")
+	}
+
+	// Add files from image directory
+	if err == nil {
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				imageFilesWithDir = append(imageFilesWithDir, imageFileWithDir{entry, "image"})
+			}
+		}
+	}
+
+	// Read image-cache directory
+	cacheDir := filepath.Join(h.uploadDir, "image-cache")
+	cacheEntries, err := os.ReadDir(cacheDir)
+	if err != nil && !os.IsNotExist(err) {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to read image cache")
+	}
+
+	// Add files from image-cache directory
+	if err == nil {
+		for _, entry := range cacheEntries {
+			if !entry.IsDir() {
+				imageFilesWithDir = append(imageFilesWithDir, imageFileWithDir{entry, "image-cache"})
+			}
+		}
+	}
+
+	// If no images found in either directory, return empty response
+	if len(imageFilesWithDir) == 0 {
+		return c.JSON(http.StatusOK, dto.ImageListResponse{
+			Images: []dto.ImageItem{},
+			Total:  0,
+			Page:   page,
+			Pages:  0,
+		})
+	}
+
+	// Sort by modification time (newest first)
+	sort.Slice(imageFilesWithDir, func(i, j int) bool {
+		infoI, _ := imageFilesWithDir[i].entry.Info()
+		infoJ, _ := imageFilesWithDir[j].entry.Info()
+		return infoI.ModTime().After(infoJ.ModTime())
+	})
+
+	// Calculate pagination
+	total := len(imageFilesWithDir)
+	pages := (total + pageSize - 1) / pageSize
+	if page > pages && pages > 0 {
+		page = pages
+	}
+
+	// Get page slice
+	start := (page - 1) * pageSize
+	end := start + pageSize
+	if start > total {
+		start = total
+	}
+	if end > total {
+		end = total
+	}
+
+	pageImages := imageFilesWithDir[start:end]
+
+	// Build response
+	images := make([]dto.ImageItem, len(pageImages))
+	for i, fileWithDir := range pageImages {
+		info, _ := fileWithDir.entry.Info()
+		images[i] = dto.ImageItem{
+			Filename: fileWithDir.entry.Name(),
+			URL:      fmt.Sprintf("/uploads/%s/%s", fileWithDir.dir, fileWithDir.entry.Name()),
+			Size:     info.Size(),
+			ModTime:  info.ModTime().Unix(),
+		}
+	}
+
+	return c.JSON(http.StatusOK, dto.ImageListResponse{
+		Images: images,
+		Total:  total,
+		Page:   page,
+		Pages:  pages,
+	})
 }
 
 // contains checks if a slice contains a string

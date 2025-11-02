@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { uploadService } from '../services/wordService';
 import imageGenerationService from '../services/imageGenerationService';
+import ImageBrowser from './ImageBrowser';
 
 interface ImageInputProps {
   value: string;
@@ -9,6 +10,7 @@ interface ImageInputProps {
   label?: string;
   showGenerateButton?: boolean;
   disabled?: boolean;
+  allowSelection?: boolean;
 }
 
 const ImageInput: React.FC<ImageInputProps> = ({
@@ -18,11 +20,13 @@ const ImageInput: React.FC<ImageInputProps> = ({
   label = 'Image',
   showGenerateButton = true,
   disabled = false,
+  allowSelection = false,
 }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [showCustomPrompt, setShowCustomPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
+  const [showImageBrowser, setShowImageBrowser] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -119,6 +123,16 @@ const ImageInput: React.FC<ImageInputProps> = ({
                 className="sr-only"
               />
             </label>
+            {allowSelection && (
+              <button
+                type="button"
+                onClick={() => setShowImageBrowser(true)}
+                disabled={disabled}
+                className="py-2 px-3 border border-blue-300 rounded-md shadow-sm text-sm leading-4 font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                📁 Browse
+              </button>
+            )}
             {showGenerateButton && onGenerateImage && (
               <div className="flex items-center gap-1">
                 <button
@@ -195,6 +209,13 @@ const ImageInput: React.FC<ImageInputProps> = ({
           </button>
         )}
       </div>
+
+      {/* Image Browser Modal */}
+      <ImageBrowser
+        isOpen={showImageBrowser}
+        onClose={() => setShowImageBrowser(false)}
+        onSelect={onChange}
+      />
     </div>
   );
 };
