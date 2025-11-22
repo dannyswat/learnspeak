@@ -27,12 +27,20 @@ const QuizManagement: React.FC = () => {
   // UI State
   const [showForm, setShowForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<typeof questions[0] | null>(null);
+  const [showAutoGenDialog, setShowAutoGenDialog] = useState(false);
   
   // Upload and recording state
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  
+  // Auto-generation state
+  const [autoGenConfig, setAutoGenConfig] = useState({
+    questionType: 'translation' as 'translation' | 'listening' | 'image',
+    answerFormat: 'text' as 'text' | 'image' | 'audio',
+    numberOfQuestions: 5,
+  });
   
   // Refs for audio recording
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -67,6 +75,116 @@ const QuizManagement: React.FC = () => {
       }
     };
   }, []);
+
+  const generateQuestions = async () => {
+    if (!topic || !topic.words || topic.words.length < 4) {
+      alert('Need at least 4 words in the topic to generate quiz questions.');
+      return;
+    }
+
+    const { questionType, answerFormat, numberOfQuestions } = autoGenConfig;
+    
+    // Validate that answer format is compatible with question type
+    if (questionType === 'listening' && answerFormat === 'audio') {
+      alert('Cannot use audio answers for listening questions. Please choose text or image answers.');
+      return;
+    }
+    
+    const availableWords = topic.words.filter(word => {
+      // Filter words based on requirements
+      if (questionType === 'image' && !word.imageUrl) return false;
+      if (questionType === 'listening' && !word.audioUrl) return false;
+      if (answerFormat === 'image' && !word.imageUrl) return false;
+      if (answerFormat === 'audio' && !word.audioUrl) return false;
+      return word.translation; // Must have translation
+    });
+
+    if (availableWords.length < 4) {
+      const requirement = 
+        questionType === 'image' ? 'images' : 
+        questionType === 'listening' ? 'audio files' : 
+        answerFormat === 'image' ? 'images' :
+        answerFormat === 'audio' ? 'audio files' : 'translations';
+      alert(`Need at least 4 words with ${requirement} to generate questions.`);
+      return;
+    }
+
+    const questionsToGenerate = Math.min(numberOfQuestions, availableWords.length);
+    const generatedQuestions: CreateQuizQuestionRequest[] = [];
+
+    // Shuffle and select words
+    const shuffledWords = [...availableWords].sort(() => Math.random() - 0.5);
+    const selectedWords = shuffledWords.slice(0, questionsToGenerate);
+
+    for (const word of selectedWords) {
+      // Get other words for incorrect options
+      const otherWords = availableWords.filter(w => w.id !== word.id);
+      const shuffledOthers = [...otherWords].sort(() => Math.random() - 0.5);
+      const incorrectWords = shuffledOthers.slice(0, 3);
+
+      // Prepare question based on type
+      let questionText = '';
+      let audioUrl: string | undefined;
+      let imageUrl: string | undefined;
+
+      if (questionType === 'translation') {
+        questionText = `What is the translation of "${word.baseWord}"?`;
+      } else if (questionType === 'listening') {
+        questionText = 'Listen to the audio and select the correct translation:';
+        audioUrl = word.audioUrl;
+      } else if (questionType === 'image') {
+        questionText = 'What does this image represent?';
+        imageUrl = word.imageUrl;
+      }
+
+      // Prepare options based on answer format
+      const allWords = [word, ...incorrectWords];
+      const shuffledOptions = [...allWords].sort(() => Math.random() - 0.5);
+      
+      const options: string[] = shuffledOptions.map(w => {
+        if (answerFormat === 'text') {
+          return w.translation || w.baseWord;
+        } else if (answerFormat === 'image') {
+          return w.imageUrl || '';
+        } else if (answerFormat === 'audio') {
+          return w.audioUrl || '';
+        }
+        return '';
+      });
+
+      // Find correct answer position
+      const correctIndex = shuffledOptions.findIndex(w => w.id === word.id);
+      const correctAnswer = ['a', 'b', 'c', 'd'][correctIndex] as 'a' | 'b' | 'c' | 'd';
+
+      const question: CreateQuizQuestionRequest = {
+        topicId: topicIdNum,
+        wordId: word.id,
+        questionType,
+        questionText,
+        audioUrl,
+        imageUrl,
+        correctAnswer,
+        optionA: options[0],
+        optionB: options[1],
+        optionC: options[2],
+        optionD: options[3],
+      };
+
+      generatedQuestions.push(question);
+    }
+
+    // Create all questions
+    try {
+      for (const question of generatedQuestions) {
+        await createMutation.mutateAsync(question);
+      }
+      setShowAutoGenDialog(false);
+      alert(`Successfully generated ${generatedQuestions.length} questions!`);
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to generate questions');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -264,17 +382,123 @@ const QuizManagement: React.FC = () => {
                 <p className="text-sm text-gray-600 mt-1">Topic: <span className="font-semibold">{topicName}</span></p>
               )}
             </div>
-            {!showForm && <button
-              onClick={() => {
-                resetForm();
-                setShowForm(true);
-              }}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-            >
-              + Add Question
-            </button>}
+            {!showForm && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAutoGenDialog(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  🤖 Auto-Generate
+                </button>
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setShowForm(true);
+                  }}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  + Add Question
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Auto-Generate Dialog */}
+        {showAutoGenDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-semibold mb-4">Auto-Generate Quiz Questions</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Question Type
+                  </label>
+                  <select
+                    value={autoGenConfig.questionType}
+                    onChange={(e) =>
+                      setAutoGenConfig({ ...autoGenConfig, questionType: e.target.value as 'translation' | 'listening' | 'image' })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="translation">Translation (Text)</option>
+                    <option value="listening">Listening (Audio)</option>
+                    <option value="image">Image Recognition</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {autoGenConfig.questionType === 'translation' && 'Show the base word, ask for translation'}
+                    {autoGenConfig.questionType === 'listening' && 'Play audio, ask for translation'}
+                    {autoGenConfig.questionType === 'image' && 'Show image, ask what it represents'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Answer Format
+                  </label>
+                  <select
+                    value={autoGenConfig.answerFormat}
+                    onChange={(e) =>
+                      setAutoGenConfig({ ...autoGenConfig, answerFormat: e.target.value as 'text' | 'image' | 'audio' })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="text">Text (Translation)</option>
+                    <option value="image">Image</option>
+                    <option value="audio">Audio</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {autoGenConfig.answerFormat === 'text' && 'Options will be text translations'}
+                    {autoGenConfig.answerFormat === 'image' && 'Options will be images'}
+                    {autoGenConfig.answerFormat === 'audio' && 'Options will be audio clips'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Number of Questions
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={autoGenConfig.numberOfQuestions}
+                    onChange={(e) =>
+                      setAutoGenConfig({ ...autoGenConfig, numberOfQuestions: parseInt(e.target.value) || 1 })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Generate up to {topic?.words?.length || 0} questions (total words available)
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> Words will be randomly selected from the topic. Each question will have 4 multiple choice options.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-6">
+                <button
+                  onClick={() => setShowAutoGenDialog(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={generateQuestions}
+                  disabled={createMutation.isPending}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                >
+                  {createMutation.isPending ? 'Generating...' : 'Generate'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Question Form */}
         {showForm && (
