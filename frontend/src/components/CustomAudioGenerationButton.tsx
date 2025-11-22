@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ttsService from '../services/ttsService';
+import { voiceOptions, type VoiceOption } from '../config/voiceOptions';
 
 interface CustomAudioGenerationButtonProps {
   onAudioGenerated: (audioUrl: string) => void;
@@ -97,13 +98,15 @@ const CustomAudioGenerationButton: React.FC<CustomAudioGenerationButtonProps> = 
                   onChange={(e) => setTtsVoice(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="zh-HK-HiuMaanNeural">Cantonese (Hong Kong) - Female (HiuMaan)</option>
-                  <option value="zh-HK-HiuGaaiNeural">Cantonese (Hong Kong) - Female (HiuGaai)</option>
-                  <option value="zh-HK-WanLungNeural">Cantonese (Hong Kong) - Male (WanLung)</option>
-                  <option value="zh-CN-XiaoxiaoNeural">Mandarin (China) - Female (Xiaoxiao)</option>
-                  <option value="zh-CN-YunxiNeural">Mandarin (China) - Male (Yunxi)</option>
-                  <option value="en-US-JennyNeural">English (US) - Female (Jenny)</option>
-                  <option value="en-US-GuyNeural">English (US) - Male (Guy)</option>
+                  {Object.entries(voiceOptions).map(([langCode, voices]) => (
+                    <optgroup key={langCode} label={langCode.toUpperCase()}>
+                      {voices.map((voice: VoiceOption) => (
+                        <option key={voice.voice} value={voice.voice}>
+                          {voice.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
 

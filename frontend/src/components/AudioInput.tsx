@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { uploadService } from '../services/wordService';
 import ttsService from '../services/ttsService';
 import { convertBlobToMp3 } from '../utils/audioConverter';
+import { getVoicesForLanguage, hasVoiceOptions, type VoiceOption } from '../config/voiceOptions';
 
 interface AudioInputProps {
   value: string;
@@ -57,50 +58,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
     };
   }, [showVoiceSelector]);
 
-  // Voice options for different languages
-  const voiceOptions: { [key: string]: { name: string; voice: string; gender: string }[] } = {
-    'en-US': [
-      { name: 'Jenny (Female)', voice: 'en-US-JennyNeural', gender: 'Female' },
-      { name: 'Guy (Male)', voice: 'en-US-GuyNeural', gender: 'Male' },
-      { name: 'Aria (Female)', voice: 'en-US-AriaNeural', gender: 'Female' },
-      { name: 'Davis (Male)', voice: 'en-US-DavisNeural', gender: 'Male' },
-    ],
-    'zh-HK': [
-      { name: 'HiuMaan (Female)', voice: 'zh-HK-HiuMaanNeural', gender: 'Female' },
-      { name: 'WanLung (Male)', voice: 'zh-HK-WanLungNeural', gender: 'Male' },
-      { name: 'HiuGaai (Female)', voice: 'zh-HK-HiuGaaiNeural', gender: 'Female' },
-    ],
-    'zh-CN': [
-      { name: 'Xiaoxiao (Female)', voice: 'zh-CN-XiaoxiaoNeural', gender: 'Female' },
-      { name: 'Yunyang (Male)', voice: 'zh-CN-YunyangNeural', gender: 'Male' },
-      { name: 'Xiaoyi (Female)', voice: 'zh-CN-XiaoyiNeural', gender: 'Female' },
-      { name: 'Yunjian (Male)', voice: 'zh-CN-YunjianNeural', gender: 'Male' },
-    ],
-    'es': [
-      { name: 'Elvira (Female)', voice: 'es-ES-ElviraNeural', gender: 'Female' },
-      { name: 'Alvaro (Male)', voice: 'es-ES-AlvaroNeural', gender: 'Male' },
-      { name: 'Abril (Female)', voice: 'es-ES-AbrilNeural', gender: 'Female' },
-      { name: 'Arnold (Male)', voice: 'es-ES-ArnoldNeural', gender: 'Male' },
-    ],
-    'fr': [
-      { name: 'Denise (Female)', voice: 'fr-FR-DeniseNeural', gender: 'Female' },
-      { name: 'Henri (Male)', voice: 'fr-FR-HenriNeural', gender: 'Male' },
-      { name: 'Brigitte (Female)', voice: 'fr-FR-BrigitteNeural', gender: 'Female' },
-      { name: 'Alain (Male)', voice: 'fr-FR-AlainNeural', gender: 'Male' },
-    ],
-    'ja': [
-      { name: 'Nanami (Female)', voice: 'ja-JP-NanamiNeural', gender: 'Female' },
-      { name: 'Keita (Male)', voice: 'ja-JP-KeitaNeural', gender: 'Male' },
-      { name: 'Aoi (Female)', voice: 'ja-JP-AoiNeural', gender: 'Female' },
-      { name: 'Daichi (Male)', voice: 'ja-JP-DaichiNeural', gender: 'Male' },
-    ],
-    'ko': [
-      { name: 'SunHi (Female)', voice: 'ko-KR-SunHiNeural', gender: 'Female' },
-      { name: 'InJoon (Male)', voice: 'ko-KR-InJoonNeural', gender: 'Male' },
-      { name: 'JiMin (Female)', voice: 'ko-KR-JiMinNeural', gender: 'Female' },
-      { name: 'BongJin (Male)', voice: 'ko-KR-BongJinNeural', gender: 'Male' },
-    ],
-  };
+
 
   useEffect(() => {
     // Cleanup on unmount
@@ -244,13 +202,13 @@ const AudioInput: React.FC<AudioInputProps> = ({
   // Get voices for current language
   const getCurrentVoices = () => {
     if (!languageCode) return [];
-    return voiceOptions[languageCode] || [];
+    return getVoicesForLanguage(languageCode);
   };
 
   const getSelectedVoiceName = () => {
     if (!selectedVoice) return null;
     const voices = getCurrentVoices();
-    const voice = voices.find(v => v.voice === selectedVoice);
+    const voice = voices.find((v: VoiceOption) => v.voice === selectedVoice);
     return voice?.name || null;
   };
 
@@ -421,7 +379,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
                     >
                       🔊 Generate
                     </button>
-                    {languageCode && getCurrentVoices().length > 0 && (
+                    {languageCode && hasVoiceOptions(languageCode) && (
                       <button
                         type="button"
                         onClick={() => setShowVoiceSelector(!showVoiceSelector)}
@@ -445,7 +403,7 @@ const AudioInput: React.FC<AudioInputProps> = ({
                             )}
                           </div>
                           <div className="space-y-1 max-h-64 overflow-y-auto">
-                            {getCurrentVoices().map((voice) => (
+                            {getCurrentVoices().map((voice: VoiceOption) => (
                               <button
                                 key={voice.voice}
                                 type="button"

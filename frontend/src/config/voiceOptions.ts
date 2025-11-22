@@ -103,6 +103,18 @@ export const voiceOptions: { [languageCode: string]: VoiceOption[] } = {
     { name: 'JiMin (Female)', voice: 'ko-KR-JiMinNeural', gender: 'Female' },
     { name: 'BongJin (Male)', voice: 'ko-KR-BongJinNeural', gender: 'Male' },
   ],
+
+  // Vietnamese (Vietnam)
+  'vi': [
+    { name: 'HoaiMy (Female)', voice: 'vi-VN-HoaiMyNeural', gender: 'Female' },
+    { name: 'NamMinh (Male)', voice: 'vi-VN-NamMinhNeural', gender: 'Male' },
+  ],
+
+  // Vietnamese (Vietnam) - alternate code
+  'vi-VN': [
+    { name: 'HoaiMy (Female)', voice: 'vi-VN-HoaiMyNeural', gender: 'Female' },
+    { name: 'NamMinh (Male)', voice: 'vi-VN-NamMinhNeural', gender: 'Male' },
+  ],
 };
 
 /**

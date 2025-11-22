@@ -95,6 +95,7 @@ func seedEssentialData() error {
 		{Code: "fr", Name: "French", NativeName: "Français", Direction: "ltr", IsActive: true},
 		{Code: "ja", Name: "Japanese", NativeName: "日本語", Direction: "ltr", IsActive: true},
 		{Code: "ko", Name: "Korean", NativeName: "한국어", Direction: "ltr", IsActive: true},
+		{Code: "vi", Name: "Vietnamese", NativeName: "Tiếng Việt", Direction: "ltr", IsActive: true},
 	}
 
 	for _, language := range languages {

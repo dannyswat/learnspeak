@@ -168,6 +168,7 @@ func (s *TTSService) getDefaultVoice(language string) string {
 		"fr":    "fr-FR-DeniseNeural", // French - Female
 		"ja":    "ja-JP-NanamiNeural", // Japanese - Female
 		"ko":    "ko-KR-SunHiNeural",  // Korean - Female
+		"vi":    "vi-VN-HoaiMyNeural", // Vietnamese - Female
 	}
 
 	if voice, ok := voiceMap[language]; ok {
