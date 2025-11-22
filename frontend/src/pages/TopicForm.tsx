@@ -3,17 +3,20 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { topicService } from '../services/topicService';
 import { wordService } from '../services/wordService';
 import type { CreateTopicRequest, UpdateTopicRequest } from '../types/topic';
-import type { Language, Word } from '../types/word';
+import type { Word } from '../types/word';
 import Layout from '../components/Layout';
+import { useLanguages } from '../hooks/useLanguages';
+import { useInvalidateTopics } from '../hooks/useTopic';
 
 const TopicForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const { languages } = useLanguages();
+  const invalidateTopics = useInvalidateTopics();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [languages, setLanguages] = useState<Language[]>([]);
   const [availableWords, setAvailableWords] = useState<Word[]>([]);
   const [selectedWords, setSelectedWords] = useState<Word[]>([]);
 
@@ -28,7 +31,6 @@ const TopicForm: React.FC = () => {
   const [wordSearch, setWordSearch] = useState('');
 
   useEffect(() => {
-    loadLanguages();
     loadWords();
     if (isEditMode && id) {
       loadTopic(parseInt(id));
@@ -37,23 +39,25 @@ const TopicForm: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    // Set default language code when languages are loaded
+    if (!isEditMode && languages.length > 0 && !languageCode) {
+      setLanguageCode(languages[0].code);
+    }
+  }, [languages, isEditMode, languageCode]);
+
+  useEffect(() => {
+    // Set default language code when languages are loaded
+    if (!isEditMode && languages.length > 0 && !languageCode) {
+      setLanguageCode(languages[0].code);
+    }
+  }, [languages, isEditMode, languageCode]);
+
+  useEffect(() => {
     if (wordSearch) {
       loadWords();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wordSearch]);
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await wordService.getLanguages();
-      setLanguages(langs);
-      if (!isEditMode && langs.length > 0) {
-        setLanguageCode(langs[0].code);
-      }
-    } catch (err) {
-      console.error('Error loading languages:', err);
-    }
-  };
 
   const loadWords = async () => {
     try {
@@ -137,6 +141,9 @@ const TopicForm: React.FC = () => {
         };
         await topicService.createTopic(request);
       }
+
+      // Invalidate topic cache
+      invalidateTopics();
 
       navigate('/topics');
     } catch (err) {

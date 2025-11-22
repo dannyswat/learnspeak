@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { topicService } from '../services/topicService';
-import { wordService } from '../services/wordService';
 import type { Topic, TopicFilterParams } from '../types/topic';
-import type { Language } from '../types/word';
+import { useLanguages } from '../hooks/useLanguages';
 
 const ExploreTopics: React.FC = () => {
   const navigate = useNavigate();
+  const { languages } = useLanguages();
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [languages, setLanguages] = useState<Language[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -24,22 +23,9 @@ const ExploreTopics: React.FC = () => {
   const pageSize = 12;
 
   useEffect(() => {
-    loadLanguages();
-  }, []);
-
-  useEffect(() => {
     loadPublicTopics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search, selectedLanguage, selectedLevel]);
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await wordService.getLanguages();
-      setLanguages(langs);
-    } catch (err) {
-      console.error('Error loading languages:', err);
-    }
-  };
 
   const loadPublicTopics = async () => {
     try {

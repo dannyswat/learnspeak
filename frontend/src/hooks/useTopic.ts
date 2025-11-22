@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { topicService } from '../services/topicService';
-import type { TopicFilterParams } from '../types/topic';
+import type { TopicFilterParams, CreateTopicRequest, UpdateTopicRequest } from '../types/topic';
 
 const TOPIC_KEYS = {
   all: ['topics'] as const,
@@ -44,3 +44,40 @@ export const useDeleteTopic = () => {
   });
 };
 
+export const useCreateTopic = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateTopicRequest) => topicService.createTopic(data),
+    onSuccess: () => {
+      // Invalidate all topic queries
+      queryClient.invalidateQueries({
+        queryKey: TOPIC_KEYS.all,
+      });
+    },
+  });
+};
+
+export const useUpdateTopic = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateTopicRequest }) =>
+      topicService.updateTopic(id, data),
+    onSuccess: () => {
+      // Invalidate all topic queries
+      queryClient.invalidateQueries({
+        queryKey: TOPIC_KEYS.all,
+      });
+    },
+  });
+};
+
+// Helper to manually invalidate topic cache (for use in pages that don't use mutations)
+export const useInvalidateTopics = () => {
+  const queryClient = useQueryClient();
+  
+  return () => {
+    queryClient.invalidateQueries({ queryKey: TOPIC_KEYS.all });
+  };
+};

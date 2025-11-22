@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { journeyService } from '../services/journeyService';
-import { wordService } from '../services/wordService';
 import type { Journey, JourneyFilterParams } from '../types/journey';
-import type { Language } from '../types/word';
 import Layout from '../components/Layout';
+import { useLanguages } from '../hooks/useLanguages';
 
 const JourneyList: React.FC = () => {
   const navigate = useNavigate();
+  const { languages } = useLanguages();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
-  const [languages, setLanguages] = useState<Language[]>([]);
   
   // Filter state
   const [search, setSearch] = useState('');
@@ -22,22 +21,9 @@ const JourneyList: React.FC = () => {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    loadLanguages();
-  }, []);
-
-  useEffect(() => {
     loadJourneys();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, search, selectedLanguage]);
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await wordService.getLanguages();
-      setLanguages(langs);
-    } catch (err) {
-      console.error('Error loading languages:', err);
-    }
-  };
 
   const loadJourneys = async () => {
     try {
