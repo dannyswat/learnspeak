@@ -5,6 +5,7 @@ import { topicService } from '../services/topicService';
 import type { Topic } from '../types/topic';
 import ConversationForm from '../components/ConversationForm';
 import Layout from '../components/Layout';
+import { useInvalidateConversationsAndTopic } from '../hooks/useConversation';
 
 const ConversationCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const ConversationCreate: React.FC = () => {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const invalidateConversationsAndTopic = useInvalidateConversationsAndTopic();
 
   useEffect(() => {
     if (id) {
@@ -73,6 +75,9 @@ const ConversationCreate: React.FC = () => {
           isLearnerLine: line.isLearnerLine,
         })),
       });
+
+      // Invalidate conversation queries
+      invalidateConversationsAndTopic(parseInt(id!));
 
       alert('Conversation created successfully!');
       navigate(`/topics/${id}/conversations/manage`);

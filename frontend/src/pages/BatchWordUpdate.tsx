@@ -6,6 +6,7 @@ import ttsService from '../services/ttsService';
 import Layout from '../components/Layout';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
+import { useInvalidateWordsAndTopic } from '../hooks/useWord';
 
 interface WordWithId extends WordEntryData {
   id: number;
@@ -15,6 +16,7 @@ const BatchWordUpdate: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
   const { languages } = useLanguages();
+  const invalidateWordsAndTopic = useInvalidateWordsAndTopic();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -136,6 +138,9 @@ const BatchWordUpdate: React.FC = () => {
       if (errors.length > 0) {
         setError(`Updated ${successCount} word(s). Errors:\n${errors.join('\n')}`);
       } else {
+        // Invalidate relevant queries
+        invalidateWordsAndTopic(parseInt(topicId!));
+        
         alert(`Successfully updated ${successCount} word(s)!`);
         navigate(`/topics/${topicId}`);
       }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { wordService } from '../services/wordService';
+import { useInvalidateWords } from '../hooks/useWord';
 import type { CreateWordRequest, UpdateWordRequest, CreateTranslationInput, UpdateTranslationInput } from '../types/word';
 import Layout from '../components/Layout';
 import ImageInput from '../components/ImageInput';
@@ -13,6 +14,7 @@ const WordForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
   const { languages } = useLanguages();
+  const invalidateWords = useInvalidateWords();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -110,6 +112,9 @@ const WordForm: React.FC = () => {
         };
         await wordService.createWord(request);
       }
+
+      // Invalidate word queries
+      invalidateWords();
 
       navigate('/words');
     } catch (err) {

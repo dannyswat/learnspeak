@@ -4,6 +4,7 @@ import { conversationService } from '../services/conversationService';
 import type { Conversation } from '../types/conversation';
 import ConversationForm from '../components/ConversationForm';
 import Layout from '../components/Layout';
+import { useInvalidateConversationsAndTopic } from '../hooks/useConversation';
 
 const ConversationEdit: React.FC = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const ConversationEdit: React.FC = () => {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const invalidateConversationsAndTopic = useInvalidateConversationsAndTopic();
 
   useEffect(() => {
     if (conversationId) {
@@ -80,6 +82,9 @@ const ConversationEdit: React.FC = () => {
           isLearnerLine: line.isLearnerLine,
         });
       }
+
+      // Invalidate conversation queries
+      invalidateConversationsAndTopic(parseInt(id!));
 
       alert('Conversation updated successfully!');
       navigate(`/topics/${id}/conversations/manage`);

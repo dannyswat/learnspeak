@@ -8,16 +8,24 @@ import Layout from '../components/Layout';
 import LanguageSelect from '../components/LanguageSelect';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
+import { useInvalidateWordsAndTopic } from '../hooks/useWord';
+import type { Word, Translation } from '../types/word';
+
+interface WordEntryDataWithId extends WordEntryData {
+  existingWordId?: number;
+}
 
 const BulkWordCreation: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
   const { languages } = useLanguages();
+  const invalidateWordsAndTopic = useInvalidateWordsAndTopic();
+  const topicIdNum = topicId ? parseInt(topicId) : 0;
 
   const [wordCount, setWordCount] = useState<number>(5);
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
   const [topicName, setTopicName] = useState<string>('');
-  const [words, setWords] = useState<WordEntryData[]>([]);
+  const [words, setWords] = useState<WordEntryDataWithId[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -43,11 +51,41 @@ const BulkWordCreation: React.FC = () => {
   useEffect(() => {
     // Initialize words array when count changes
     const newWords = Array.from({ length: wordCount }, (_, i) => 
-      words[i] || { baseWord: '', translation: '', romanization: '', notes: '', imageUrl: '', audioUrl: '' }
+      words[i] || { baseWord: '', translation: '', romanization: '', notes: '', imageUrl: '', audioUrl: '', existingWordId: undefined }
     );
     setWords(newWords);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wordCount]);
+
+  const checkExistingWord = async (baseWord: string, index: number) => {
+    if (!baseWord.trim()) return;
+
+    try {
+      // Search for exact match
+      const result = await wordService.getWords({ search: baseWord.trim(), pageSize: 10 });
+      
+      // Find exact match (case-insensitive)
+      const exactMatch = result.words.find(
+        (w: Word) => w.baseWord.toLowerCase() === baseWord.trim().toLowerCase()
+      );
+
+      if (exactMatch) {
+        // Update the word entry with existing data
+        const newWords = [...words];
+        newWords[index] = {
+          ...newWords[index],
+          baseWord: exactMatch.baseWord, // Use exact casing from database
+          imageUrl: exactMatch.imageUrl || newWords[index].imageUrl,
+          notes: exactMatch.notes || newWords[index].notes,
+          existingWordId: exactMatch.id,
+        };
+        setWords(newWords);
+      }
+    } catch (err) {
+      console.error('Error checking existing word:', err);
+      // Don't show error to user, just continue
+    }
+  };
 
   const loadTopic = async () => {
     try {
@@ -69,6 +107,14 @@ const BulkWordCreation: React.FC = () => {
     const newWords = [...words];
     newWords[index] = { ...newWords[index], [field]: value };
     setWords(newWords);
+
+    // Check for existing word when base word is changed
+    if (field === 'baseWord' && value.trim()) {
+      // Debounce the check slightly
+      setTimeout(() => {
+        checkExistingWord(value, index);
+      }, 500);
+    }
   };
 
   const handleBatchTranslate = async () => {
@@ -250,24 +296,84 @@ const BulkWordCreation: React.FC = () => {
 
       const createdWordIds: number[] = [];
 
-      // Create words one by one
+      // Process each word: create new or update existing
       for (const word of validWords) {
-        const wordData = {
-          baseWord: word.baseWord.trim(),
-          imageUrl: word.imageUrl || undefined,
-          notes: word.notes.trim() || undefined,
-          translations: [
-            {
-              languageId: targetLanguage,
-              translation: word.translation.trim(),
-              romanization: word.romanization.trim() || undefined,
-              audioUrl: word.audioUrl || undefined,
-            }
-          ]
-        };
+        let wordId: number;
 
-        const createdWord = await wordService.createWord(wordData);
-        createdWordIds.push(createdWord.id);
+        if (word.existingWordId) {
+          // Word exists - update it with new translation
+          try {
+            // First, get the existing word to check if translation already exists
+            const existingWord = await wordService.getWord(word.existingWordId);
+            
+            // Check if this language translation already exists
+            const existingTranslation = existingWord.translations?.find(
+              (t: Translation) => t.languageId === targetLanguage
+            );
+
+            if (existingTranslation) {
+              // Translation exists, update it
+              const updatedTranslations = existingWord.translations!.map((t: Translation) =>
+                t.languageId === targetLanguage
+                  ? {
+                      languageId: targetLanguage,
+                      translation: word.translation.trim(),
+                      romanization: word.romanization.trim() || undefined,
+                      audioUrl: word.audioUrl || t.audioUrl || undefined,
+                    }
+                  : t
+              );
+
+              await wordService.updateWord(word.existingWordId, {
+                baseWord: word.baseWord.trim(),
+                imageUrl: word.imageUrl || existingWord.imageUrl || undefined,
+                notes: word.notes.trim() || existingWord.notes || undefined,
+                translations: updatedTranslations,
+              });
+            } else {
+              // Translation doesn't exist, add it
+              await wordService.updateWord(word.existingWordId, {
+                baseWord: word.baseWord.trim(),
+                imageUrl: word.imageUrl || existingWord.imageUrl || undefined,
+                notes: word.notes.trim() || existingWord.notes || undefined,
+                translations: [
+                  ...(existingWord.translations || []),
+                  {
+                    languageId: targetLanguage,
+                    translation: word.translation.trim(),
+                    romanization: word.romanization.trim() || undefined,
+                    audioUrl: word.audioUrl || undefined,
+                  }
+                ],
+              });
+            }
+
+            wordId = word.existingWordId;
+          } catch (err) {
+            console.error('Error updating existing word:', err);
+            throw err;
+          }
+        } else {
+          // Create new word
+          const wordData = {
+            baseWord: word.baseWord.trim(),
+            imageUrl: word.imageUrl || undefined,
+            notes: word.notes.trim() || undefined,
+            translations: [
+              {
+                languageId: targetLanguage,
+                translation: word.translation.trim(),
+                romanization: word.romanization.trim() || undefined,
+                audioUrl: word.audioUrl || undefined,
+              }
+            ]
+          };
+
+          const createdWord = await wordService.createWord(wordData);
+          wordId = createdWord.id;
+        }
+
+        createdWordIds.push(wordId);
       }
 
       // Add all words to the topic
@@ -275,7 +381,22 @@ const BulkWordCreation: React.FC = () => {
         await topicService.addWordsToTopic(parseInt(topicId), createdWordIds);
       }
 
-      alert(`Successfully created ${createdWordIds.length} words and added them to the topic!`);
+      const newWordsCount = validWords.filter((w: WordEntryDataWithId) => !w.existingWordId).length;
+      const updatedWordsCount = validWords.filter((w: WordEntryDataWithId) => w.existingWordId).length;
+      
+      let successMessage = '';
+      if (newWordsCount > 0 && updatedWordsCount > 0) {
+        successMessage = `Successfully created ${newWordsCount} new word(s) and updated ${updatedWordsCount} existing word(s)!`;
+      } else if (newWordsCount > 0) {
+        successMessage = `Successfully created ${newWordsCount} word(s)!`;
+      } else {
+        successMessage = `Successfully updated ${updatedWordsCount} word(s)!`;
+      }
+
+      // Invalidate relevant queries
+      invalidateWordsAndTopic(topicIdNum);
+
+      alert(successMessage);
       navigate(`/topics/${topicId}`);
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -461,9 +582,16 @@ const BulkWordCreation: React.FC = () => {
                   className={`transition-all ${
                     currentPlayingIndex === index
                       ? 'ring-4 ring-teal-400 ring-opacity-50 shadow-lg'
+                      : word.existingWordId
+                      ? 'ring-2 ring-blue-400 ring-opacity-50'
                       : ''
                   }`}
                 >
+                  {word.existingWordId && (
+                    <div className="bg-blue-50 border-l-4 border-blue-400 px-4 py-2 mb-2 text-sm text-blue-700">
+                      ℹ️ Existing word found. Image and notes loaded. Translation will be added/updated.
+                    </div>
+                  )}
                   <WordEntryForm
                     word={word}
                     index={index}
