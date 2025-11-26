@@ -105,7 +105,7 @@ func (s *ImageGenerationService) GenerateImage(ctx context.Context, opts ImageGe
 		if err != nil {
 			log.Printf("⚠️  Warning: failed to cache image: %v", err)
 		} else {
-			result.LocalPath = "/" + localPath
+			result.LocalPath = localPath
 			if opts.CustomPrompt != "" {
 				log.Printf("✅ Cached custom prompt image, overriding previous cache for: %s", prompt)
 			}

@@ -49,7 +49,7 @@ func (m *FileCacheManager) GetCachedImage(prompt, size string) (*GeneratedImageR
 	// Return cached image info
 	return &GeneratedImageResult{
 		URL:       "", // Cached images don't have URLs
-		LocalPath: cachedPath,
+		LocalPath: "/" + cachedPath,
 		Prompt:    prompt,
 		Cached:    true,
 	}, nil
@@ -87,7 +87,7 @@ func (m *FileCacheManager) CacheImage(imageURL, prompt, size string) (string, er
 	}
 
 	log.Printf("Cached image: %s (size: %d bytes)", cachedPath, len(imageData))
-	return cachedPath, nil
+	return "/" + cachedPath, nil
 }
 
 // getCacheKey generates an MD5 hash for caching
