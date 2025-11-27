@@ -7,6 +7,7 @@ import Layout from '../components/Layout';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
 import { useInvalidateWordsAndTopic } from '../hooks/useWord';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface WordWithId extends WordEntryData {
   id: number;
@@ -17,6 +18,15 @@ const BatchWordUpdate: React.FC = () => {
   const navigate = useNavigate();
   const { languages } = useLanguages();
   const invalidateWordsAndTopic = useInvalidateWordsAndTopic();
+  
+  // Auto-save functionality - single source of truth
+  const localStorageKey = `batchWordUpdate_${topicId}`;
+  const { data, saveToLocalStorage, clearLocalStorage } = useLocalStorage<{
+    words: WordWithId[];
+  }>(localStorageKey);
+
+  // Use localStorage data directly
+  const words = data?.words || [];
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,8 +36,14 @@ const BatchWordUpdate: React.FC = () => {
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number>(-1);
   const [topicName, setTopicName] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
-  const [words, setWords] = useState<WordWithId[]>([]);
   const [originalWords, setOriginalWords] = useState<WordWithId[]>([]);
+  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
+
+  // Helper function to update words
+  const setWords = (newWords: WordWithId[]) => {
+    saveToLocalStorage({ words: newWords });
+    setLastAutoSaved(new Date());
+  };
 
   useEffect(() => {
     if (topicId) {
@@ -61,7 +77,12 @@ const BatchWordUpdate: React.FC = () => {
           audioUrl: word.audioUrl || '',
         }));
         
-        setWords(wordData);
+        // Initialize localStorage if empty or use existing saved data
+        if (!data || data.words.length === 0) {
+          setWords(wordData);
+        }
+        // else: keep existing saved data from localStorage
+        
         setOriginalWords(JSON.parse(JSON.stringify(wordData))); // Deep copy for comparison
       } else {
         setError('No words found in this topic');
@@ -141,6 +162,9 @@ const BatchWordUpdate: React.FC = () => {
         // Invalidate relevant queries
         invalidateWordsAndTopic(parseInt(topicId!));
         
+        // Clear auto-saved data after successful submission
+        clearLocalStorage();
+        
         alert(`Successfully updated ${successCount} word(s)!`);
         navigate(`/topics/${topicId}`);
       }
@@ -155,6 +179,7 @@ const BatchWordUpdate: React.FC = () => {
   const handleReset = () => {
     if (confirm('Discard all changes and reset to original values?')) {
       setWords(JSON.parse(JSON.stringify(originalWords)));
+      clearLocalStorage();
     }
   };
 
@@ -296,9 +321,17 @@ const BatchWordUpdate: React.FC = () => {
               <p className="mt-2 text-sm sm:text-base text-gray-600">
                 Topic: <span className="font-semibold">{topicName}</span>
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 mt-1">
-                Update multiple words at once. Changes are highlighted.
-              </p>
+              <div className="flex items-center gap-4">
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  Update multiple words at once. Changes are highlighted.
+                </p>
+                {lastAutoSaved && (
+                  <div className="text-xs text-gray-500 flex items-center gap-1 whitespace-nowrap">
+                    <span className="text-green-500">✓</span>
+                    Auto-saved {lastAutoSaved.toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
             </div>
             <button
               type="button"
