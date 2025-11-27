@@ -117,7 +117,7 @@ const ImageInput: React.FC<ImageInputProps> = ({
               {uploadingImage ? 'Uploading...' : 'Upload Image'}
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*, .jpg, .jpeg, .png, .gif, .webp"
                 onChange={handleImageUpload}
                 disabled={uploadingImage || disabled}
                 className="sr-only"
