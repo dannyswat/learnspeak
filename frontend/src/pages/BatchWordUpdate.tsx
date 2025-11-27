@@ -8,6 +8,7 @@ import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
 import { useInvalidateWordsAndTopic } from '../hooks/useWord';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAutoPlay } from '../hooks/useAutoPlay';
 
 interface WordWithId extends WordEntryData {
   id: number;
@@ -32,12 +33,13 @@ const BatchWordUpdate: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [generatingAudio, setGeneratingAudio] = useState(false);
-  const [autoPlaying, setAutoPlaying] = useState(false);
-  const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number>(-1);
   const [topicName, setTopicName] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
   const [originalWords, setOriginalWords] = useState<WordWithId[]>([]);
   const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
+  
+  // Auto play functionality
+  const { autoPlaying, currentPlayingIndex, play: playAudio, stop: stopAudio } = useAutoPlay();
 
   // Helper function to update words
   const setWords = (newWords: WordWithId[]) => {
@@ -245,44 +247,8 @@ const BatchWordUpdate: React.FC = () => {
     }
   };
 
-  const handleAutoPlay = async () => {
-    const wordsWithAudio = words.filter(w => w.audioUrl);
-    
-    if (wordsWithAudio.length === 0) {
-      alert('No audio files available to play. Generate audio first.');
-      return;
-    }
-
-    setAutoPlaying(true);
-    
-    for (let i = 0; i < words.length; i++) {
-      if (!words[i].audioUrl) continue;
-      
-      setCurrentPlayingIndex(i);
-      
-      try {
-        const audio = new Audio(words[i].audioUrl);
-        await new Promise<void>((resolve, reject) => {
-          audio.onended = () => resolve();
-          audio.onerror = () => reject(new Error('Audio playback failed'));
-          audio.play().catch(reject);
-        });
-        
-        // Wait 500ms between each audio
-        await new Promise(resolve => setTimeout(resolve, 500));
-      } catch (err) {
-        console.error('Error playing audio:', err);
-      }
-    }
-    
-    setAutoPlaying(false);
-    setCurrentPlayingIndex(-1);
-  };
-
-  const handleStopAutoPlay = () => {
-    setAutoPlaying(false);
-    setCurrentPlayingIndex(-1);
-  };
+  const handleAutoPlay = () => playAudio(words);
+  const handleStopAutoPlay = () => stopAudio();
 
   const hasChanges = () => {
     return words.some((word, index) => {
