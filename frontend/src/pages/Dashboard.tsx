@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
-import type { UserJourney } from '../types/user';
+import type { UserJourney, TeacherStatistics } from '../types/user';
 import Layout from '../components/Layout';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [journeys, setJourneys] = useState<UserJourney[]>([]);
+  const [teacherStats, setTeacherStats] = useState<TeacherStatistics | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isLearner = user?.roles?.includes('learner');
@@ -17,11 +18,13 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     if (user && isLearner) {
       loadLearnerData();
+    } else if (user && isTeacher) {
+      loadTeacherData();
     } else {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isLearner]);
+  }, [user, isLearner, isTeacher]);
 
   const loadLearnerData = async () => {
     if (!user) return;
@@ -32,6 +35,18 @@ export const Dashboard: React.FC = () => {
       setJourneys(response.userJourneys);
     } catch (err) {
       console.error('Error loading learner data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTeacherData = async () => {
+    try {
+      setLoading(true);
+      const stats = await userService.getTeacherStatistics();
+      setTeacherStats(stats);
+    } catch (err) {
+      console.error('Error loading teacher statistics:', err);
     } finally {
       setLoading(false);
     }
@@ -68,29 +83,94 @@ export const Dashboard: React.FC = () => {
           </h1>
           <p className="text-gray-600">Manage your content and students</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button onClick={() => navigate('/words/new')} className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-left">
-            <div className="text-4xl mb-3">📚</div>
-            <div className="font-semibold text-lg mb-1">Add Words</div>
-            <div className="text-sm text-green-100">Create new vocabulary</div>
-          </button>
-          <button onClick={() => navigate('/topics/new')} className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-left">
-            <div className="text-4xl mb-3">📝</div>
-            <div className="font-semibold text-lg mb-1">Create Topic</div>
-            <div className="text-sm text-blue-100">Organize your content</div>
-          </button>
-          <button onClick={() => navigate('/journeys/new')} className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-left">
-            <div className="text-4xl mb-3">🗺️</div>
-            <div className="font-semibold text-lg mb-1">New Journey</div>
-            <div className="text-sm text-purple-100">Build learning paths</div>
-          </button>
-          <button onClick={() => navigate('/students')} className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-left">
-            <div className="text-4xl mb-3">👥</div>
-            <div className="font-semibold text-lg mb-1">Manage Students</div>
-            <div className="text-sm text-orange-100">View and assign journeys</div>
-          </button>
-        </div>
+        
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-4xl">👥</span>
+                <span className="text-sm text-gray-600 font-medium">Total Students</span>
+              </div>
+              <div className="text-3xl font-bold text-blue-600 font-['Poppins']">
+                {teacherStats?.totalStudents || 0}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">Registered learners</div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-4xl">📝</span>
+                <span className="text-sm text-gray-600 font-medium">Topics Created</span>
+              </div>
+              <div className="text-3xl font-bold text-green-600 font-['Poppins']">
+                {teacherStats?.totalTopicsCreated || 0}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">Created by you</div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-4xl">✅</span>
+                <span className="text-sm text-gray-600 font-medium">Topics Completion</span>
+              </div>
+              <div className="text-3xl font-bold text-purple-600 font-['Poppins']">
+                {teacherStats?.totalTopicCompletions || 0}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">Completed by students</div>
+            </div>
+            
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-4xl">🗺️</span>
+                <span className="text-sm text-gray-600 font-medium">Journey Subscriptions</span>
+              </div>
+              <div className="text-3xl font-bold text-orange-600 font-['Poppins']">
+                {teacherStats?.journeySubscriptions || 0}
+              </div>
+              <div className="text-xs text-gray-400 mt-1">Active assignments</div>
+            </div>
+          </div>
+        )}
+        
         <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button onClick={() => navigate('/words/new')} className="text-left px-4 py-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-3">
+              <span className="text-2xl">📚</span>
+              <div>
+                <div className="font-medium text-gray-900">Add Words</div>
+                <div className="text-xs text-gray-500">Create new vocabulary</div>
+              </div>
+            </button>
+            <button onClick={() => navigate('/topics/new')} className="text-left px-4 py-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-3">
+              <span className="text-2xl">📝</span>
+              <div>
+                <div className="font-medium text-gray-900">Create Topic</div>
+                <div className="text-xs text-gray-500">Organize your content</div>
+              </div>
+            </button>
+            <button onClick={() => navigate('/journeys/new')} className="text-left px-4 py-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-3">
+              <span className="text-2xl">🗺️</span>
+              <div>
+                <div className="font-medium text-gray-900">New Journey</div>
+                <div className="text-xs text-gray-500">Build learning paths</div>
+              </div>
+            </button>
+            <button onClick={() => navigate('/students')} className="text-left px-4 py-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors flex items-center gap-3">
+              <span className="text-2xl">👥</span>
+              <div>
+                <div className="font-medium text-gray-900">Manage Students</div>
+                <div className="text-xs text-gray-500">View and assign journeys</div>
+              </div>
+            </button>
+          </div>
+        </div>
+        
+        <div className="mt-6 bg-white rounded-xl shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">📊 Quick Links</h2>
           <div className="space-y-3">
             <button onClick={() => navigate('/words')} className="w-full text-left px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">View All Words →</button>

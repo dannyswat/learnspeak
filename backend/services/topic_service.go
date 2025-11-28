@@ -337,6 +337,7 @@ func (s *topicService) toTopicResponse(topic *models.Topic, includeWords bool) (
 				Romanization:  romanization,
 				AudioURL:      audioURL,
 				ImageURL:      word.ImageURL,
+				Notes:         word.Notes,
 				SequenceOrder: tw.SequenceOrder,
 			}
 		}

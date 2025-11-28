@@ -106,3 +106,10 @@ export interface AssignJourneyResponse {
     assignedAt: string;
   }[];
 }
+
+export interface TeacherStatistics {
+  totalStudents: number;
+  totalTopicsCreated: number;
+  totalTopicCompletions: number;
+  journeySubscriptions: number;
+}

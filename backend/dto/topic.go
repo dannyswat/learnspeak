@@ -51,6 +51,7 @@ type TopicWordInfo struct {
 	Romanization  string `json:"romanization"`
 	AudioURL      string `json:"audioUrl"`
 	ImageURL      string `json:"imageUrl"`
+	Notes         string `json:"notes"`
 	SequenceOrder int    `json:"sequenceOrder"`
 }
 

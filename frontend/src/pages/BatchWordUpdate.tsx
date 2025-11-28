@@ -74,7 +74,7 @@ const BatchWordUpdate: React.FC = () => {
           baseWord: word.baseWord,
           translation: word.translation || '',
           romanization: word.romanization || '',
-          notes: '', // TopicWord doesn't have notes field
+          notes: word.notes || '',
           imageUrl: word.imageUrl || '',
           audioUrl: word.audioUrl || '',
         }));

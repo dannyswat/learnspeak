@@ -18,15 +18,27 @@ type UserService interface {
 	UpdateUser(id uint, req *dto.UpdateUserRequest) (*dto.UserResponse, error)
 	DeleteUser(id uint) error
 	CreateUser(req *dto.CreateUserRequest) (*dto.UserResponse, error)
+	GetTeacherStatistics(teacherID uint) (*dto.TeacherStatisticsResponse, error)
 }
 
 type userService struct {
-	userRepo repositories.UserRepository
+	userRepo         repositories.UserRepository
+	topicRepo        repositories.TopicRepository
+	userProgressRepo repositories.UserProgressRepository
+	userJourneyRepo  repositories.UserJourneyRepository
 }
 
-func NewUserService(userRepo repositories.UserRepository) UserService {
+func NewUserService(
+	userRepo repositories.UserRepository,
+	topicRepo repositories.TopicRepository,
+	userProgressRepo repositories.UserProgressRepository,
+	userJourneyRepo repositories.UserJourneyRepository,
+) UserService {
 	return &userService{
-		userRepo: userRepo,
+		userRepo:         userRepo,
+		topicRepo:        topicRepo,
+		userProgressRepo: userProgressRepo,
+		userJourneyRepo:  userJourneyRepo,
 	}
 }
 
@@ -249,4 +261,39 @@ func (s *userService) CreateUser(req *dto.CreateUserRequest) (*dto.UserResponse,
 	}
 
 	return s.toUserResponse(createdUser), nil
+}
+
+// GetTeacherStatistics gets dashboard statistics for a teacher
+func (s *userService) GetTeacherStatistics(teacherID uint) (*dto.TeacherStatisticsResponse, error) {
+	stats := &dto.TeacherStatisticsResponse{}
+
+	// 1. Count total students (learners)
+	_, totalStudents, err := s.userRepo.GetLearners(1, 1) // Just get count, not data
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total students: %w", err)
+	}
+	stats.TotalStudents = totalStudents
+
+	// 2. Count total topics created by this teacher
+	_, totalTopics, err := s.topicRepo.List("", "", "", teacherID, nil, 1, 1, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total topics: %w", err)
+	}
+	stats.TotalTopicsCreated = totalTopics
+
+	// 3. Count total topic completions across all students
+	completionCount, err := s.userProgressRepo.CountCompletionsByTeacher(teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get completion count: %w", err)
+	}
+	stats.TotalTopicCompletions = completionCount
+
+	// 4. Count journey subscriptions (assigned journeys created by this teacher)
+	subscriptionCount, err := s.userJourneyRepo.CountSubscriptionsByTeacher(teacherID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscription count: %w", err)
+	}
+	stats.JourneySubscriptions = subscriptionCount
+
+	return stats, nil
 }

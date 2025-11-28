@@ -43,3 +43,11 @@ type CreateUserRequest struct {
 	Name     string   `json:"name" validate:"required,min=1,max=100"`
 	Roles    []string `json:"roles" validate:"required,min=1,dive,oneof=learner teacher admin"`
 }
+
+// TeacherStatisticsResponse represents teacher dashboard statistics
+type TeacherStatisticsResponse struct {
+	TotalStudents         int64 `json:"totalStudents"`
+	TotalTopicsCreated    int64 `json:"totalTopicsCreated"`
+	TotalTopicCompletions int64 `json:"totalTopicCompletions"`
+	JourneySubscriptions  int64 `json:"journeySubscriptions"`
+}

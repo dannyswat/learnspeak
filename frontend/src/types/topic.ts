@@ -20,6 +20,7 @@ export interface TopicWord {
   romanization: string;
   audioUrl: string;
   imageUrl: string;
+  notes: string;
   sequenceOrder: number;
 }
 

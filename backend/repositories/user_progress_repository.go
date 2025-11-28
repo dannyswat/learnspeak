@@ -12,6 +12,7 @@ type UserProgressRepository interface {
 	GetUserTopicProgress(userID, topicID uint) ([]models.UserProgress, error)
 	GetCompletedTopicIDs(userID, journeyID uint) ([]uint, error)
 	GetJourneyProgress(userID, journeyID uint) (*JourneyProgressStats, error)
+	CountCompletionsByTeacher(teacherID uint) (int64, error)
 }
 
 type userProgressRepository struct {
@@ -139,4 +140,15 @@ func (r *userProgressRepository) GetJourneyProgress(userID, journeyID uint) (*Jo
 	}
 
 	return stats, nil
+}
+
+// CountCompletionsByTeacher counts total topic completions for a teacher's topics
+func (r *userProgressRepository) CountCompletionsByTeacher(teacherID uint) (int64, error) {
+	var count int64
+	err := r.db.Table("user_progress").
+		Joins("INNER JOIN topics ON topics.id = user_progress.topic_id").
+		Where("topics.created_by = ? AND user_progress.completed = ? AND user_progress.activity_type = ?",
+			teacherID, true, "flashcard").
+		Count(&count).Error
+	return count, err
 }

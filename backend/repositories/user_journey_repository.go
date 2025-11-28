@@ -37,6 +37,9 @@ type UserJourneyRepository interface {
 
 	// GetStatistics gets statistics for a user journey
 	GetStatistics(userID, journeyID uint) (map[string]interface{}, error)
+
+	// CountSubscriptionsByTeacher counts journey subscriptions for a teacher
+	CountSubscriptionsByTeacher(teacherID uint) (int64, error)
 }
 
 type userJourneyRepository struct {
@@ -270,4 +273,14 @@ func (r *userJourneyRepository) GetStatistics(userID, journeyID uint) (map[strin
 	stats["progress_percentage"] = progress
 
 	return stats, nil
+}
+
+// CountSubscriptionsByTeacher counts journey subscriptions for a teacher
+func (r *userJourneyRepository) CountSubscriptionsByTeacher(teacherID uint) (int64, error) {
+	var count int64
+	err := r.db.Table("user_journeys").
+		Joins("INNER JOIN journeys ON journeys.id = user_journeys.journey_id").
+		Where("journeys.created_by = ?", teacherID).
+		Count(&count).Error
+	return count, err
 }

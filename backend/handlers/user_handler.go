@@ -350,3 +350,28 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 		"message": "User deleted successfully",
 	})
 }
+
+// GetTeacherStatistics godoc
+// @Summary Get teacher dashboard statistics
+// @Description Get statistics for teacher dashboard: total students, topics created, completions, and journey subscriptions
+// @Tags users
+// @Produce json
+// @Success 200 {object} dto.TeacherStatisticsResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Security BearerAuth
+// @Router /users/statistics [get]
+func (h *UserHandler) GetTeacherStatistics(c echo.Context) error {
+	// Get current user ID
+	userID := c.Get("userId").(uint)
+
+	// Get statistics
+	stats, err := h.userService.GetTeacherStatistics(userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Message: "Failed to get teacher statistics",
+			Error:   err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, stats)
+}

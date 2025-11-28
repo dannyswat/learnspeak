@@ -8,6 +8,7 @@ import type {
   AssignJourneyRequest,
   UnassignJourneyRequest,
   AssignJourneyResponse,
+  TeacherStatistics,
 } from '../types/user';
 
 const USERS_ENDPOINT = '/users';
@@ -151,6 +152,14 @@ export const userService = {
     roles: string[];
   }): Promise<User> {
     const response = await api.post<User>('/admin/users', data);
+    return response.data;
+  },
+
+  /**
+   * Get teacher dashboard statistics
+   */
+  async getTeacherStatistics(): Promise<TeacherStatistics> {
+    const response = await api.get<TeacherStatistics>(`${USERS_ENDPOINT}/statistics`);
     return response.data;
   },
 };
