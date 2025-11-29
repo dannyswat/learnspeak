@@ -7,11 +7,15 @@ import Layout from '../components/Layout';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
 import { useInvalidateWordsAndTopic } from '../hooks/useWord';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAutoPlay } from '../hooks/useAutoPlay';
+import { useAutoSave } from '../hooks/useAutoSave';
 
 interface WordWithId extends WordEntryData {
   id: number;
+}
+
+interface BatchWordFormData {
+  words: WordWithId[];
 }
 
 const BatchWordUpdate: React.FC = () => {
@@ -20,14 +24,30 @@ const BatchWordUpdate: React.FC = () => {
   const { languages } = useLanguages();
   const invalidateWordsAndTopic = useInvalidateWordsAndTopic();
   
-  // Auto-save functionality - single source of truth
-  const localStorageKey = `batchWordUpdate_${topicId}`;
-  const { data, saveToLocalStorage, clearLocalStorage } = useLocalStorage<{
-    words: WordWithId[];
-  }>(localStorageKey);
+  // Form state with auto-save
+  const {
+    data: formData,
+    setData: setFormData,
+    isLoading: isAutoSaveLoading,
+    lastSaved: lastAutoSaved,
+    clearSaved: clearAutoSaved,
+    hasSavedData
+  } = useAutoSave<BatchWordFormData>(
+    `batchWordUpdate_${topicId || 'new'}`,
+    { words: [] },
+    { debounceMs: 500 }
+  );
 
-  // Use localStorage data directly
-  const words = data?.words || [];
+  // Derive state from formData for easier access
+  const words = formData.words;
+
+  // Helper function to update words
+  const setWords = (newWords: WordWithId[] | ((prev: WordWithId[]) => WordWithId[])) => {
+    setFormData(prev => ({
+      ...prev,
+      words: typeof newWords === 'function' ? newWords(prev.words) : newWords
+    }));
+  };
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,23 +56,17 @@ const BatchWordUpdate: React.FC = () => {
   const [topicName, setTopicName] = useState<string>('');
   const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
   const [originalWords, setOriginalWords] = useState<WordWithId[]>([]);
-  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   
   // Auto play functionality
   const { autoPlaying, currentPlayingIndex, play: playAudio, stop: stopAudio } = useAutoPlay();
 
-  // Helper function to update words
-  const setWords = (newWords: WordWithId[]) => {
-    saveToLocalStorage({ words: newWords });
-    setLastAutoSaved(new Date());
-  };
-
   useEffect(() => {
-    if (topicId) {
+    // Wait for auto-save to finish loading before loading topic words
+    if (topicId && !isAutoSaveLoading) {
       loadTopicWords();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topicId]);
+  }, [topicId, isAutoSaveLoading]);
 
   const loadTopicWords = async () => {
     try {
@@ -79,12 +93,10 @@ const BatchWordUpdate: React.FC = () => {
           audioUrl: word.audioUrl || '',
         }));
         
-        // Initialize localStorage if empty or use existing saved data
-        if (!data || data.words.length === 0) {
+        // Only set words from API if no saved data exists
+        if (!hasSavedData) {
           setWords(wordData);
         }
-        // else: keep existing saved data from localStorage
-        
         setOriginalWords(JSON.parse(JSON.stringify(wordData))); // Deep copy for comparison
       } else {
         setError('No words found in this topic');
@@ -164,8 +176,8 @@ const BatchWordUpdate: React.FC = () => {
         // Invalidate relevant queries
         invalidateWordsAndTopic(parseInt(topicId!));
         
-        // Clear auto-saved data after successful submission
-        clearLocalStorage();
+        // Clear auto-saved data
+        clearAutoSaved();
         
         alert(`Successfully updated ${successCount} word(s)!`);
         navigate(`/topics/${topicId}`);
@@ -181,7 +193,7 @@ const BatchWordUpdate: React.FC = () => {
   const handleReset = () => {
     if (confirm('Discard all changes and reset to original values?')) {
       setWords(JSON.parse(JSON.stringify(originalWords)));
-      clearLocalStorage();
+      clearAutoSaved();
     }
   };
 
@@ -264,7 +276,7 @@ const BatchWordUpdate: React.FC = () => {
     });
   };
 
-  if (loading) {
+  if (loading || isAutoSaveLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">

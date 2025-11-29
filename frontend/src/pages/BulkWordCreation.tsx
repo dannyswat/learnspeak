@@ -10,10 +10,18 @@ import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
 import { useInvalidateWordsAndTopic } from '../hooks/useWord';
 import { useAutoPlay } from '../hooks/useAutoPlay';
+import { useAutoSave } from '../hooks/useAutoSave';
+import { useDebounce } from '../hooks/useDebounce';
 import type { Word, Translation } from '../types/word';
 
 interface WordEntryDataWithId extends WordEntryData {
   existingWordId?: number;
+}
+
+interface BulkWordFormData {
+  words: WordEntryDataWithId[];
+  wordCount: number;
+  targetLanguage: number | null;
 }
 
 const BulkWordCreation: React.FC = () => {
@@ -23,10 +31,45 @@ const BulkWordCreation: React.FC = () => {
   const invalidateWordsAndTopic = useInvalidateWordsAndTopic();
   const topicIdNum = topicId ? parseInt(topicId) : 0;
   
-  // Form state
-  const [words, setWords] = useState<WordEntryDataWithId[]>([]);
-  const [wordCount, setWordCount] = useState<number>(5);
-  const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
+  // Form state with auto-save
+  const { 
+    data: formData, 
+    setData: setFormData, 
+    isLoading: isAutoSaveLoading,
+    lastSaved: lastAutoSaved,
+    clearSaved: clearAutoSaved 
+  } = useAutoSave<BulkWordFormData>(
+    `bulkWordCreation_${topicId || 'new'}`,
+    { words: [], wordCount: 5, targetLanguage: null },
+    { debounceMs: 500 }
+  );
+
+  // Derive state from formData for easier access
+  const words = formData.words;
+  const wordCount = formData.wordCount;
+  const targetLanguage = formData.targetLanguage;
+
+  // Helper functions to update form data
+  const setWords = (newWords: WordEntryDataWithId[] | ((prev: WordEntryDataWithId[]) => WordEntryDataWithId[])) => {
+    setFormData(prev => ({
+      ...prev,
+      words: typeof newWords === 'function' ? newWords(prev.words) : newWords
+    }));
+  };
+
+  const setWordCount = (newCount: number | ((prev: number) => number)) => {
+    setFormData(prev => ({
+      ...prev,
+      wordCount: typeof newCount === 'function' ? newCount(prev.wordCount) : newCount
+    }));
+  };
+
+  const setTargetLanguage = (newLang: number | null) => {
+    setFormData(prev => ({
+      ...prev,
+      targetLanguage: newLang
+    }));
+  };
 
   const [topicName, setTopicName] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -37,6 +80,11 @@ const BulkWordCreation: React.FC = () => {
   
   // Auto play functionality
   const { autoPlaying, currentPlayingIndex, play: playAudio, stop: stopAudio } = useAutoPlay();
+
+  // Debounced check for existing word
+  const debouncedCheckExistingWord = useDebounce((baseWord: string, index: number) => {
+    checkExistingWord(baseWord, index);
+  }, 500);
 
   useEffect(() => {
     // Auto-select first language if available
@@ -55,14 +103,15 @@ const BulkWordCreation: React.FC = () => {
 
   useEffect(() => {
     // Initialize words array when count changes
-    if (wordCount !== words.length) {
+    // Only run after auto-save data is loaded
+    if (!isAutoSaveLoading && wordCount !== words.length) {
       const newWords = Array.from({ length: wordCount }, (_, i) => 
         words[i] || { baseWord: '', translation: '', romanization: '', notes: '', imageUrl: '', audioUrl: '', existingWordId: undefined }
       );
       setWords(newWords);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wordCount]);
+  }, [wordCount, isAutoSaveLoading]);
 
   const checkExistingWord = async (baseWord: string, index: number) => {
     if (!baseWord.trim()) return;
@@ -86,14 +135,18 @@ const BulkWordCreation: React.FC = () => {
           notes: exactMatch.notes || newWords[index].notes,
           existingWordId: exactMatch.id,
         };
+        setWords(newWords);
       } else {
-        // Clear existingWordId if no match found
-        newWords[index] = {
-          ...newWords[index],
-          existingWordId: undefined,
-        };
+        if (newWords[index].existingWordId) {
+          // Clear existingWordId if no match found
+          newWords[index] = {
+            ...newWords[index],
+            existingWordId: undefined,
+          };
+          setWords(newWords);
+        }
       }
-      setWords(newWords);
+      
     } catch (err) {
       console.error('Error checking existing word:', err);
       // Don't show error to user, just continue
@@ -121,12 +174,9 @@ const BulkWordCreation: React.FC = () => {
     newWords[index] = { ...newWords[index], [field]: value };
     setWords(newWords);
 
-    // Check for existing word when base word is changed
+    // Check for existing word when base word is changed (debounced)
     if (field === 'baseWord' && value.trim()) {
-      // Debounce the check slightly
-      setTimeout(() => {
-        checkExistingWord(value, index);
-      }, 500);
+      debouncedCheckExistingWord(value, index);
     }
   };
 
@@ -373,6 +423,9 @@ const BulkWordCreation: React.FC = () => {
       // Invalidate relevant queries
       invalidateWordsAndTopic(topicIdNum);
 
+      // Clear auto-saved data
+      clearAutoSaved();
+
       alert(successMessage);
       navigate(`/topics/${topicId}`);
     } catch (err) {
@@ -384,6 +437,8 @@ const BulkWordCreation: React.FC = () => {
   };
 
   const handleCancel = () => {
+    // Clear auto-saved data on cancel
+    clearAutoSaved();
     navigate(`/topics/${topicId}`);
   };
 
@@ -399,7 +454,7 @@ const BulkWordCreation: React.FC = () => {
     setWordCount(Math.max(1, wordCount - 1));
   };
 
-  if (loading) {
+  if (loading || isAutoSaveLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
@@ -426,10 +481,19 @@ const BulkWordCreation: React.FC = () => {
             <span className="text-gray-900">Quick Add Words</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Quick Add Words</h2>
-          <p className="text-sm sm:text-base text-gray-600">
-            Quickly create multiple words and add them to "{topicName}" in one go
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Quick Add Words</h2>
+              <p className="text-sm sm:text-base text-gray-600">
+                Quickly create multiple words and add them to "{topicName}" in one go
+              </p>
+            </div>
+            {lastAutoSaved && (
+              <div className="text-xs text-gray-500">
+                Auto-saved at {lastAutoSaved.toLocaleTimeString()}
+              </div>
+            )}
+          </div>
         </div>
 
         {error && (
