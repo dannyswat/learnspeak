@@ -120,7 +120,7 @@ const QuizPractice: React.FC = () => {
 
   const handleExit = () => {
     if (journeyId) {
-      navigate(`/my-journeys`);
+      navigate(`/journeys/${journeyId}`);
     } else {
       navigate(`/topics/${topicId}`);
     }
