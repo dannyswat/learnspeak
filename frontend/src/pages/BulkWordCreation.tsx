@@ -103,9 +103,9 @@ const BulkWordCreation: React.FC = () => {
         (w: Word) => w.baseWord.toLowerCase() === baseWord.trim().toLowerCase()
       );
 
+      const newWords = [...words];
       if (exactMatch) {
         // Update the word entry with existing data
-        const newWords = [...words];
         newWords[index] = {
           ...newWords[index],
           baseWord: exactMatch.baseWord, // Use exact casing from database
@@ -113,8 +113,14 @@ const BulkWordCreation: React.FC = () => {
           notes: exactMatch.notes || newWords[index].notes,
           existingWordId: exactMatch.id,
         };
-        setWords(newWords);
+      } else {
+        // Clear existingWordId if no match found
+        newWords[index] = {
+          ...newWords[index],
+          existingWordId: undefined,
+        };
       }
+      setWords(newWords);
     } catch (err) {
       console.error('Error checking existing word:', err);
       // Don't show error to user, just continue
@@ -408,14 +414,9 @@ const BulkWordCreation: React.FC = () => {
   };
 
   const handleCancel = () => {
+    // Clear auto-saved data when user cancels
+    clearLocalStorage();
     navigate(`/topics/${topicId}`);
-  };
-
-  const handleCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const count = parseInt(e.target.value);
-    if (count > 0 && count <= 100) {
-      setWordCount(count);
-    }
   };
 
   const addMoreWords = () => {
@@ -486,15 +487,24 @@ const BulkWordCreation: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 How many words do you want to add?
               </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={wordCount}
-                  onChange={handleCountChange}
-                  className="w-20 sm:w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
+              <div className="flex items-center gap-2">
+                <span className="text-xl text-gray-900 px-4 border-b-2 border-gray-500">{wordCount}</span>
+                <button
+                  type="button"
+                  onClick={() => setWordCount(Math.min(100, wordCount + 1))}
+                  disabled={wordCount >= 100}
+                  className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  + Add
+                </button>
+                <button
+                  type="button"
+                  onClick={addMoreWords}
+                  disabled={wordCount >= 100}
+                  className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  + Add 5
+                </button>
                 <span className="text-xs sm:text-sm text-gray-600">words (max 100)</span>
               </div>
             </div>
@@ -573,14 +583,6 @@ const BulkWordCreation: React.FC = () => {
                     ▶️ <span className="hidden sm:inline">Autoplay</span><span className="sm:hidden">Play</span>
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={addMoreWords}
-                  disabled={wordCount >= 100}
-                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  + Add 5 More
-                </button>
               </div>
             </div>
 
