@@ -4,6 +4,8 @@ import { uploadService } from '../services/wordService';
 import Layout from '../components/Layout';
 import DynamicViewer from '../components/DynamicViewer';
 import { useTopicQuizForPractice, useSubmitQuiz } from '../hooks/useQuiz';
+import { useAutoPlay } from '../hooks/useAutoPlay';
+import { determineContentType } from '../utils/typeDetector';
 import type { QuizAnswer, QuizResult } from '../types/quiz';
 
 const QuizPractice: React.FC = () => {
@@ -20,6 +22,14 @@ const QuizPractice: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<QuizResult | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // Auto play for options
+  const { 
+    autoPlaying: optionsAutoPlaying, 
+    currentPlayingIndex: currentPlayingOptionIndex, 
+    play: playOptions, 
+    stop: stopOptions 
+  } = useAutoPlay();
 
   // Fetch quiz questions for practice
   const { data, isLoading, error } = useTopicQuizForPractice(topicIdNum, true);
@@ -47,6 +57,12 @@ const QuizPractice: React.FC = () => {
   };
 
   const handleNext = () => {
+    // Require answer before moving to next question
+    const currentQuestion = questions[currentIndex];
+    if (!answers.has(currentQuestion.id)) {
+      alert('Please select an answer before proceeding to the next question.');
+      return;
+    }
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
@@ -118,6 +134,38 @@ const QuizPractice: React.FC = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get audio options for current question
+  const audioOptionsItems = useMemo(() => {
+    if (questions.length === 0) return [];
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion) return [];
+    
+    return (['a', 'b', 'c', 'd'] as const)
+      .map((option, index) => {
+        const optionText = currentQuestion[`option${option.toUpperCase()}` as keyof typeof currentQuestion] as string;
+        const isAudio = determineContentType(optionText) === 'audio';
+        return {
+          option,
+          index,
+          audioUrl: isAudio ? uploadService.getFileUrl(optionText) : undefined,
+        };
+      });
+  }, [questions, currentIndex]);
+
+  // Check if current question has audio options
+  const hasAudioOptions = useMemo(() => {
+    return audioOptionsItems.some(item => item.audioUrl);
+  }, [audioOptionsItems]);
+
+  // Autoplay all audio options
+  const handleOptionsAutoPlay = () => {
+    playOptions(audioOptionsItems, 500);
+  };
+
+  const handleStopOptionsAutoPlay = () => {
+    stopOptions();
   };
 
   if (isLoading) {
@@ -348,24 +396,28 @@ const QuizPractice: React.FC = () => {
           </div>
 
           {/* Answer Options */}
-          <div className="space-y-3">
-            {(['a', 'b', 'c', 'd'] as const).map((option) => {
-              const optionText = currentQuestion[`option${option.toUpperCase()}` as keyof typeof currentQuestion];
+          <div className="grid grid-cols-2 gap-3">
+            {(['a', 'b', 'c', 'd'] as const).map((option, index) => {
+              const optionText = currentQuestion[`option${option.toUpperCase()}` as keyof typeof currentQuestion] as string;
               const isSelected = currentAnswer === option;
+              const isAudio = determineContentType(optionText) === 'audio';
+              const isCurrentlyPlaying = optionsAutoPlaying && currentPlayingOptionIndex === index;
 
               return (
                 <button
                   key={option}
                   onClick={() => handleAnswerSelect(option)}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                    isSelected
+                  className={`text-left p-4 rounded-lg border-2 transition-all ${
+                    isCurrentlyPlaying
+                      ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-400 ring-opacity-50'
+                      : isSelected
                       ? 'border-green-500 bg-green-50'
                       : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-1 font-medium flex-shrink-0 ${
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-medium flex-shrink-0 ${
                         isSelected
                           ? 'border-green-500 bg-green-500 text-white'
                           : 'border-gray-300 text-gray-600'
@@ -374,16 +426,47 @@ const QuizPractice: React.FC = () => {
                       {getOptionLabel(option)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <DynamicViewer
-                        value={optionText as string}
-                        className="text-left"
-                      />
+                      {isAudio ? (
+                        <audio
+                          src={uploadService.getFileUrl(optionText)}
+                          controls
+                          className="w-full h-10"
+                        />
+                      ) : (
+                        <DynamicViewer
+                          value={optionText}
+                          className="text-left"
+                        />
+                      )}
                     </div>
                   </div>
                 </button>
               );
             })}
           </div>
+
+          {/* Autoplay Options Button */}
+          {hasAudioOptions && (
+            <div className="mt-4 flex justify-center">
+              {optionsAutoPlaying ? (
+                <button
+                  type="button"
+                  onClick={handleStopOptionsAutoPlay}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-2"
+                >
+                  ⏹️ Stop Autoplay
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleOptionsAutoPlay}
+                  className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 flex items-center gap-2"
+                >
+                  ▶️ Autoplay Options
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
@@ -400,36 +483,19 @@ const QuizPractice: React.FC = () => {
             ← Previous
           </button>
 
-          <div className="flex gap-2">
-            {questions.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-10 h-10 rounded-lg font-medium ${
-                  index === currentIndex
-                    ? 'bg-green-500 text-white'
-                    : answers.has(questions[index].id)
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
-
           {currentIndex === questions.length - 1 ? (
             <button
               onClick={handleSubmit}
-              disabled={submitting}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50"
+              disabled={submitting || !currentAnswer}
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Submitting...' : 'Submit Quiz'}
             </button>
           ) : (
             <button
               onClick={handleNext}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium"
+              disabled={!currentAnswer}
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next →
             </button>
