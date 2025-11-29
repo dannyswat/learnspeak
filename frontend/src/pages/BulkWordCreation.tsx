@@ -9,7 +9,6 @@ import LanguageSelect from '../components/LanguageSelect';
 import WordEntryForm, { type WordEntryData } from '../components/WordEntryForm';
 import { useLanguages } from '../hooks/useLanguages';
 import { useInvalidateWordsAndTopic } from '../hooks/useWord';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useAutoPlay } from '../hooks/useAutoPlay';
 import type { Word, Translation } from '../types/word';
 
@@ -24,19 +23,10 @@ const BulkWordCreation: React.FC = () => {
   const invalidateWordsAndTopic = useInvalidateWordsAndTopic();
   const topicIdNum = topicId ? parseInt(topicId) : 0;
   
-  // Auto-save functionality - single source of truth
-  const localStorageKey = `bulkWordCreation_${topicId || 'new'}`;
-  const { data, saveToLocalStorage, clearLocalStorage } = useLocalStorage<{
-    words: WordEntryDataWithId[];
-    wordCount: number;
-    targetLanguage: number | null;
-  }>(localStorageKey);
-
-  // Initialize with default values if no saved data
-  const formData = data || { words: [], wordCount: 5, targetLanguage: null };
-  const words = formData.words;
-  const wordCount = formData.wordCount;
-  const targetLanguage = formData.targetLanguage;
+  // Form state
+  const [words, setWords] = useState<WordEntryDataWithId[]>([]);
+  const [wordCount, setWordCount] = useState<number>(5);
+  const [targetLanguage, setTargetLanguage] = useState<number | null>(null);
 
   const [topicName, setTopicName] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -44,26 +34,9 @@ const BulkWordCreation: React.FC = () => {
   const [error, setError] = useState('');
   const [translating, setTranslating] = useState(false);
   const [generatingAudio, setGeneratingAudio] = useState(false);
-  const [lastAutoSaved, setLastAutoSaved] = useState<Date | null>(null);
   
   // Auto play functionality
   const { autoPlaying, currentPlayingIndex, play: playAudio, stop: stopAudio } = useAutoPlay();
-
-  // Helper functions to update localStorage data
-  const setWords = (newWords: WordEntryDataWithId[]) => {
-    saveToLocalStorage({ ...formData, words: newWords });
-    setLastAutoSaved(new Date());
-  };
-
-  const setWordCount = (count: number) => {
-    saveToLocalStorage({ ...formData, wordCount: count });
-    setLastAutoSaved(new Date());
-  };
-
-  const setTargetLanguage = (langId: number | null) => {
-    saveToLocalStorage({ ...formData, targetLanguage: langId });
-    setLastAutoSaved(new Date());
-  };
 
   useEffect(() => {
     // Auto-select first language if available
@@ -400,9 +373,6 @@ const BulkWordCreation: React.FC = () => {
       // Invalidate relevant queries
       invalidateWordsAndTopic(topicIdNum);
 
-      // Clear auto-saved data after successful submission
-      clearLocalStorage();
-
       alert(successMessage);
       navigate(`/topics/${topicId}`);
     } catch (err) {
@@ -414,8 +384,6 @@ const BulkWordCreation: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Clear auto-saved data when user cancels
-    clearLocalStorage();
     navigate(`/topics/${topicId}`);
   };
 
@@ -459,17 +427,9 @@ const BulkWordCreation: React.FC = () => {
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Quick Add Words</h2>
-          <div className="flex items-center gap-4">
-            <p className="text-sm sm:text-base text-gray-600">
-              Quickly create multiple words and add them to "{topicName}" in one go
-            </p>
-            {lastAutoSaved && (
-              <div className="text-xs text-gray-500 flex items-center gap-1">
-                <span className="text-green-500">✓</span>
-                Auto-saved {lastAutoSaved.toLocaleTimeString()}
-              </div>
-            )}
-          </div>
+          <p className="text-sm sm:text-base text-gray-600">
+            Quickly create multiple words and add them to "{topicName}" in one go
+          </p>
         </div>
 
         {error && (
